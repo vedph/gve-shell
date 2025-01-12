@@ -103,6 +103,7 @@ export class GveGraphvizService {
     const excludedNodeIds = this.getExcludedNodeIds(chain, tags);
 
     sb.push('digraph G {');
+    sb.push('  bgcolor=transparent;');
     sb.push('  node [style=filled];');
     sb.push(`  rankdir=${rankdir};`);
     chain.nodes.forEach((node) => {
