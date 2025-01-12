@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 3.0.2
+
 - 2025-01-12: transparent background for graphviz.
 
 ### 3.0.1
