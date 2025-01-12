@@ -2,7 +2,11 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.0.7.
 
-GVE shell for developing frontend components. Some components require an API backend.
+[VEdition](https://vedph.github.io/gve-doc) frontend (code-named `GVE` = Goethe Venetian Epigrams) shell. This app is a shell used to develop libraries including GVE components and services for snapshots. Related repositories:
+
+- [backend core and APIs](https://github.com/vedph/gve-core).
+- [Cadmus editor frontend](https://github.com/vedph/cadmus-gve-app). This is a [Cadmus](https://vedph.github.io/cadmus-doc)-based editor for GVE entities including (but not limited to) GVE snapshots.
+- [documentation](https://github.com/vedph/gve-doc). This repository is the source for the [VEdition documentation web pages](https://vedph.github.io/gve-doc).
 
 ## Docker
 
@@ -31,7 +35,7 @@ To just run the image, use `docker run -d --name gve-shell -p 4200:80 vedph2020/
 
 Main third-party dependencies:
 
-- GSAP: `npm i gsap`, `npm i --save-dev @types/gsap`.
+- [GSAP](https://gsap.com): `npm i gsap`, `npm i --save-dev @types/gsap`.
 - [SVG.js](https://svgjs.dev/docs/3.0/): `npm i @svgdotjs/svg.js`: this is used to parse SVG code building objects. There seem to be glitches in doing this via a `DOMParser`, like `getBBox()` not being available on SVG elements, even though they were created from the SVG namespace.
 
 ## Documentation

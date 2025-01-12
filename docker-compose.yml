@@ -1,6 +1,7 @@
 services:
+  # API
   gve-api:
-    image: vedph2020/gve-api:2.0.0
+    image: vedph2020/gve-api:2.0.2
     container_name: gve-api
     ports:
       - 5239:8080
@@ -9,6 +10,7 @@ services:
     networks:
       - gve-network
 
+  # SHELL
   gve-shell:
     image: vedph2020/gve-shell:0.0.6
     container_name: gve-shell
