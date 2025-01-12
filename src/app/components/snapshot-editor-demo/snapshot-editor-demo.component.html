@@ -1,0 +1,24 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Snapshot Editor</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <gve-snapshot-editor
+      [debug]="debug.value"
+      [snapshot]="snapshot"
+      (snapshotChange)="onSnapshotChange($event)"
+    />
+    <mat-expansion-panel [disabled]="!snapshot" [expanded]="false">
+      <mat-expansion-panel-header>
+        <mat-panel-title>result</mat-panel-title>
+      </mat-expansion-panel-header>
+      <div>
+        <mat-checkbox [formControl]="debug">debug mode</mat-checkbox>
+      </div>
+      <code>
+        <pre>{{ snapshot | json }}</pre>
+      </code>
+    </mat-expansion-panel>
+  </mat-card-content>
+</mat-card>

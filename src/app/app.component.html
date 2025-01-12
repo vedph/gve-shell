@@ -1,0 +1,77 @@
+<div>
+  <header>
+    <mat-toolbar color="primary" class="mat-primary">
+      <span id="logo"
+        ><img src="./assets/img/logo-white-40.png" alt="Fusisoft"
+      /></span>
+      <a mat-button routerLink="/home">GVE</a>
+
+      <!-- demo -->
+      <button type="button" mat-button [matMenuTriggerFor]="demoMenu">
+        Demo
+      </button>
+      <mat-menu #animationMenu>
+        <a mat-menu-item routerLink="/demo/animation-tween">
+          <mat-icon color="primary" class="mat-primary">login</mat-icon>
+          Animation tween</a
+        >
+        <a mat-menu-item routerLink="/demo/animation-timeline">
+          <mat-icon color="primary" class="mat-primary">update</mat-icon>
+          Animation timeline</a
+        >
+        <a mat-menu-item routerLink="/demo/animation-timeline-set">
+          <mat-icon color="primary" class="mat-primary">subscriptions</mat-icon>
+          Animation timelines set</a
+        >
+      </mat-menu>
+      <mat-menu #demoMenu>
+        <a mat-menu-item [matMenuTriggerFor]="animationMenu">
+          <mat-icon color="primary" class="mat-primary">update</mat-icon>
+          Animation
+        </a>
+        <a mat-menu-item routerLink="/demo/feature">
+          <mat-icon color="primary" class="mat-primary">list</mat-icon>
+          Feature editor</a
+        >
+        <a mat-menu-item routerLink="/demo/feature-set">
+          <mat-icon color="primary" class="mat-primary">list-alt</mat-icon>
+          Features set editor</a
+        >
+        <a mat-menu-item routerLink="/demo/base-text">
+          <mat-icon color="primary" class="mat-primary">table_rows</mat-icon>
+          Base text</a
+        >
+        <a mat-menu-item routerLink="/demo/operation">
+          <mat-icon color="primary" class="mat-primary">input</mat-icon>
+          Operation editor</a
+        >
+        <a mat-menu-item routerLink="/demo/snapshot-view">
+          <mat-icon color="primary" class="mat-primary">code</mat-icon>
+          Snapshot view</a
+        >
+        <a mat-menu-item routerLink="/demo/snapshot">
+          <mat-icon color="primary" class="mat-primary"
+            >document_scanner</mat-icon
+          >
+          Snapshot editor</a
+        >
+      </mat-menu>
+    </mat-toolbar>
+  </header>
+
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer>
+    <div class="footer-container">
+      <div class="info">
+        GVE by
+        <a rel="noopener" href="http://www.fusisoft.it" target="_blank"
+          >Daniele Fusi</a
+        >
+        - version {{ version }}
+      </div>
+    </div>
+  </footer>
+</div>

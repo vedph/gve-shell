@@ -1,0 +1,80 @@
+fieldset {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+legend {
+  color: silver;
+}
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+div#rendition {
+  margin: 10px 0;
+  border: 1px solid silver;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  color: silver;
+}
+th,
+td {
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+div#container {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "input events"
+    "snapshot snapshot"
+    "rendition rendition"
+    "visuals visuals";
+  gap: 8px;
+}
+div#input {
+  grid-area: input;
+}
+div#snapshot {
+  grid-area: snapshot;
+}
+div#rendition {
+  grid-area: rendition;
+}
+div#visuals {
+  grid-area: visuals;
+}
+div#events {
+  grid-area: events;
+}
+svg {
+  width: 100%;
+  height: auto;
+}
+@media only screen and (max-width: 959px) {
+  div#container {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "input"
+      "snapshot"
+      "rendition"
+      "visuals"
+      "events";
+  }
+}

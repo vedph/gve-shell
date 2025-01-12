@@ -1,0 +1,36 @@
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row * {
+  flex: 0 0 auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  color: #909090;
+  font-weight: normal;
+  text-align: left;
+  background-color: rgb(225, 224, 224);
+}
+th,
+td {
+  padding: 4px;
+  border-bottom: 1px solid silver;
+}
+tbody tr:nth-child(even) {
+  background-color: #e8e8e8;
+}
+td.fit-width {
+  width: 1px;
+  white-space: nowrap;
+}

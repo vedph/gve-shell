@@ -1,0 +1,132 @@
+<div>
+  <div class="form-row">
+    <!-- filter -->
+    @if (filterThreshold() === 0 || features().length >= filterThreshold()) {
+    <mat-form-field>
+      <input matInput placeholder="filter" [formControl]="filter" />
+      <button
+        type="button"
+        mat-icon-button
+        matSuffix
+        (click)="filter.reset()"
+        [disabled]="!filter.value"
+        [attr.aria-label]="'Reset filter'"
+      >
+        <mat-icon color="warn" class="mat-warn">cancel</mat-icon>
+      </button>
+    </mat-form-field>
+    }
+
+    <!-- add feature button -->
+    <button
+      type="button"
+      color="primary"
+      class="mat-primary"
+      mat-flat-button
+      matTooltip="Add a new feature"
+      (click)="addFeature()"
+      [class.in-row-button]="
+        filterThreshold() === 0 || features()!.length >= filterThreshold()
+      "
+    >
+      <mat-icon>add</mat-icon>
+      feature
+    </button>
+  </div>
+
+  <!-- list -->
+  @if (features().length) {
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>feature</th>
+        <th>value</th>
+        <th>policy</th>
+        @if (isVar()) {
+        <th>negated</th>
+        <th>global</th>
+        <th>short-lived</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (feature of filteredFeatures; track feature) {
+      <tr>
+        <td class="fit-width">
+          <!-- edit -->
+          <button
+            type="button"
+            color="primary"
+            mat-icon-button
+            matTooltip="Edit this feature"
+            (click)="editFeature(feature)"
+          >
+            <mat-icon class="mat-primary">edit</mat-icon>
+          </button>
+          <!-- delete -->
+          <button
+            type="button"
+            color="warn"
+            mat-icon-button
+            matTooltip="Delete this feature"
+            (click)="deleteFeature(feature)"
+          >
+            <mat-icon class="mat-warn">delete</mat-icon>
+          </button>
+        </td>
+        <td>
+          @if (featNames()?.length) {
+          <span>{{
+            feature.name | flatLookup : featNames : "id" : "label"
+          }}</span>
+          } @else {
+          <span>{{ feature.name }}</span>
+          }
+        </td>
+        <td>
+          @if (featValues()) {
+          <span>{{
+            feature.value | flatLookup : featValues()![feature.name]
+          }}</span>
+          } @else {
+          <span>{{ feature.value }}</span>
+          }
+        </td>
+        <td>
+          <span>{{ POLICIES[feature.setPolicy] }}</span>
+        </td>
+        @if (isVar()) {
+        <td>
+          <span>{{ $any(feature).isNegated ? "yes" : "no" }}</span>
+        </td>
+        <td>
+          <span>{{ $any(feature).isGlobal ? "yes" : "no" }}</span>
+        </td>
+        <td>
+          <span>{{ $any(feature).isShortLived ? "yes" : "no" }}</span>
+        </td>
+        }
+      </tr>
+      }
+    </tbody>
+  </table>
+  }
+
+  <!-- editor -->
+  <mat-expansion-panel [disabled]="!editedFeature" [expanded]="editedFeature">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <span>{{ editedFeature?.name || "feature" }}</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <gve-feature-editor
+      [isVar]="isVar()"
+      [featNames]="featNames()"
+      [featValues]="featValues()"
+      [feature]="editedFeature"
+      (featureChange)="onFeatureChange($event)"
+      (featureCancel)="onFeatureCancel()"
+    />
+  </mat-expansion-panel>
+</div>

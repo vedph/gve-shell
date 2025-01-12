@@ -1,0 +1,141 @@
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row-center {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.form-row, .form-row-center * {
+  flex: 0 0 auto;
+}
+.form-row .right {
+  margin-left: auto;
+}
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.button-row * {
+  flex: 0 0 auto;
+}
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+#text-range {
+  margin: 8px;
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 6px;
+}
+mat-expansion-panel {
+  margin: 8px 0;
+}
+
+div#visual-info {
+  font-size: 95%;
+  color: #909090;
+  margin: 8px;
+}
+
+#list {
+  margin: 8px 0;
+}
+#opStyle {
+  margin-top: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  color: #909090;
+  font-weight: normal;
+  text-align: left;
+  background-color: rgb(225, 224, 224);
+}
+th,
+td {
+  padding: 4px;
+  border-bottom: 1px solid silver;
+}
+tbody tr:nth-child(even) {
+  background-color: #e8e8e8;
+}
+td.fit-width {
+  width: 1px;
+  white-space: nowrap;
+}
+tr.selected {
+  background-color: #c8d9eb;
+}
+tr.edited {
+  background-color: #f6f6e4;
+}
+fieldset {
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 8px 0;
+}
+legend {
+  color: #909090;
+}
+.error {
+  color: red;
+}
+.input-nr {
+  width: 6em;
+}
+.full-width {
+  width: 100%;
+}
+.code {
+  font-family: "Courier New", Courier, monospace;
+}
+.boxed {
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 8px 0;
+}
+span.label {
+  margin-left: 8px;
+}
+gve-animation-timeline-set {
+  margin: 8px 0;
+}
+
+div#image {
+  display: grid;
+  gap: 8px;
+  grid-template-rows: auto;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "image-ctl image-view";
+}
+div#image-ctl {
+  grid-area: image-ctl;
+}
+div#image-view {
+  grid-area: image-view;
+}
+div#chain-view {
+  margin-bottom: 8px;
+}
+
+/* lt-md */
+@media only screen and (max-width: 959px) {
+  div#image {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "image-ctl"
+      "image-view";
+  }
+}

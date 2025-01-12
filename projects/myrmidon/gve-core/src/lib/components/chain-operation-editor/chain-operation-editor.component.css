@@ -1,0 +1,162 @@
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row * {
+  flex: 0 0 auto;
+}
+#submit-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  border-top: 1px solid silver;
+}
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.nr {
+  width: 5em;
+}
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+#id {
+  border-radius: 6px;
+  padding: 4px;
+  background-color: #beb9b9;
+  color: white;
+  margin-top: -16px;
+}
+fieldset {
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 8px 0;
+}
+legend {
+  color: silver;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+th {
+  color: #909090;
+  font-weight: normal;
+  text-align: left;
+  background-color: rgb(225, 224, 224);
+}
+th,
+td {
+  padding: 4px;
+  border-bottom: 1px solid silver;
+}
+tbody tr:nth-child(even) {
+  background-color: #e8e8e8;
+}
+td.fit-width {
+  width: 1px;
+  white-space: nowrap;
+}
+tr {
+  border-bottom: 1px solid silver;
+}
+th,
+td {
+  text-align: center;
+}
+#btn-save {
+  color: #072d3e;
+}
+#btn-load {
+  color: #dbd112;
+}
+#btn-copy {
+  color: #22549f;
+}
+#btn-preview {
+  color: #095409;
+}
+#code {
+  height: 500px;
+  border: 1px solid silver;
+}
+#monaco {
+  height: 100%;
+}
+.svg-cell {
+  /* width: 200px; */
+  padding: 0 8px;
+}
+.svg-cell svg {
+  border: 1px solid silver;
+  width: 100%; /* Scale the SVG to fit the width of the table cell */
+  height: auto; /* This will maintain the aspect ratio of the SVG */
+}
+#preview {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding: 8px;
+}
+.tree-invisible {
+  display: none;
+}
+.tree ul,
+.tree li {
+  margin-top: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+}
+.selected-node {
+  background-color: #e5e5e5;
+}
+.child-title {
+  font-weight: bold;
+  margin: 0;
+  background-color: #ccc;
+  color: white;
+  padding: 8px;
+}
+
+#tree-container {
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "nav ed";
+  gap: 0 16px;
+  align-items: stretch;
+}
+#tree-nav {
+  grid-area: nav;
+  border: 1px solid silver;
+  border-radius: 6px;
+  margin: 8px 0;
+  padding-right: 8px;
+}
+#tree-ed {
+  grid-area: ed;
+  border: 1px solid silver;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+@media only screen and (max-width: 959px) {
+  div#container {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "nav"
+      "ed";
+    gap: 16px 0;
+    align-items: start;
+  }
+}

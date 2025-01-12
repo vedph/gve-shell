@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Introduction",
+    "file": "index.md"
+  },
+  {
+    "title": "Editing Features",
+    "file": "usr-features.md"
+  },
+  {
+    "title": "Editing Operations",
+    "file": "usr-operation.md"
+  },
+  {
+    "title": "Editing Snapshots",
+    "file": "usr-snapshot.md"
+  }
+]

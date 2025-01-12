@@ -1,0 +1,23 @@
+.full-width {
+  width: 100%;
+}
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row-center {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.form-row, .form-row-center * {
+  flex: 0 0 auto;
+}
+div#heading {
+  margin: 8px;
+  text-align: center;
+}

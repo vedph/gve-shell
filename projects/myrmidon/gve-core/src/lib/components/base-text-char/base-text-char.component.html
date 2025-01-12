@@ -1,0 +1,20 @@
+@if (char()) {
+<div matRipple id="container" (click)="onCharClick($event)">
+  <div
+    id="c-label"
+    [style.fontSize]="char()!.emSize + 'em'"
+    [style.borderColor]="char()!.borderColor"
+  >
+    {{ char()!.label }}
+  </div>
+  <div
+    id="c-id"
+    [style.fontSize]="char()!.emSize / 2 + 'em'"
+    [style.color]="char()!.color | colorToContrast"
+    [style.borderColor]="char()!.borderColor"
+    [style.backgroundColor]="char()!.color"
+  >
+    {{ char()!.id }}
+  </div>
+</div>
+}

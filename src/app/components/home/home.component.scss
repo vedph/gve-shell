@@ -1,0 +1,19 @@
+svg {
+  width: 100%;
+  height: 100%;
+  background-color: whitesmoke;
+}
+.banner {
+  height: 600px;
+  margin-bottom: 16px;
+}
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 0 0;
+}
+#title h2 {
+  text-align: center;
+  color: #DCA45D;
+}

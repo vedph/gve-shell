@@ -1,0 +1,57 @@
+<form [formGroup]="form">
+  <!-- add -->
+  <div>
+    <button
+      type="button"
+      class="mat-primary"
+      mat-flat-button
+      (click)="newTimeline()"
+    >
+      <mat-icon>add_circle</mat-icon>
+      timeline
+    </button>
+  </div>
+
+  <!-- table -->
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>tag</th>
+        <th>tweens</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (t of set.value; track t.tag; let index = $index) {
+      <tr>
+        <td class="fit-width">
+          <!-- edit -->
+          <button type="button" mat-icon-button (click)="editTimeline(index)">
+            <mat-icon class="mat-primary">edit</mat-icon>
+          </button>
+          <!-- delete -->
+          <button type="button" mat-icon-button (click)="deleteTimeline(index)">
+            <mat-icon class="mat-warn">remove_circle</mat-icon>
+          </button>
+        </td>
+        <td>{{ t.tag }}</td>
+        <td>{{ t.tweens.length }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- editor -->
+  <mat-expansion-panel [disabled]="!editedTimeline" [expanded]="editedTimeline">
+    <mat-expansion-panel-header>
+      timeline {{ editedTimeline?.tag }}
+    </mat-expansion-panel-header>
+    <gve-animation-timeline
+      [elementIds]="elementIds()"
+      [tags]="tags()"
+      [timeline]="editedTimeline"
+      (timelineChange)="onTimelineChange($event)"
+      (timelineCancel)="closeTimeline()"
+    />
+  </mat-expansion-panel>
+</form>

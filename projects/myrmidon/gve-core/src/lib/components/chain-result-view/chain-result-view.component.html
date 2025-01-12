@@ -1,0 +1,60 @@
+@if (result()) {
+<div id="container">
+  <div id="bar" class="form-row">
+    <!-- version -->
+    <mat-form-field *ngIf="versionTags?.length">
+      <mat-label>version</mat-label>
+      <mat-select [formControl]="versionTag">
+        <mat-option [value]="null">-</mat-option>
+        <mat-option *ngFor="let t of versionTags" [value]="t">{{
+          t
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <!-- tag -->
+    <mat-form-field *ngIf="tags?.length">
+      <mat-label>tag</mat-label>
+      <mat-select [formControl]="tag">
+        <mat-option *ngFor="let t of tags" [value]="t">{{ t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- step -->
+  @if (step) {
+  <div id="step">
+    <!-- text -->
+    <div id="text">
+      <gve-base-text-view
+        [text]="result()!.taggedNodes[step.outputTag]"
+        [borderColorCallback]="getCharBorderColor"
+        (charPick)="onStepCharPick($event)"
+        (rangePick)="onStepRangePick($event)"
+      />
+    </div>
+    <!-- features -->
+    <div id="feats" class="form-row-top">
+      <div id="g-feats">
+        <div class="feat-header">{{ step.outputTag }}</div>
+        <gve-feature-set-view [features]="step.featureSet.features" />
+      </div>
+      <div id="n-feats">
+        @if (selectionFeatures.length) {
+        <div class="feat-header">{{ selection }}</div>
+        <gve-feature-set-view [features]="selectionFeatures" />
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- steps map -->
+  <div id="map">
+    <gve-steps-map
+      [steps]="result()!.steps"
+      [selectedStep]="step"
+      (selectedStepChange)="onStepChange($event)"
+    />
+  </div>
+</div>
+}

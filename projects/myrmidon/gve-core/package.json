@@ -1,0 +1,32 @@
+{
+  "name": "@myrmidon/gve-core",
+  "version": "3.0.0",
+  "description": "Cadmus - GVE Angular frontend core components.",
+  "keywords": [
+    "GVE"
+  ],
+  "homepage": "https://github.com/vedph/gve-shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vedph/gve-shell"
+  },
+  "author": {
+    "name": "Daniele Fusi"
+  },
+  "peerDependencies": {
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@cisstech/nge": "^18.0.4",
+    "@myrmidon/ngx-mat-tools": "^0.0.1",
+    "@myrmidon/ngx-tools": "^0.0.1",
+    "@myrmidon/gve-snapshot-view": "^1.1.6",
+    "@svgdotjs/svg.js": "^3.2.4",
+    "gsap": "^3.12.5",
+    "monaco-editor": "^0.52.0",
+    "nanoid": "^5.0.9"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

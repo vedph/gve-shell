@@ -1,0 +1,33 @@
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row * {
+  flex: 0 0 auto;
+}
+.in-row-button {
+  margin-top: -16px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  text-align: left;
+  background-color: #c8d9eb;
+  color: #333;
+  font-weight: normal;
+}
+th,
+td {
+  border: 1px solid silver;
+  padding: 4px;
+}
+tr:nth-child(even) {
+  background-color: #dfdfdf;
+}
+#filter {
+  width: 7em;
+}

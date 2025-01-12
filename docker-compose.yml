@@ -1,0 +1,22 @@
+services:
+  gve-api:
+    image: vedph2020/gve-api:2.0.0
+    container_name: gve-api
+    ports:
+      - 5239:8080
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - gve-network
+
+  gve-shell:
+    image: vedph2020/gve-shell:0.0.6
+    container_name: gve-shell
+    ports:
+      - 4200:80
+    networks:
+      - gve-network
+
+networks:
+  gve-network:
+    driver: bridge

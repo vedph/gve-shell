@@ -1,0 +1,29 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Base Text</mat-card-title>
+  </mat-card-header>
+
+  <div>
+    <mat-form-field style="width: 100%; max-width: 800px">
+      <textarea
+        matInput
+        placeholder="text"
+        [formControl]="text"
+        rows="5"
+      ></textarea>
+    </mat-form-field>
+  </div>
+  @if (range) {
+  <div id="range">{{ range.at }} x {{ range.run }}</div>
+  }
+
+  <hr />
+  <mat-card-content>
+    <gve-base-text-view
+      [text]="nodes"
+      [hasLineNumber]="true"
+      (charPick)="onCharPick($event)"
+      (rangePick)="onRangePick($event)"
+    />
+  </mat-card-content>
+</mat-card>

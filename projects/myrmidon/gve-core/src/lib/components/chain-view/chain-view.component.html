@@ -1,0 +1,36 @@
+<div id="container">
+  <div>
+    <ngx-viz [code]="graph()" />
+  </div>
+  <div class="button-row">
+    <!-- select -->
+    <mat-form-field>
+      <mat-label>tags</mat-label>
+      <mat-select [formControl]="userTags" multiple>
+        @for (tag of tags(); track tag) {
+        <mat-option [value]="tag">{{ tag }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <!-- copy -->
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Copy graphviz code"
+      [disabled]="!graph()"
+      (click)="copyGraph()"
+    >
+      <mat-icon>content_copy</mat-icon>
+    </button>
+    <!--editor -->
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Open in editor"
+      [disabled]="!graph()"
+      (click)="openExternalEditor()"
+    >
+      <mat-icon>launch</mat-icon>
+    </button>
+  </div>
+</div>

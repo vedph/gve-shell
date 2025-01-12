@@ -1,0 +1,155 @@
+<form [formGroup]="form" (submit)="save()">
+  <div class="form-row">
+    <!-- label -->
+    <mat-form-field>
+      <mat-label>label</mat-label>
+      <input matInput [formControl]="label" />
+      <mat-error
+        *ngIf="$any(label).errors?.required && (label.dirty || label.touched)"
+        >label required</mat-error
+      >
+      <mat-error
+        *ngIf="$any(label).errors?.maxLength && (label.dirty || label.touched)"
+        >label too long</mat-error
+      >
+    </mat-form-field>
+
+    <!-- type -->
+    <mat-form-field>
+      <mat-label>type</mat-label>
+      <mat-select [formControl]="type">
+        <mat-option *ngFor="let t of types" [value]="t">{{ t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- position -->
+    <mat-form-field>
+      <mat-label>position</mat-label>
+      <input matInput [formControl]="position" />
+      <button
+        type="button"
+        mat-icon-button
+        matSuffix
+        [attr.aria-label]="'Information about position'"
+        (click)="
+          openUrl(
+            'https://gsap.com/docs/v3/GSAP/Timeline/#positioning-animations-in-a-timeline'
+          )
+        "
+      >
+        <mat-icon>info</mat-icon>
+      </button>
+      <mat-hint>time label &lt; &gt; += -=</mat-hint>
+      <mat-error
+        *ngIf="
+          $any(position).errors?.maxLength &&
+          (position.dirty || position.touched)
+        "
+        >position too long</mat-error
+      >
+    </mat-form-field>
+  </div>
+
+  <div class="form-row">
+    <!-- selector -->
+    <mat-form-field>
+      <mat-label>selector</mat-label>
+      <input matInput [formControl]="selector" />
+      <mat-hint>CSS selector</mat-hint>
+      <mat-error
+        *ngIf="
+          $any(selector).errors?.required &&
+          (selector.dirty || selector.touched)
+        "
+        >selector required</mat-error
+      >
+      <mat-error
+        *ngIf="
+          $any(selector).errors?.maxLength &&
+          (selector.dirty || selector.touched)
+        "
+        >selector too long</mat-error
+      >
+    </mat-form-field>
+
+    <!-- element id -->
+    @if ((elementIds())?.length) {
+    <mat-form-field>
+      <mat-label>element ID</mat-label>
+      <mat-select [formControl]="elementId">
+        <mat-option *ngFor="let id of elementIds()" [value]="id">{{
+          id
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    }
+  </div>
+
+  <!-- note -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>note</mat-label>
+      <textarea rows="2" matInput [formControl]="note"></textarea>
+      <mat-error
+        *ngIf="$any(note).errors?.maxLength && (note.dirty || note.touched)"
+        >note too long</mat-error
+      >
+    </mat-form-field>
+  </div>
+
+  <!-- vars -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>vars</mat-label>
+      <textarea matInput [formControl]="vars"></textarea>
+      <mat-hint>JSON object</mat-hint>
+      <mat-error
+        *ngIf="$any(vars).errors?.required && (vars.dirty || vars.touched)"
+        >vars required</mat-error
+      >
+      <mat-error *ngIf="$any(vars).errors?.json && (vars.dirty || vars.touched)"
+        >invalid JSON</mat-error
+      >
+    </mat-form-field>
+  </div>
+
+  <!-- vars2 only when type is fromTo -->
+  @if (type.value === 'fromTo') {
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>2nd vars</mat-label>
+      <textarea matInput [formControl]="vars2"></textarea>
+      <mat-hint>JSON object</mat-hint>
+      <mat-error
+        *ngIf="$any(vars2).errors?.required && (vars2.dirty || vars2.touched)"
+        >vars required</mat-error
+      >
+      <mat-error
+        *ngIf="$any(vars2).errors?.json && (vars2.dirty || vars2.touched)"
+        >invalid JSON</mat-error
+      >
+    </mat-form-field>
+  </div>
+  }
+
+  <div class="form-row">
+    <button
+      type="button"
+      class="mat-warn"
+      mat-icon-button
+      matTooltip="Close tween"
+      (click)="close()"
+    >
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      class="mat-primary"
+      mat-icon-button
+      matTooltip="Save tween"
+      [disabled]="form.invalid || form.pristine"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+    </button>
+  </div>
+</form>
