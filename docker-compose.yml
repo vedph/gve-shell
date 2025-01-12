@@ -12,8 +12,10 @@ services:
 
   # SHELL
   gve-shell:
-    image: vedph2020/gve-shell:0.0.6
+    image: vedph2020/gve-shell:3.0.1
     container_name: gve-shell
+    depends_on:
+      - gve-api
     ports:
       - 4200:80
     networks:

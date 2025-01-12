@@ -14,7 +14,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 1. `npm run build-lib`.
 2. update version in `env.js` and `ng build --configuration=production`.
-3. `docker build . -t vedph2020/gve-shell:0.0.6 -t vedph2020/gve-shell:latest` (replace with the current version).
+3. `docker build . -t vedph2020/gve-shell:3.0.1 -t vedph2020/gve-shell:latest` (replace with the current version).
 
 💡 You will be able to spare a prod-specific image by just overwriting the [env.js](src/env.js) file in your [Docker compose script](docker-compose.yml) via a volume, e.g.. putting under `gve-shell`:
 
@@ -58,6 +58,8 @@ To publish the documentation via GitHub:
 3. after a few minutes, your documentation should be available at <https://YOURUSERNAME.github.io/YOURREPOSITORY/>.
 
 ## History
+
+### 3.0.1
 
 - 2025-01-12:
   - replaced `graphviz-webcomponent` with [my own ngx-viz](https://github.com/vedph/ngx-viz).
