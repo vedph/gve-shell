@@ -61,6 +61,7 @@ To publish the documentation via GitHub:
 
 ### 3.0.2
 
+- 2025-01-15: logos in homepage.
 - 2025-01-12: transparent background for graphviz.
 
 ### 3.0.1
