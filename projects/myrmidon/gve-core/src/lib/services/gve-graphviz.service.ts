@@ -107,8 +107,9 @@ export class GveGraphvizService {
     sb.push('  node [style=filled];');
     sb.push(`  rankdir=${rankdir};`);
     chain.nodes.forEach((node) => {
+      // note that in label we must escape the double quotes
       sb.push(
-        `  ${node.id} [label="${node.label}"` +
+        `  ${node.id} [label="${node.label === '"' ? '"' : node.label}"` +
           (node.sourceTag
             ? ` fillcolor="${this.getColorForTag(node.sourceTag)}"`
             : '') +

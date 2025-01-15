@@ -59,6 +59,10 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 3.0.3
+
+- 2025-01-15: fixed unescaped `"` in label in graphviz service.
+
 ### 3.0.2
 
 - 2025-01-15: logos in homepage.
