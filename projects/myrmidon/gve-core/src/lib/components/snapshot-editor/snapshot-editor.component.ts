@@ -123,6 +123,8 @@ export class SnapshotEditorComponent {
   private _previewing?: boolean;
   private _transparentIds?: string[];
   private _stepPickFrozen?: boolean;
+  private _handlingOver?: boolean;
+  private _lastOverId?: string;
 
   @ViewChild('snapshotView', { static: false })
   public snapshotView?: ElementRef<SnapshotViewComponent>;
@@ -984,10 +986,17 @@ export class SnapshotEditorComponent {
    * @param event The event.
    */
   public onVisualEvent(event: CustomEvent<GveVisualEvent>): void {
+    if (this._handlingOver) {
+      return;
+    }
     const d = event.detail;
 
     if (d.event.type === 'mouseover') {
       const visual = d.source;
+      if (visual.id === this._lastOverId) {
+        return;
+      }
+      this._handlingOver = true;
       const sb: string[] = [];
       // id (type)
       sb.push('#' + visual.id);
@@ -1011,7 +1020,10 @@ export class SnapshotEditorComponent {
           `◻${visual.width.toFixed(1)}×${visual.height.toFixed(1)})`
       );
       this.visualInfo = sb.join('');
+      this._lastOverId = visual.id;
     }
+
+    this._handlingOver = false;
   }
 
   /**
