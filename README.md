@@ -14,7 +14,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 1. `npm run build-lib`.
 2. update version in `env.js` and `ng build --configuration=production`.
-3. `docker build . -t vedph2020/gve-shell:3.0.1 -t vedph2020/gve-shell:latest` (replace with the current version).
+3. `docker build . -t vedph2020/gve-shell:3.0.3 -t vedph2020/gve-shell:latest` (replace with the current version).
 
 💡 You will be able to spare a prod-specific image by just overwriting the [env.js](src/env.js) file in your [Docker compose script](docker-compose.yml) via a volume, e.g.. putting under `gve-shell`:
 
@@ -61,7 +61,10 @@ To publish the documentation via GitHub:
 
 ### 3.0.3
 
-- 2025-01-15: fixed unescaped `"` in label in graphviz service.
+- 2025-01-15:
+  - fixed unescaped `"` in label in graphviz service.
+  - better handling of mouseover in snapshot editor.
+  - added missing log entry to ARZDC sample.
 
 ### 3.0.2
 

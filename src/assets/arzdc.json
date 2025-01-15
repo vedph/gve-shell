@@ -200,6 +200,12 @@
       "features": [
         {
           "isGlobal": true,
+          "name": "log",
+          "value": "swap D with C",
+          "setPolicy": 0
+        },
+        {
+          "isGlobal": true,
           "isShortLived": true,
           "name": "version",
           "value": "gamma",
