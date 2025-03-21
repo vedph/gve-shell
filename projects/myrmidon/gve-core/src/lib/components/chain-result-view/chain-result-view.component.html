@@ -27,9 +27,9 @@
     <div id="text">
       <gve-base-text-view
         [text]="result()!.taggedNodes[step.outputTag]"
-        [borderColorCallback]="getCharBorderColor"
-        (charPick)="onStepCharPick($event)"
-        (rangePick)="onStepRangePick($event)"
+        [colorCallback]="getCharColor"
+        (charPick)="onTextCharPick($event)"
+        (rangePick)="onTextRangePick($event)"
       />
     </div>
     <!-- features -->

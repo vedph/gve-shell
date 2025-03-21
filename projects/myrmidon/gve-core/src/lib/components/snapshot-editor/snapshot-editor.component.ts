@@ -39,6 +39,7 @@ import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 import {
   CharChainOperation,
+  CharDecoration,
   CharNode,
   DEFAULT_SVG_BASE_TEXT_OPTIONS,
   Feature,
@@ -148,6 +149,12 @@ export class SnapshotEditorComponent {
    * True to enable debug mode for view rendition.
    */
   public readonly debug = input<boolean | undefined>();
+
+  /**
+   * True to not show character decoration according to the trace
+   * features in nodes.
+   */
+  public readonly noDecoration = input<boolean | undefined>();
 
   /**
    * Emitted when the user saves the edited snapshot.
@@ -1111,6 +1118,34 @@ export class SnapshotEditorComponent {
     this.rulers = this._renderer.toggleRulers();
   }
 
+  private defaultCharDecorator(
+    char: CharNode,
+    lineNumber: number,
+    x: number,
+    y: number
+  ): CharDecoration | null {
+    const features = char.features;
+    const segOut = features?.find((f) => f.name === '$seg-out');
+    const seg2Out = features?.find((f) => f.name === '$seg2-out');
+    const segIn = features?.find((f) => f.name === '$seg-in');
+    const seg2In = features?.find((f) => f.name === '$seg2-in');
+
+    if (!segOut && !seg2Out && !segIn && !seg2In) {
+      return null;
+    }
+
+    const decoration: CharDecoration = {};
+    if (segOut || seg2Out) {
+      decoration.fill = segOut ? '#9B2915' : '#9B6F91';
+    }
+    // if (segIn || seg2In) {
+    //   decoration.stroke = segIn ? '#E9B44C' : '#DF928E';
+    //   decoration.strokeWidth = 3;
+    // }
+
+    return decoration;
+  }
+
   /**
    * Get a snapshot from the form data.
    *
@@ -1141,6 +1176,11 @@ export class SnapshotEditorComponent {
       operations: [...this.operations.value],
       opStyle: this.opStyle.value || undefined,
     };
+
+    // add char decoration unless opted out
+    if (!this.noDecoration()) {
+      snapshot.textOptions.charDecorator = this.defaultCharDecorator;
+    }
 
     // image
     if (this.imageUrl.value) {

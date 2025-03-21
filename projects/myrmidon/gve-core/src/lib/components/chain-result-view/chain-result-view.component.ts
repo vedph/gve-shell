@@ -91,7 +91,8 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
 
   constructor(formBuilder: FormBuilder) {
     // bind callback methods
-    this.getCharBorderColor = this.getCharBorderColor.bind(this);
+    this.getCharColor = this.getCharColor.bind(this);
+    // this.getCharBorderColor = this.getCharBorderColor.bind(this);
 
     this.versionTag = formBuilder.control<string | null>(null);
     this.tag = formBuilder.control<string | null>(null);
@@ -111,7 +112,7 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this._subs = [
-      // whenever the staged version tag changes, update the form
+      // whenever the staged version tag changes, update the tag
       this.versionTag.valueChanges
         .pipe(distinctUntilChanged(), debounceTime(200))
         .subscribe((value) => {
@@ -122,6 +123,7 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
       this.tag.valueChanges
         .pipe(distinctUntilChanged(), debounceTime(200))
         .subscribe((value) => {
+          this.selectionFeatures = [];
           this.step = this.result()?.steps.find(
             (step) => step.outputTag === value
           );
@@ -132,9 +134,22 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
     ];
   }
 
-  public getCharBorderColor(node: CharNode): string | null {
-    return this.step?.refNodeIds.includes(node.id) ? 'orange' : null;
+  public getCharColor(node: CharNode): string | null {
+    //return this.step?.refNodeIds.includes(node.id) ? 'orange' : null;
+    const features = this.getNodeFeatures(node.id);
+    return features?.some(
+      (f) => f.name === '$seg-out' || f.name === '$seg2-out'
+    )
+      ? 'orange'
+      : null;
   }
+
+  // public getCharBorderColor(node: CharNode): string | null {
+  //   const features = this.getNodeFeatures(node.id);
+  //   return features?.some((f) => f.name === '$seg-in' || f.name === '$seg2-in')
+  //     ? 'green'
+  //     : null;
+  // }
 
   private selectInitialStep(initialStepIndex?: number): void {
     if (initialStepIndex !== undefined && this.result()?.steps) {
@@ -194,7 +209,7 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
       this.tags = [];
       this.versionTags = [];
     } else {
-      this.tags = result.chainTags;
+      this.tags = result.chainTags.filter((t) => t.length > 0 && t !== 'v0');
       this.updateVersionTags();
     }
   }
@@ -221,14 +236,14 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  public onStepCharPick(event: BaseTextCharEvent): void {
+  public onTextCharPick(event: BaseTextCharEvent): void {
     const features = this.getNodeFeatures(event.char.id);
     const node = this.findNode(event.char.id)!;
     this.selection = `${event.char.label} (${node.sourceTag})`;
     this.selectionFeatures = [...features];
   }
 
-  public onStepRangePick(range: VarBaseTextRange): void {
+  public onTextRangePick(range: VarBaseTextRange): void {
     if (range.run === 1) {
       // already handled by onStepCharPick
       return;
@@ -265,10 +280,10 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
   }
 
   public onStepChange(step?: ChainOperationContextStep): void {
+    this.selectionFeatures = [];
     if (step) {
       // setting the tag will trigger the step change
       this.tag.setValue(step.outputTag);
-      this.selectionFeatures = [];
     }
   }
 }

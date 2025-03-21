@@ -10,9 +10,11 @@ import { AnimationTweenDemoComponent } from './components/animation-tween-demo/a
 import { AnimationTimelineDemoComponent } from './components/animation-timeline-demo/animation-timeline-demo.component';
 import { SnapshotViewDemoComponent } from './components/snapshot-view-demo/snapshot-view-demo.component';
 import { AnimationTimelineSetDemoComponent } from './components/animation-timeline-set-demo/animation-timeline-set-demo.component';
+import { ChainResultViewDemoComponent } from './components/chain-result-view-demo/chain-result-view-demo.component';
 
 export const routes: Routes = [
   { path: 'home', component: HomeComponent },
+  { path: 'demo/chain-result-view', component: ChainResultViewDemoComponent },
   { path: 'demo/feature', component: FeatureEditorDemoComponent },
   { path: 'demo/feature-set', component: FeatureSetEditorDemoComponent },
   { path: 'demo/operation', component: ChainOperationEditorDemoComponent },

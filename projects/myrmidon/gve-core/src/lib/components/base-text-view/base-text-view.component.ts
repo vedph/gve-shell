@@ -20,13 +20,19 @@ export interface VarBaseTextRange {
 /**
  * 🔑 `gve-base-text-view`
  *
- * A component to display a selectable base text.
+ * A component to display a selectable base text. Its input is either a string or an
+ * array of `CharNode`'s.
  * Used by the chain result view component and the base text editor component.
  *
  * - ▶️ `defaultColor` (`string`): the default color for the text.
+ * - ▶️ `colorCallback` (callback): an optional callback to get the color of a
+ * character node.
  * - ▶️ `defaultBorderColor` (`string`): the default border color for the text.
+ * - ▶️ `borderColorCallback` (callback): an optional callback to get the border color
+ * of a character node.
  * - ▶️ `selectionColor` (`string`): the color for the selected text.
- * - ▶️ `hasLineNumber` (`boolean`): true if line numbers should be displayed next to each line.
+ * - ▶️ `hasLineNumber` (`boolean`): true if line numbers should be displayed next
+ * to each line.
  * - ▶️ `text` (`string` | `CharNode[]`): the text to display.
  * - 🔥 `charPick` (`BaseTextCharEvent`): emitted when a character is picked.
  * - 🔥 `rangePick` (`VarBaseTextRange`): emitted when a range is picked.
@@ -69,6 +75,14 @@ export class BaseTextViewComponent {
    * An optional callback to get the color of a character node.
    * Return null to use the default color.
    */
+  public readonly colorCallback = input<
+    ((node: CharNode) => string | null) | undefined
+  >();
+
+  /**
+   * An optional callback to get the color of a character node.
+   * Return null to use the default color.
+   */
   public readonly borderColorCallback = input<
     ((node: CharNode) => string | null) | undefined
   >();
@@ -90,12 +104,17 @@ export class BaseTextViewComponent {
   constructor() {
     // build lines when text or border color callback change
     effect(() => {
-      this.buildLines(this.text(), this.borderColorCallback());
+      this.buildLines(
+        this.text(),
+        this.colorCallback(),
+        this.borderColorCallback()
+      );
     });
   }
 
   private buildLines(
     text: CharNode[],
+    colorCallback?: (node: CharNode) => string | null,
     borderColorCallback?: (node: CharNode) => string | null
   ): void {
     if (!text) {
@@ -113,12 +132,17 @@ export class BaseTextViewComponent {
         id: nodes[i].id,
         value: nodes[i].data,
         label: nodes[i].label,
-        color: this.defaultColor(),
+        color: colorCallback
+          ? colorCallback(nodes[i]) || this.defaultColor()
+          : this.defaultColor(),
         borderColor: borderColorCallback
           ? borderColorCallback(nodes[i]) || this.defaultBorderColor()
           : this.defaultBorderColor(),
         emSize: 1.5,
       };
+      char.oldColor = char.color;
+      char.oldBorderColor = char.borderColor;
+
       newLines[newLines.length - 1].push(char);
 
       if (char.value === '\n') {
@@ -132,8 +156,8 @@ export class BaseTextViewComponent {
   private resetColors(): void {
     for (const line of this.lines) {
       for (const c of line) {
-        c.color = this.defaultColor();
-        c.borderColor = this.defaultBorderColor();
+        c.color = c.oldColor || this.defaultColor();
+        c.borderColor = c.oldBorderColor || this.defaultBorderColor();
       }
     }
   }
@@ -152,6 +176,9 @@ export class BaseTextViewComponent {
       for (const line of this.lines) {
         for (const c of line) {
           if (c.id >= minId && c.id <= maxId) {
+            c.oldColor = c.color;
+            c.oldBorderColor = c.borderColor;
+
             c.color = this.selectionColor();
             c.borderColor = this.selectionColor();
           }
@@ -163,6 +190,9 @@ export class BaseTextViewComponent {
       return;
     } else {
       // select current char
+      event.char.oldColor = event.char.color;
+      event.char.oldBorderColor = event.char.borderColor;
+
       event.char.color = this.selectionColor();
       event.char.borderColor = this.selectionColor();
       this.charPick.emit(event);

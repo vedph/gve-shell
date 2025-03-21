@@ -59,6 +59,10 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-03-21:
+  - updated Angular and packages.
+  - adding decoration for `$seg-out` and `$seg2-out` features.
+  - added demo page for testing the chain result view component.
 - 2025-03-04: updated Angular and packages.
 - 2025-01-28: updated Angular and packages.
 

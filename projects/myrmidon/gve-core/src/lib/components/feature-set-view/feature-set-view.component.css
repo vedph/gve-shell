@@ -31,3 +31,9 @@ tr:nth-child(even) {
 #filter {
   width: 7em;
 }
+#badge {
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 4px;
+  margin-top: -18px;
+}

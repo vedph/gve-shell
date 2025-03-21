@@ -11,7 +11,9 @@ export interface BaseTextChar {
   value: string;
   label: string;
   color: string;
+  oldColor?: string;
   borderColor: string;
+  oldBorderColor?: string;
   emSize: number;
 }
 
