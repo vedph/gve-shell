@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, input, model, output } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  effect,
+  input,
+  model,
+  output,
+  signal,
+} from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -32,7 +40,12 @@ import { ChainOperationContextStep } from '../../services/gve-api.service';
   templateUrl: './steps-map.component.html',
   styleUrl: './steps-map.component.css',
 })
-export class StepsMapComponent {
+export class StepsMapComponent implements AfterViewInit {
+  // track view initialization
+  private _viewInitialized = signal(false);
+  // track whether we've processed the steps/selection
+  private _selectionProcessed = signal(false);
+
   // the lines of each version text, keyed under the output tag
   public lines: { [key: string]: string[] } = {};
 
@@ -58,22 +71,65 @@ export class StepsMapComponent {
   public selectedStepChange = output<ChainOperationContextStep | undefined>();
 
   constructor() {
-    // when the steps change, update lines and selected step
+    // handle steps updates
     effect(() => {
-      const steps = this.steps();
-      const first = steps === undefined;
-
-      if (first && (steps as ChainOperationContextStep[]).length) {
-        this.selectedStep.set(
-          steps[(steps as ChainOperationContextStep[]).length - 1]
-        );
-        this.updateLines(steps);
-        this.selectedStepChange.emit(this.selectedStep()!);
+      const currentSteps = this.steps();
+      if (currentSteps && currentSteps.length > 0) {
+        this.updateLines(currentSteps);
       } else {
-        this.selectedStep.set(undefined);
-        this.selectedStepChange.emit(undefined);
-        this.updateLines(steps);
+        this.lines = {};
       }
+
+      // reset selection processing when steps change
+      this._selectionProcessed.set(false);
+    });
+
+    // handle synchronization between steps and selectedStep
+    effect(() => {
+      // only proceed if view is initialized and we haven't processed selection yet
+      if (this._viewInitialized() && !this._selectionProcessed()) {
+        const currentSteps = this.steps();
+        const currentSelectedStep = this.selectedStep();
+
+        // if we have steps, handle selection
+        if (currentSteps && currentSteps.length > 0) {
+          if (currentSelectedStep) {
+            // If we have both inputs, verify selection is valid
+            this.validateAndSetSelection(currentSelectedStep);
+          } else {
+            // auto-select last step if no selection provided
+            this.selectedStep.set(currentSteps[currentSteps.length - 1]);
+            this.selectedStepChange.emit(this.selectedStep());
+          }
+
+          // mark as processed
+          this._selectionProcessed.set(true);
+        }
+      }
+    });
+  }
+
+  private validateAndSetSelection(step: ChainOperationContextStep): void {
+    const currentSteps = this.steps();
+
+    // check if the selected step exists in the steps array
+    const stepExists = currentSteps.some((s) => s.outputTag === step.outputTag);
+
+    if (stepExists) {
+      // valid selection, keep it
+      this.selectedStepChange.emit(step);
+    } else {
+      // invalid selection, default to last step
+      const lastStep = currentSteps[currentSteps.length - 1];
+      this.selectedStep.set(lastStep);
+      this.selectedStepChange.emit(lastStep);
+    }
+  }
+
+  public ngAfterViewInit(): void {
+    // signal that view is ready for selection processing
+    setTimeout(() => {
+      this._viewInitialized.set(true);
     });
   }
 

@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   effect,
   input,
   OnDestroy,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -62,8 +64,14 @@ import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
 })
-export class ChainResultViewComponent implements OnInit, OnDestroy {
+export class ChainResultViewComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   private _subs?: Subscription[];
+  // track if we've already performed step selection
+  private _stepSelectionDone = signal(false);
+  // track if component view is initialized
+  private _viewInitialized = signal(false);
 
   /**
    * The result to display.
@@ -104,10 +112,42 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
       this.selectInitialStep(this.initialStepIndex());
     });
 
-    // when initialStepIndex changes, update the selected step
-    // effect(() => {
-      // this.selectInitialStep(this.initialStepIndex());
-    // });
+    // When either the result or initialStepIndex changes, try to select a step
+    effect(() => {
+      // Only proceed if we haven't already done selection and view is ready
+      if (!this._stepSelectionDone() && this._viewInitialized()) {
+        const currentResult = this.result();
+        const currentIndex = this.initialStepIndex();
+
+        // If we have both pieces of data needed for selection, do it
+        if (currentResult?.steps?.length && currentIndex !== undefined) {
+          this.doInitialStepSelection(currentResult, currentIndex);
+          this._stepSelectionDone.set(true);
+        }
+      }
+    });
+  }
+
+  private doInitialStepSelection(
+    result: CharChainResult,
+    initialStepIndex: number
+  ): void {
+    // calculate the effective index (handling negative indices)
+    const effectiveIndex =
+      initialStepIndex < 0
+        ? result.steps.length + initialStepIndex
+        : initialStepIndex;
+
+    // ensure the index is valid
+    if (effectiveIndex >= 0 && effectiveIndex < result.steps.length) {
+      const targetStep = result.steps[effectiveIndex];
+
+      // if we have a tag control (which we do based on your code)
+      if (targetStep.outputTag) {
+        // using the tag control ensures all the necessary updates happen
+        this.tag.setValue(targetStep.outputTag);
+      }
+    }
   }
 
   public ngOnInit(): void {
@@ -132,6 +172,13 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
           }
         }),
     ];
+  }
+
+  public ngAfterViewInit(): void {
+    // signal that view is ready for initial selection
+    setTimeout(() => {
+      this._viewInitialized.set(true);
+    });
   }
 
   public getCharColor(node: CharNode): string | null {
@@ -212,6 +259,9 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
       this.tags = result.chainTags.filter((t) => t.length > 0 && t !== 'v0');
       this.updateVersionTags();
     }
+
+    // reset step selection tracking when result changes
+    this._stepSelectionDone.set(false);
   }
 
   private getNodeFeatures(id: number): Feature[] {
