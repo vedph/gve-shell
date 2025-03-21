@@ -105,9 +105,9 @@ export class ChainResultViewComponent implements OnInit, OnDestroy {
     });
 
     // when initialStepIndex changes, update the selected step
-    effect(() => {
-      this.selectInitialStep(this.initialStepIndex());
-    });
+    // effect(() => {
+      // this.selectInitialStep(this.initialStepIndex());
+    // });
   }
 
   public ngOnInit(): void {

@@ -27,6 +27,7 @@ import {
 export class ChainResultViewDemoComponent {
   public result?: CharChainResult;
   public step?: ChainOperationContextStep;
+  public initialStepIndex = -1; // last step
 
   constructor(asset: AssetService) {
     asset.loadText('arzdc-result.json').subscribe((text) => {

@@ -3,6 +3,10 @@
     <mat-card-title>Chain Result View</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <gve-chain-result-view [result]="result" (stepPick)="onStepPick($event)" />
+    <gve-chain-result-view
+      [result]="result"
+      [initialStepIndex]="initialStepIndex"
+      (stepPick)="onStepPick($event)"
+    />
   </mat-card-content>
 </mat-card>

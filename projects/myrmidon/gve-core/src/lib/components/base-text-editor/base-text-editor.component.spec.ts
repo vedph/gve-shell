@@ -15,6 +15,7 @@ describe('BaseTextEditorComponent', () => {
 
     fixture = TestBed.createComponent(BaseTextEditorComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('text', 'Sample text for testing');
     fixture.detectChanges();
   });
 
