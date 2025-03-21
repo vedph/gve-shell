@@ -94,7 +94,7 @@ export class StepsMapComponent implements AfterViewInit {
         // if we have steps, handle selection
         if (currentSteps && currentSteps.length > 0) {
           if (currentSelectedStep) {
-            // If we have both inputs, verify selection is valid
+            // if we have both inputs, verify selection is valid
             this.validateAndSetSelection(currentSelectedStep);
           } else {
             // auto-select last step if no selection provided
