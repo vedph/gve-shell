@@ -110,6 +110,12 @@ export class BaseTextViewComponent {
         this.borderColorCallback()
       );
     });
+
+    // reset _lastSelectedChar when text changes
+    effect(() => {
+      this.text();
+      this._lastSelectedChar = undefined;
+    });
   }
 
   private buildLines(
@@ -154,8 +160,11 @@ export class BaseTextViewComponent {
   }
 
   private resetColors(): void {
+    if (!this.lines) return;
+
     for (const line of this.lines) {
       for (const c of line) {
+        if (!c) continue;
         c.color = c.oldColor || this.defaultColor();
         c.borderColor = c.oldBorderColor || this.defaultBorderColor();
       }
@@ -163,42 +172,55 @@ export class BaseTextViewComponent {
   }
 
   public onCharPick(event: BaseTextCharEvent): void {
+    // guard against null/undefined event.char
+    if (!event?.char) {
+      return;
+    }
+
+    // first reset all colors before updating
     this.resetColors();
 
-    if (
-      this._lastSelectedChar &&
+    // calculate selection state
+    const isRangeSelection =
+      Boolean(this._lastSelectedChar) &&
       this._lastSelectedChar !== event.char &&
-      event.event.ctrlKey
-    ) {
+      event.event?.ctrlKey;
+
+    let rangeToEmit: VarBaseTextRange;
+
+    if (isRangeSelection && this._lastSelectedChar) {
       const minId = Math.min(this._lastSelectedChar.id, event.char.id);
       const maxId = Math.max(this._lastSelectedChar.id, event.char.id);
 
+      // update UI to highlight range
       for (const line of this.lines) {
         for (const c of line) {
+          if (!c) continue;
           if (c.id >= minId && c.id <= maxId) {
             c.oldColor = c.color;
             c.oldBorderColor = c.borderColor;
-
             c.color = this.selectionColor();
             c.borderColor = this.selectionColor();
           }
         }
       }
 
-      this.charPick.emit(event);
-      this.rangePick.emit({ at: minId, run: maxId - minId + 1 });
-      return;
+      rangeToEmit = { at: minId, run: maxId - minId + 1 };
     } else {
-      // select current char
+      // single character selection
       event.char.oldColor = event.char.color;
       event.char.oldBorderColor = event.char.borderColor;
-
       event.char.color = this.selectionColor();
       event.char.borderColor = this.selectionColor();
-      this.charPick.emit(event);
-      this.rangePick.emit({ at: event.char.id, run: 1 });
+
+      rangeToEmit = { at: event.char.id, run: 1 };
+
+      // update last selected character for single selections
+      this._lastSelectedChar = event.char;
     }
 
-    this._lastSelectedChar = event.char;
+    // emit events last, after all internal state is updated
+    this.charPick.emit(event);
+    this.rangePick.emit(rangeToEmit);
   }
 }
