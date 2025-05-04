@@ -59,6 +59,7 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-05-03: updated Angular and packages.
 - 2025-03-21:
   - updated Angular and packages.
   - adding decoration for `$seg-out` and `$seg2-out` features.
