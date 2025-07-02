@@ -17,7 +17,7 @@ import {
 } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -43,7 +43,6 @@ import { GveAnimationTween, TweenType } from '@myrmidon/gve-snapshot-view';
 @Component({
   selector: 'gve-animation-tween',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -52,8 +51,8 @@ import { GveAnimationTween, TweenType } from '@myrmidon/gve-snapshot-view';
     MatInputModule,
     MatSelectModule,
     MatTabsModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   templateUrl: './animation-tween.component.html',
   styleUrl: './animation-tween.component.css',
 })

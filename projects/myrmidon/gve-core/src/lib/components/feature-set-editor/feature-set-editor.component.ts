@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   Component,
   effect,
@@ -57,7 +57,6 @@ import {
 @Component({
   selector: 'gve-feature-set-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatExpansionModule,
@@ -67,8 +66,8 @@ import {
     MatSelectModule,
     MatTooltipModule,
     FlatLookupPipe,
-    FeatureEditorComponent,
-  ],
+    FeatureEditorComponent
+],
   templateUrl: './feature-set-editor.component.html',
   styleUrl: './feature-set-editor.component.css',
 })

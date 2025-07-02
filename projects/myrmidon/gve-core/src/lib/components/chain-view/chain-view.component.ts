@@ -6,7 +6,7 @@ import {
   model,
   OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -31,15 +31,14 @@ import { SettingsService } from '../../services/settings.service';
 @Component({
   selector: 'gve-chain-view',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatSelectModule,
     MatTooltipModule,
-    VizComponent,
-  ],
+    VizComponent
+],
   templateUrl: './chain-view.component.html',
   styleUrl: './chain-view.component.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

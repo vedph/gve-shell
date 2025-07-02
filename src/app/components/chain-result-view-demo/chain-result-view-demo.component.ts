@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -15,12 +15,11 @@ import {
 @Component({
   selector: 'app-chain-result-view-demo',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatCheckboxModule,
-    ChainResultViewComponent,
-  ],
+    ChainResultViewComponent
+],
   templateUrl: './chain-result-view-demo.component.html',
   styleUrl: './chain-result-view-demo.component.scss',
 })

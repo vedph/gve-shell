@@ -16,7 +16,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
 // material
@@ -67,7 +67,6 @@ export interface FeatureMap {
 @Component({
   selector: 'gve-feature-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -75,8 +74,8 @@ export interface FeatureMap {
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   templateUrl: './feature-editor.component.html',
   styleUrl: './feature-editor.component.css',
 })

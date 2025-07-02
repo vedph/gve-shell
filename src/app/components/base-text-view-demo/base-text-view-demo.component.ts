@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormControl,
@@ -23,14 +23,13 @@ import {
 @Component({
   selector: 'app-var-base-text-view-demo',
   imports: [
-    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    BaseTextViewComponent,
-  ],
+    BaseTextViewComponent
+],
   templateUrl: './base-text-view-demo.component.html',
   styleUrl: './base-text-view-demo.component.scss',
 })

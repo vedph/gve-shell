@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   Component,
   effect,
@@ -31,15 +31,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 @Component({
   selector: 'gve-ln-heights-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   templateUrl: './ln-heights-editor.component.html',
   styleUrl: './ln-heights-editor.component.css',
 })

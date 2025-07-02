@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
@@ -36,7 +36,6 @@ import { AnimationTimelineComponent } from '../animation-timeline/animation-time
 @Component({
   selector: 'gve-animation-timeline-set',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -47,8 +46,8 @@ import { AnimationTimelineComponent } from '../animation-timeline/animation-time
     MatSelectModule,
     MatTabsModule,
     MatTooltipModule,
-    AnimationTimelineComponent,
-  ],
+    AnimationTimelineComponent
+],
   templateUrl: './animation-timeline-set.component.html',
   styleUrl: './animation-timeline-set.component.css',
 })

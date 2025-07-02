@@ -1,6 +1,6 @@
 import { Component, effect, input, Input } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -36,14 +36,13 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
 @Component({
   selector: 'gve-feature-set-view',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    FlatLookupPipe,
-  ],
+    FlatLookupPipe
+],
   templateUrl: './feature-set-view.component.html',
   styleUrl: './feature-set-view.component.css',
 })

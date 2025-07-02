@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
@@ -36,15 +36,14 @@ import { LabeledId, OperationSource } from '@myrmidon/gve-snapshot-view';
 @Component({
   selector: 'gve-operation-source-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   templateUrl: './operation-source-editor.component.html',
   styleUrl: './operation-source-editor.component.css',
 })

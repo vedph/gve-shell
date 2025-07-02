@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -51,7 +51,6 @@ import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
 @Component({
   selector: 'gve-chain-result-view',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -59,8 +58,8 @@ import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
     MatSelectModule,
     FeatureSetViewComponent,
     StepsMapComponent,
-    BaseTextViewComponent,
-  ],
+    BaseTextViewComponent
+],
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
 })

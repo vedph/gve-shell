@@ -59,6 +59,10 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 4.0.0
+
+- 2025-07-02: ⚠️ updated Angular (v20) and packages.
+
 ### 3.0.4
 
 - 2025-05-27: Docker image.

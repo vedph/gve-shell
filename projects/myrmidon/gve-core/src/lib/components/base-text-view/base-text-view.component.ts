@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, effect, input, output } from '@angular/core';
 
 import { CharNode } from '@myrmidon/gve-snapshot-view';
@@ -39,7 +39,7 @@ export interface VarBaseTextRange {
  */
 @Component({
   selector: 'gve-base-text-view',
-  imports: [CommonModule, BaseTextCharComponent],
+  imports: [BaseTextCharComponent],
   templateUrl: './base-text-view.component.html',
   styleUrl: './base-text-view.component.css',
 })

@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -44,7 +44,6 @@ import { AnimationTweenComponent } from '../animation-tween/animation-tween.comp
 @Component({
   selector: 'gve-animation-timeline',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -55,8 +54,8 @@ import { AnimationTweenComponent } from '../animation-tween/animation-tween.comp
     MatSelectModule,
     MatTabsModule,
     MatTooltipModule,
-    AnimationTweenComponent,
-  ],
+    AnimationTweenComponent
+],
   templateUrl: './animation-timeline.component.html',
   styleUrl: './animation-timeline.component.css',
 })

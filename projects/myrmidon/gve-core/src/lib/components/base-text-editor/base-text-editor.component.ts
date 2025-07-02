@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, effect, input, output } from '@angular/core';
 import {
   FormBuilder,
@@ -39,7 +39,6 @@ import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-edi
 @Component({
   selector: 'gve-base-text-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -47,8 +46,8 @@ import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-edi
     MatInputModule,
     MatTooltipModule,
     BaseTextViewComponent,
-    FeatureSetEditorComponent,
-  ],
+    FeatureSetEditorComponent
+],
   templateUrl: './base-text-editor.component.html',
   styleUrl: './base-text-editor.component.css',
 })

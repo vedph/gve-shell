@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   Component,
   effect,
@@ -106,9 +106,7 @@ import { SvgValidators } from '../../validators/svg-validators';
 @Component({
   selector: 'gve-chain-operation-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
-    // material
     ClipboardModule,
     MatBadgeModule,
     MatButtonModule,
@@ -120,13 +118,11 @@ import { SvgValidators } from '../../validators/svg-validators';
     MatSelectModule,
     MatTabsModule,
     MatTooltipModule,
-    // monaco
     NgeMonacoModule,
-    // myrmex
     SafeHtmlPipe,
     FeatureSetEditorComponent,
-    OperationSourceEditorComponent,
-  ],
+    OperationSourceEditorComponent
+],
   templateUrl: './chain-operation-editor.component.html',
   styleUrl: './chain-operation-editor.component.css',
 })
