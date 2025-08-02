@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-08-02:
+  - updated Angular and packages.
+  - updated peer dependencies and version in library.
 - 2025-07-12: updated Angular and packages.
 
 ### 4.0.0
