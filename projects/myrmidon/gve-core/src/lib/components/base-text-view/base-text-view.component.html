@@ -1,9 +1,9 @@
 <div id="text">
-  @for (line of lines; track $index) {
+  @for (line of lines(); track $index) {
   <div class="line">
     @if (hasLineNumber()) {
     <div class="nr">
-      {{ lines.indexOf(line) + 1 }}
+      {{ lines().indexOf(line) + 1 }}
     </div>
     } @for (c of line; track c.id) {
     <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" />

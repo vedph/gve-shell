@@ -1,4 +1,3 @@
-
 import {
   AfterViewInit,
   Component,
@@ -58,8 +57,8 @@ import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
     MatSelectModule,
     FeatureSetViewComponent,
     StepsMapComponent,
-    BaseTextViewComponent
-],
+    BaseTextViewComponent,
+  ],
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
 })
@@ -88,13 +87,16 @@ export class ChainResultViewComponent
    */
   public readonly stepPick = output<ChainOperationContextStep>();
 
-  public versionTags: string[] = [];
-  public tags: string[] = [];
+  public readonly versionTags = signal<string[]>([]);
+  public readonly tags = signal<string[]>([]);
+  public readonly step = signal<ChainOperationContextStep | undefined>(
+    undefined
+  );
+  public readonly selection = signal<string | undefined>(undefined);
+  public readonly selectionFeatures = signal<OperationFeature[]>([]);
+
   public versionTag: FormControl<string | null>;
   public tag: FormControl<string | null>;
-  public step?: ChainOperationContextStep;
-  public selection?: string;
-  public selectionFeatures: OperationFeature[] = [];
 
   constructor(formBuilder: FormBuilder) {
     // bind callback methods
@@ -111,14 +113,14 @@ export class ChainResultViewComponent
       this.selectInitialStep(this.initialStepIndex());
     });
 
-    // When either the result or initialStepIndex changes, try to select a step
+    // when either the result or initialStepIndex changes, try to select a step
     effect(() => {
-      // Only proceed if we haven't already done selection and view is ready
+      // only proceed if we haven't already done selection and view is ready
       if (!this._stepSelectionDone() && this._viewInitialized()) {
         const currentResult = this.result();
         const currentIndex = this.initialStepIndex();
 
-        // If we have both pieces of data needed for selection, do it
+        // if we have both pieces of data needed for selection, do it
         if (currentResult?.steps?.length && currentIndex !== undefined) {
           this.doInitialStepSelection(currentResult, currentIndex);
           this._stepSelectionDone.set(true);
@@ -162,12 +164,12 @@ export class ChainResultViewComponent
       this.tag.valueChanges
         .pipe(distinctUntilChanged(), debounceTime(200))
         .subscribe((value) => {
-          this.selectionFeatures = [];
-          this.step = this.result()?.steps.find(
-            (step) => step.outputTag === value
+          this.selectionFeatures.set([]); // reset selection features
+          this.step.set(
+            this.result()?.steps.find((step) => step.outputTag === value)
           );
-          if (this.step) {
-            this.stepPick.emit(this.step!);
+          if (this.step()) {
+            this.stepPick.emit(this.step()!);
           }
         }),
     ];
@@ -181,7 +183,6 @@ export class ChainResultViewComponent
   }
 
   public getCharColor(node: CharNode): string | null {
-    //return this.step?.refNodeIds.includes(node.id) ? 'orange' : null;
     const features = this.getNodeFeatures(node.id);
     return features?.some(
       (f) => f.name === '$seg-out' || f.name === '$seg2-out'
@@ -190,23 +191,17 @@ export class ChainResultViewComponent
       : null;
   }
 
-  // public getCharBorderColor(node: CharNode): string | null {
-  //   const features = this.getNodeFeatures(node.id);
-  //   return features?.some((f) => f.name === '$seg-in' || f.name === '$seg2-in')
-  //     ? 'green'
-  //     : null;
-  // }
-
   private selectInitialStep(initialStepIndex?: number): void {
     if (initialStepIndex !== undefined && this.result()?.steps) {
-      this.step =
+      this.step.set(
         this.result()!.steps[
           initialStepIndex < 0
             ? this.result()!.steps.length + initialStepIndex
             : initialStepIndex
-        ];
+        ]
+      );
     } else {
-      this.step = undefined;
+      this.step.set(undefined);
     }
   }
 
@@ -216,7 +211,7 @@ export class ChainResultViewComponent
 
   private updateVersionTags(): void {
     if (!this.result()) {
-      this.versionTags = [];
+      this.versionTags.set([]);
       return;
     }
 
@@ -229,7 +224,7 @@ export class ChainResultViewComponent
         }
       }
     }
-    this.versionTags = Array.from(tags).sort();
+    this.versionTags.set(Array.from(tags).sort());
   }
 
   private getTagFromVersion(version?: string | null): string | undefined {
@@ -247,15 +242,15 @@ export class ChainResultViewComponent
   }
 
   private updateForm(result?: CharChainResult): void {
-    this.selectionFeatures = [];
+    this.selectionFeatures.set([]);
 
     if (!result) {
-      this.step = undefined;
-      this.selection = undefined;
-      this.tags = [];
-      this.versionTags = [];
+      this.step.set(undefined);
+      this.selection.set(undefined);
+      this.tags.set([]);
+      this.versionTags.set([]);
     } else {
-      this.tags = result.chainTags.filter((t) => t.length > 0 && t !== 'v0');
+      this.tags.set(result.chainTags.filter((t) => t.length > 0 && t !== 'v0'));
       this.updateVersionTags();
     }
 
@@ -264,16 +259,17 @@ export class ChainResultViewComponent
   }
 
   private getNodeFeatures(id: number): Feature[] {
-    if (!this.step) {
+    if (!this.step()) {
       return [];
     }
     return (
-      this.step.featureSet.nodeFeatures[this.step.outputTag + '_' + id] || []
+      this.step()!.featureSet.nodeFeatures[this.step()!.outputTag + '_' + id] ||
+      []
     );
   }
 
   private findNode(id: number): CharNode | null {
-    if (!this.step) {
+    if (!this.step()) {
       return null;
     }
     for (let key of Object.keys(this.result()!.taggedNodes)) {
@@ -288,8 +284,8 @@ export class ChainResultViewComponent
   public onTextCharPick(event: BaseTextCharEvent): void {
     const features = this.getNodeFeatures(event.char.id);
     const node = this.findNode(event.char.id)!;
-    this.selection = `${event.char.label} (${node.sourceTag})`;
-    this.selectionFeatures = [...features];
+    this.selection.set(`${event.char.label} (${node.sourceTag})`);
+    this.selectionFeatures.set([...features]);
   }
 
   public onTextRangePick(range: VarBaseTextRange): void {
@@ -297,7 +293,7 @@ export class ChainResultViewComponent
       // already handled by onStepCharPick
       return;
     }
-    this.selection = range.at + '×' + range.run;
+    this.selection.set(range.at + '×' + range.run);
     const end = range.at + range.run;
 
     const features: Feature[] = [];
@@ -325,11 +321,11 @@ export class ChainResultViewComponent
       }
     }
 
-    this.selectionFeatures = features;
+    this.selectionFeatures.set(features);
   }
 
   public onStepChange(step?: ChainOperationContextStep): void {
-    this.selectionFeatures = [];
+    this.selectionFeatures.set([]);
     if (step) {
       // setting the tag will trigger the step change
       this.tag.setValue(step.outputTag);

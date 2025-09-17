@@ -17,7 +17,6 @@ import {
 } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
-
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -51,8 +50,8 @@ import { GveAnimationTween, TweenType } from '@myrmidon/gve-snapshot-view';
     MatInputModule,
     MatSelectModule,
     MatTabsModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+  ],
   templateUrl: './animation-tween.component.html',
   styleUrl: './animation-tween.component.css',
 })
@@ -71,16 +70,11 @@ export class AnimationTweenComponent implements OnInit, OnDestroy {
   public readonly elementIds = input<string[] | undefined>();
 
   /**
-   * Emitted when the tween is changed.
-   */
-  public readonly tweenChange = output<GveAnimationTween>();
-
-  /**
    * Emitted when the user cancels the edit.
    */
   public readonly tweenCancel = output();
 
-  public types = ['to', 'from', 'fromTo', 'set'];
+  public readonly types = ['to', 'from', 'fromTo', 'set'];
 
   public label: FormControl<string>;
   public note: FormControl<string | null>;
@@ -208,6 +202,5 @@ export class AnimationTweenComponent implements OnInit, OnDestroy {
       return;
     }
     this.tween.set(this.getTween());
-    this.tweenChange.emit(this.tween()!);
   }
 }

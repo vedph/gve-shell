@@ -17,15 +17,15 @@
           <mat-icon color="warn" class="mat-warn">cancel</mat-icon>
         </button>
       </mat-form-field>
-      <span id="badge">{{ filteredFeatures.length }}</span>
+      <span id="badge">{{ filteredFeatures().length }}</span>
     </div>
     }
 
     <!-- list -->
-    @if (filteredFeatures.length) {
+    @if (filteredFeatures().length) {
     <table>
       <tbody>
-        @for (feature of filteredFeatures; track $index) {
+        @for (feature of filteredFeatures(); track $index) {
         <tr>
           <th>
             @if (featNames.length) {

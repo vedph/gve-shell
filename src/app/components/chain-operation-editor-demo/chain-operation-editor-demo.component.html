@@ -5,17 +5,20 @@
   <mat-card-content>
     <gve-chain-operation-editor
       [snapshot]="snapshot"
-      [operation]="operation"
-      (operationChange)="onOperationChange($event)"
+      [operation]="operation()"
+      (operationChange)="onOperationChange($event!)"
     />
-    <mat-expansion-panel [(expanded)]="codeVisible">
+    <mat-expansion-panel
+      [expanded]="codeVisible()"
+      (expandedChange)="codeVisible.set($event)"
+    >
       <mat-expansion-panel-header>
         <mat-panel-title>operation</mat-panel-title>
       </mat-expansion-panel-header>
-      @if (operation) {
-      <pre><code>{{ operation | json }}</code></pre>
+      @if (operation()) {
+      <pre><code>{{ operation() | json }}</code></pre>
       } @else {
-        <p>no operation</p>
+      <p>no operation</p>
       }
     </mat-expansion-panel>
   </mat-card-content>

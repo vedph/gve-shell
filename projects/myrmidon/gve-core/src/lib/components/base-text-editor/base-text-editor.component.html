@@ -4,39 +4,30 @@
     <mat-form-field class="full-width">
       <mat-label>text</mat-label>
       <textarea matInput [formControl]="userText" rows="5"></textarea>
-      @if (
-        $any(userText).errors?.required &&
-        (userText.dirty || userText.touched)
-        ) {
-        <mat-error
-          >text required</mat-error
-          >
-        }
-        @if (
-          $any(userText).errors?.maxLength &&
-          (userText.dirty || userText.touched)
-          ) {
-          <mat-error
-            >text too long</mat-error
-            >
-          }
-        </mat-form-field>
-      </div>
-      <!-- buttons -->
-      <div class="form-row">
-        <!-- set -->
-        <button
-          type="button"
-          mat-flat-button
-          class="mat-warn"
-          matTooltip="Reset characters to newly entered text"
-          [disabled]="!userText.value"
-          (click)="setTextFromUser()"
-          >
-          set
-        </button>
-        <!-- patch: TODO -->
-        <!-- <button
+      @if ( $any(userText).errors?.required && (userText.dirty ||
+      userText.touched) ) {
+      <mat-error>text required</mat-error>
+      } @if ( $any(userText).errors?.maxLength && (userText.dirty ||
+      userText.touched) ) {
+      <mat-error>text too long</mat-error>
+      }
+    </mat-form-field>
+  </div>
+  <!-- buttons -->
+  <div class="form-row">
+    <!-- set -->
+    <button
+      type="button"
+      mat-flat-button
+      class="mat-warn"
+      matTooltip="Reset characters to newly entered text"
+      [disabled]="!userText.value"
+      (click)="setTextFromUser()"
+    >
+      set
+    </button>
+    <!-- patch: TODO -->
+    <!-- <button
         type="button"
         mat-flat-button
         class="mat-primary"
@@ -46,30 +37,30 @@
         >
         patch
       </button> -->
-    </div>
+  </div>
 
-    <!-- base text -->
-    <div id="text-view">
-      <gve-base-text-view
-        [text]="text() || []"
-        (charPick)="onSelectedChar($event)"
-        (rangePick)="textRange = $event"
-        />
+  <!-- base text -->
+  <div id="text-view">
+    <gve-base-text-view
+      [text]="text() || []"
+      (charPick)="onSelectedChar($event)"
+      (rangePick)="textRange.set($event)"
+    />
 
-        <!-- text range -->
-        @if (textRange) {
-          <div id="text-range">{{ textRange.at }} × {{ textRange.run }}</div>
-        }
-      </div>
+    <!-- text range -->
+    @if (textRange()) {
+    <div id="text-range">{{ textRange()!.at }} × {{ textRange()!.run }}</div>
+    }
+  </div>
 
-      <!-- char features -->
-      @if (selectedChar) {
-        <fieldset>
-          <legend>features</legend>
-          <gve-feature-set-editor
-            [features]="selectedChar.features || []"
-            (featuresChange)="onFeaturesChange($event)"
-            />
-          </fieldset>
-        }
-      </form>
+  <!-- char features -->
+  @if (selectedChar()) {
+  <fieldset>
+    <legend>features</legend>
+    <gve-feature-set-editor
+      [features]="selectedChar()!.features || []"
+      (featuresChange)="onFeaturesChange($event)"
+    />
+  </fieldset>
+  }
+</form>

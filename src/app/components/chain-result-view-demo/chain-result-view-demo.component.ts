@@ -1,5 +1,4 @@
-
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +9,7 @@ import {
   ChainOperationContextStep,
   ChainResultViewComponent,
   CharChainResult,
-} from '../../../../projects/myrmidon/gve-core/src/public-api';
+} from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-chain-result-view-demo',
@@ -18,23 +17,26 @@ import {
     ReactiveFormsModule,
     MatCardModule,
     MatCheckboxModule,
-    ChainResultViewComponent
-],
+    ChainResultViewComponent,
+  ],
   templateUrl: './chain-result-view-demo.component.html',
   styleUrl: './chain-result-view-demo.component.scss',
 })
 export class ChainResultViewDemoComponent {
-  public result?: CharChainResult;
-  public step?: ChainOperationContextStep;
-  public initialStepIndex = -1; // last step
+  public readonly result = signal<CharChainResult | undefined>(undefined);
+  public readonly step = signal<ChainOperationContextStep | undefined>(
+    undefined
+  );
+  public readonly initialStepIndex = signal<number>(-1); // last step
 
   constructor(asset: AssetService) {
     asset.loadText('arzdc-result.json').subscribe((text) => {
-      this.result = JSON.parse(text);
+      this.result.set(JSON.parse(text));
     });
   }
 
   public onStepPick(step: ChainOperationContextStep): void {
+    this.step.set(step);
     console.log('Step picked:', step);
   }
 }

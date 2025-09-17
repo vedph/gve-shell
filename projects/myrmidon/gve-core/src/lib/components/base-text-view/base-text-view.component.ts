@@ -1,5 +1,4 @@
-
-import { Component, effect, input, output } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 
 import { CharNode } from '@myrmidon/gve-snapshot-view';
 
@@ -99,7 +98,7 @@ export class BaseTextViewComponent {
    */
   public readonly rangePick = output<VarBaseTextRange>();
 
-  public lines: BaseTextChar[][] = [];
+  public readonly lines = signal<BaseTextChar[][]>([]);
 
   constructor() {
     // build lines when text or border color callback change
@@ -124,7 +123,7 @@ export class BaseTextViewComponent {
     borderColorCallback?: (node: CharNode) => string | null
   ): void {
     if (!text) {
-      this.lines = [];
+      this.lines.set([]);
       return;
     }
 
@@ -156,19 +155,23 @@ export class BaseTextViewComponent {
       }
     }
 
-    this.lines = newLines;
+    this.lines.set(newLines);
   }
 
   private resetColors(): void {
-    if (!this.lines) return;
+    if (!this.lines()) return;
 
-    for (const line of this.lines) {
-      for (const c of line) {
-        if (!c) continue;
-        c.color = c.oldColor || this.defaultColor();
-        c.borderColor = c.oldBorderColor || this.defaultBorderColor();
-      }
-    }
+    const newLines = this.lines().map((line) =>
+      line.map((c) => {
+        if (!c) return c;
+        return {
+          ...c,
+          color: c.oldColor || this.defaultColor(),
+          borderColor: c.oldBorderColor || this.defaultBorderColor(),
+        };
+      })
+    );
+    this.lines.set(newLines);
   }
 
   public onCharPick(event: BaseTextCharEvent): void {
@@ -192,31 +195,48 @@ export class BaseTextViewComponent {
       const minId = Math.min(this._lastSelectedChar.id, event.char.id);
       const maxId = Math.max(this._lastSelectedChar.id, event.char.id);
 
-      // update UI to highlight range
-      for (const line of this.lines) {
-        for (const c of line) {
-          if (!c) continue;
+      // update UI to highlight range - create new objects
+      const newLines = this.lines().map((line) =>
+        line.map((c) => {
+          if (!c) return c;
           if (c.id >= minId && c.id <= maxId) {
-            c.oldColor = c.color;
-            c.oldBorderColor = c.borderColor;
-            c.color = this.selectionColor();
-            c.borderColor = this.selectionColor();
+            return {
+              ...c,
+              oldColor: c.color,
+              oldBorderColor: c.borderColor,
+              color: this.selectionColor(),
+              borderColor: this.selectionColor(),
+            };
           }
-        }
-      }
+          return c;
+        })
+      );
+      this.lines.set(newLines);
 
       rangeToEmit = { at: minId, run: maxId - minId + 1 };
     } else {
-      // single character selection
-      event.char.oldColor = event.char.color;
-      event.char.oldBorderColor = event.char.borderColor;
-      event.char.color = this.selectionColor();
-      event.char.borderColor = this.selectionColor();
+      // single character selection - create new objects
+      const newLines = this.lines().map((line) =>
+        line.map((c) => {
+          if (!c) return c;
+          if (c.id === event.char.id) {
+            const updatedChar = {
+              ...c,
+              oldColor: c.color,
+              oldBorderColor: c.borderColor,
+              color: this.selectionColor(),
+              borderColor: this.selectionColor(),
+            };
+            // update last selected character reference
+            this._lastSelectedChar = updatedChar;
+            return updatedChar;
+          }
+          return c;
+        })
+      );
+      this.lines.set(newLines);
 
       rangeToEmit = { at: event.char.id, run: 1 };
-
-      // update last selected character for single selections
-      this._lastSelectedChar = event.char;
     }
 
     // emit events last, after all internal state is updated

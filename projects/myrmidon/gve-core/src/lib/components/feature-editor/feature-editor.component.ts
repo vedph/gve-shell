@@ -7,6 +7,7 @@ import {
   OnDestroy,
   OnInit,
   output,
+  signal,
   ViewChild,
 } from '@angular/core';
 import {
@@ -74,8 +75,8 @@ export interface FeatureMap {
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+  ],
   templateUrl: './feature-editor.component.html',
   styleUrl: './feature-editor.component.css',
 })
@@ -114,10 +115,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
    */
   public readonly featureCancel = output();
 
-  /**
-   * Event emitted when the user saves the edited feature.
-   */
-  public readonly featureChange = output<Feature | OperationFeature>();
+  public readonly nameIds = signal<LabeledId[] | undefined>(undefined);
 
   public name: FormControl<string>;
   public value: FormControl<string>;
@@ -126,10 +124,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   public isNegated: FormControl<boolean>;
   public isGlobal: FormControl<boolean>;
   public isShortLived: FormControl<boolean>;
-
   public form: FormGroup;
-
-  public nameIds?: LabeledId[];
 
   constructor(formBuilder: FormBuilder) {
     this.name = formBuilder.control<string>('', {
@@ -160,9 +155,8 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       this.updateForm(this.feature());
       setTimeout(() => {
         this.nameControl?.nativeElement?.focus();
-        this.nameIds = this.getLabeledIdsFor(
-          this.name.value,
-          this.featValues()
+        this.nameIds.set(
+          this.getLabeledIdsFor(this.name.value, this.featValues())
         );
       }, 500);
     });
@@ -175,7 +169,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       .subscribe((name) => {
         if (!this._frozen && this.featNames()?.length) {
           this.value.reset();
-          this.nameIds = this.getLabeledIdsFor(name, this.featValues());
+          this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
         }
       });
   }
@@ -234,6 +228,5 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
             setPolicy: this.setPolicy.value,
           }
     );
-    this.featureChange.emit(this.feature()!);
   }
 }

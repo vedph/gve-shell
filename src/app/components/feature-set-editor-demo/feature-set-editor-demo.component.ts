@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -12,7 +12,7 @@ import { Feature, LabeledId } from '@myrmidon/gve-snapshot-view';
 import {
   FeatureMap,
   FeatureSetEditorComponent,
-} from '../../../../projects/myrmidon/gve-core/src/public-api';
+} from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-feature-set-editor-demo',
@@ -30,25 +30,25 @@ import {
 })
 export class FeatureSetEditorDemoComponent implements OnInit, OnDestroy {
   private _subs: Subscription[];
+
   public hasFeatNames: FormControl;
   public hasFeatValues: FormControl;
   public filterThreshold: FormControl;
 
-  public featNames?: LabeledId[];
-  public featValues?: FeatureMap;
-  public features: Feature[];
+  public readonly featNames = signal<LabeledId[] | undefined>(undefined);
+  public readonly featValues = signal<FeatureMap | undefined>(undefined);
+  public readonly features = signal<Feature[]>([
+    {
+      name: 'color',
+      value: 'red',
+      setPolicy: 0,
+    },
+  ]);
 
   constructor(formBuilder: FormBuilder) {
     this.hasFeatNames = formBuilder.control(false);
     this.hasFeatValues = formBuilder.control(false);
     this.filterThreshold = formBuilder.control(5);
-    this.features = [
-      {
-        name: 'color',
-        value: 'red',
-        setPolicy: 0,
-      },
-    ];
     this._subs = [];
   }
 
@@ -56,7 +56,7 @@ export class FeatureSetEditorDemoComponent implements OnInit, OnDestroy {
     this._subs.push(
       this.hasFeatNames.valueChanges.subscribe((value: boolean) => {
         if (value) {
-          this.featNames = [
+          this.featNames.set([
             {
               id: 'clr',
               label: 'color',
@@ -65,16 +65,16 @@ export class FeatureSetEditorDemoComponent implements OnInit, OnDestroy {
               id: 'sz',
               label: 'size',
             },
-          ];
+          ]);
         } else {
-          this.featNames = undefined;
+          this.featNames.set(undefined);
         }
       })
     );
 
     this.hasFeatValues.valueChanges.subscribe((value: boolean) => {
       if (value) {
-        this.featValues = {
+        this.featValues.set({
           clr: [
             {
               id: 'r',
@@ -89,9 +89,9 @@ export class FeatureSetEditorDemoComponent implements OnInit, OnDestroy {
               label: 'blue',
             },
           ],
-        };
+        });
       } else {
-        this.featValues = undefined;
+        this.featValues.set(undefined);
       }
     });
   }
@@ -101,6 +101,6 @@ export class FeatureSetEditorDemoComponent implements OnInit, OnDestroy {
   }
 
   public onFeaturesChange(features: Feature[]): void {
-    this.features = features;
+    this.features.set(features);
   }
 }

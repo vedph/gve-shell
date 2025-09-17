@@ -6,13 +6,13 @@
     <gve-animation-timeline-set
       [tags]="tags"
       [elementIds]="elementIds"
-      [timelines]="timelines"
+      [timelines]="timelines()"
       (timelinesChange)="onTimelinesChange($event)"
     />
     <hr />
     <div>
       <code>
-        <pre>{{ timelines | json }}</pre>
+        <pre>{{ timelines() | json }}</pre>
       </code>
     </div>
   </mat-card-content>

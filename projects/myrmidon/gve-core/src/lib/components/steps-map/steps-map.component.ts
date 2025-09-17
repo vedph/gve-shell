@@ -5,7 +5,6 @@ import {
   effect,
   input,
   model,
-  output,
   signal,
 } from '@angular/core';
 
@@ -47,7 +46,7 @@ export class StepsMapComponent implements AfterViewInit {
   private _selectionProcessed = signal(false);
 
   // the lines of each version text, keyed under the output tag
-  public lines: { [key: string]: string[] } = {};
+  public readonly lines = signal<{ [key: string]: string[] }>({});
 
   /**
    * The steps to display.
@@ -64,12 +63,6 @@ export class StepsMapComponent implements AfterViewInit {
    */
   public readonly textFontSize = input('0.8em');
 
-  /**
-   * Emitted when the selected step has changed by user, or when
-   * the steps are set for the first time.
-   */
-  public selectedStepChange = output<ChainOperationContextStep | undefined>();
-
   constructor() {
     // handle steps updates
     effect(() => {
@@ -77,7 +70,7 @@ export class StepsMapComponent implements AfterViewInit {
       if (currentSteps && currentSteps.length > 0) {
         this.updateLines(currentSteps);
       } else {
-        this.lines = {};
+        this.lines.set({});
       }
 
       // reset selection processing when steps change
@@ -99,7 +92,6 @@ export class StepsMapComponent implements AfterViewInit {
           } else {
             // auto-select last step if no selection provided
             this.selectedStep.set(currentSteps[currentSteps.length - 1]);
-            this.selectedStepChange.emit(this.selectedStep());
           }
 
           // mark as processed
@@ -117,12 +109,11 @@ export class StepsMapComponent implements AfterViewInit {
 
     if (stepExists) {
       // valid selection, keep it
-      this.selectedStepChange.emit(step);
+      this.selectedStep.set(step);
     } else {
       // invalid selection, default to last step
       const lastStep = currentSteps[currentSteps.length - 1];
       this.selectedStep.set(lastStep);
-      this.selectedStepChange.emit(lastStep);
     }
   }
 
@@ -135,18 +126,19 @@ export class StepsMapComponent implements AfterViewInit {
 
   private updateLines(steps: ChainOperationContextStep[] | undefined) {
     if (!steps) {
-      this.lines = {};
+      this.lines.set({});
       return;
     }
 
+    const lines: { [key: string]: string[] } = {};
     for (let i = 0; i < steps.length; i++) {
       const step = this.steps()![i];
-      this.lines[step.outputTag] = step.result?.split('\n') || [];
+      lines[step.outputTag] = step.result?.split('\n') || [];
     }
+    this.lines.set(lines);
   }
 
   public onStepClick(step: ChainOperationContextStep) {
     this.selectedStep.set(step);
-    this.selectedStepChange.emit(this.selectedStep()!);
   }
 }

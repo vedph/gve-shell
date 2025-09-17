@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +12,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { GveVisualEvent, Snapshot } from '@myrmidon/gve-snapshot-view';
 
-import { SnapshotEditorComponent } from '../../../../projects/myrmidon/gve-core/src/lib/components/snapshot-editor/snapshot-editor.component';
+import { SnapshotEditorComponent } from '@myrmidon/gve-core';
+
 import { AssetService } from '../../services/asset.service';
 
 @Component({
@@ -34,7 +35,8 @@ import { AssetService } from '../../services/asset.service';
   styleUrl: './snapshot-editor-demo.component.scss',
 })
 export class SnapshotEditorDemoComponent implements OnInit {
-  public snapshot?: Snapshot;
+  public readonly snapshot = signal<Snapshot | undefined>(undefined);
+
   public debug: FormControl<boolean> = new FormControl(false, {
     nonNullable: true,
   });
@@ -49,12 +51,12 @@ export class SnapshotEditorDemoComponent implements OnInit {
 
   public ngOnInit(): void {
     this._asset.loadObject<Snapshot>('arzdc').subscribe((snapshot) => {
-      this.snapshot = snapshot;
+      this.snapshot.set(snapshot);
     });
   }
 
-  public onSnapshotChange(snapshot?: Snapshot): void {
-    this.snapshot = snapshot!;
+  public onSnapshotChange(snapshot: Snapshot): void {
+    this.snapshot.set(snapshot);
     console.log('Snapshot change:', snapshot);
   }
 

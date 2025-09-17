@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { GveAnimationTimeline } from '@myrmidon/gve-snapshot-view';
 
-import { AnimationTimelineComponent } from '../../../../projects/myrmidon/gve-core/src/public-api';
+import { AnimationTimelineComponent } from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-animation-timeline-demo',
@@ -30,25 +30,25 @@ import { AnimationTimelineComponent } from '../../../../projects/myrmidon/gve-co
   styleUrl: './animation-timeline-demo.component.scss',
 })
 export class AnimationTimelineDemoComponent {
-  public timeline: GveAnimationTimeline = {
+  public readonly timeline = signal<GveAnimationTimeline>({
     tag: 'timeline',
     tweens: [
       {
         label: 'A',
         type: 'to',
         selector: '#a',
-        vars: "{ duration: 2, ease: 'elastic' }",
+        vars: '{ "duration": 2, "ease": "elastic" }',
       },
       {
         label: 'B',
         type: 'to',
         selector: '#b',
-        vars: '{ duration: 1 }',
+        vars: '{ "duration": 1 }',
       },
     ],
-  };
+  });
 
-  public onTimelineChange(timeline?: GveAnimationTimeline) {
-    this.timeline = timeline!;
+  public onTimelineChange(timeline: GveAnimationTimeline) {
+    this.timeline.set(timeline);
   }
 }

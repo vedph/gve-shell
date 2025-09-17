@@ -13,14 +13,14 @@
       ></textarea>
     </mat-form-field>
   </div>
-  @if (range) {
-  <div id="range">{{ range.at }} x {{ range.run }}</div>
+  @if (range()) {
+  <div id="range">{{ range()!.at }} x {{ range()!.run }}</div>
   }
 
   <hr />
   <mat-card-content>
     <gve-base-text-view
-      [text]="nodes"
+      [text]="nodes()"
       [hasLineNumber]="true"
       (charPick)="onCharPick($event)"
       (rangePick)="onRangePick($event)"

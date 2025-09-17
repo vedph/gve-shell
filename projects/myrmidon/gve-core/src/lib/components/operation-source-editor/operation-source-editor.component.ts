@@ -64,11 +64,6 @@ export class OperationSourceEditorComponent {
   public readonly types = input<LabeledId[] | undefined>();
 
   /**
-   * The event emitted when the source changes.
-   */
-  public readonly sourceChange = output<OperationSource | undefined>();
-
-  /**
    * The event emitted when the edit is canceled.
    */
   public sourceCancel = output();
@@ -133,6 +128,5 @@ export class OperationSourceEditorComponent {
       rank: this.rank.value,
       note: this.note.value || undefined,
     });
-    this.sourceChange.emit(this.source());
   }
 }

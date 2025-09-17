@@ -1,4 +1,3 @@
-
 import {
   Component,
   effect,
@@ -7,6 +6,7 @@ import {
   OnDestroy,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -36,7 +36,7 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
-import { SafeHtmlPipe } from '@myrmidon/ngx-tools';
+import { deepCopy, SafeHtmlPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   CharChainOperation,
@@ -121,8 +121,8 @@ import { SvgValidators } from '../../validators/svg-validators';
     NgeMonacoModule,
     SafeHtmlPipe,
     FeatureSetEditorComponent,
-    OperationSourceEditorComponent
-],
+    OperationSourceEditorComponent,
+  ],
   templateUrl: './chain-operation-editor.component.html',
   styleUrl: './chain-operation-editor.component.css',
 })
@@ -133,7 +133,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
   private _editorModel?: monaco.editor.ITextModel;
   private _editor?: monaco.editor.IStandaloneCodeEditor;
-  private _editedSourceIndex = -1;
 
   /**
    * The operation to edit.
@@ -165,11 +164,18 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
    */
   public readonly operationCancel = output();
 
-  public tabIndex: number = 0;
-  public id?: string;
-  public hasTo = false;
-  public hasToRun = false;
-  public hasValue = false;
+  public readonly tabIndex = signal<number>(0);
+  public readonly id = signal<string | undefined>(undefined);
+  public readonly hasTo = signal<boolean>(false);
+  public readonly hasToRun = signal<boolean>(false);
+  public readonly hasValue = signal<boolean>(false);
+  // elements parsed from SVG and having an id attribute;
+  // we can attach features to each of these elements
+  public readonly elements = signal<SVGElement[]>([]);
+  public readonly editedElementId = signal<string | undefined>(undefined);
+  // source
+  public readonly editedSource = signal<OperationSource | undefined>(undefined);
+  public readonly editedSourceIndex = signal<number>(-1);
 
   // general
   public rank: FormControl<number>;
@@ -195,14 +201,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public dpFeatures: FormControl<Feature[]>;
   // root
   public form: FormGroup;
-
-  // elements parsed from SVG and having an id attribute;
-  // we can attach features to each of these elements
-  public elements: SVGElement[];
-  public editedElementId?: string;
-
-  // source
-  public editedSource?: OperationSource;
 
   constructor(
     formBuilder: FormBuilder,
@@ -272,9 +270,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       newTextHidden: this.newTextHidden,
       dpFeatures: this.dpFeatures,
     });
-
-    // SVG elements
-    this.elements = [];
 
     // when operation changes, update form
     effect(() => {
@@ -389,26 +384,26 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   // #region sources
   public addSource(): void {
-    this.editedSource = { id: '', type: '' };
-    this._editedSourceIndex = -1;
+    this.editedSource.set({ id: '', type: '' });
+    this.editedSourceIndex.set(-1);
   }
 
   public editSource(index: number): void {
-    this._editedSourceIndex = index;
-    this.editedSource = this.sources.value[index];
+    this.editedSourceIndex.set(index);
+    this.editedSource.set(deepCopy(this.sources.value[index]));
   }
 
   public closeSource(): void {
-    this._editedSourceIndex = -1;
-    this.editedSource = undefined;
+    this.editedSourceIndex.set(-1);
+    this.editedSource.set(undefined);
   }
 
   public onSourceChange(source: OperationSource): void {
     const sources = [...this.sources.value];
-    if (this._editedSourceIndex === -1) {
+    if (this.editedSourceIndex() === -1) {
       sources.push(source);
     } else {
-      sources[this._editedSourceIndex] = source;
+      sources[this.editedSourceIndex()] = source;
     }
     this.sources.setValue(sources);
     this.closeSource();
@@ -514,9 +509,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   // #region element features
   public onTabIndexChange(index: number): void {
-    this.tabIndex = index;
+    this.tabIndex.set(index);
     if (index === 3) {
-      this.elements = this.parseSvg(this.svg.value);
+      this.elements.set(this.parseSvg(this.svg.value));
     }
   }
 
@@ -527,7 +522,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       ...this.elementFeatures.value,
       [id]: features,
     });
-    this.editedElementId = id;
+    this.editedElementId.set(id);
   }
 
   public deleteElementFeatures(element: SVGElement): void {
@@ -544,20 +539,20 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
           delete elementFeatures[id];
           this.elementFeatures.setValue(elementFeatures);
 
-          if (this.editedElementId === id) {
-            this.editedElementId = undefined;
+          if (this.editedElementId() === id) {
+            this.editedElementId.set(undefined);
           }
         }
       });
   }
 
   public onElementFeaturesChange(features: Feature[]): void {
-    if (this.editedElementId) {
+    if (this.editedElementId()) {
       this.elementFeatures.setValue({
         ...this.elementFeatures.value,
-        [this.editedElementId]: features,
+        [this.editedElementId()!]: features,
       });
-      this.editedElementId = undefined;
+      this.editedElementId.set(undefined);
     }
   }
   // #endregion
@@ -581,9 +576,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
         value = true;
         break;
     }
-    this.hasTo = to;
-    this.hasToRun = toRun;
-    this.hasValue = value;
+    this.hasTo.set(to);
+    this.hasToRun.set(toRun);
+    this.hasValue.set(value);
 
     if (!to) {
       this.to.reset();
@@ -605,9 +600,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
     // get or generate ID
     if (operation.id) {
-      this.id = operation.id;
+      this.id.set(operation.id);
     } else {
-      this.id = this._nanoid();
+      this.id.set(this._nanoid());
     }
 
     this.rank.setValue(operation.rank || 0);
@@ -636,7 +631,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
     this.form.markAsPristine();
 
-    this.elements = this.parseSvg(operation.diplomatics?.g);
+    this.elements.set(this.parseSvg(operation.diplomatics?.g));
 
     this.updateArgsUI();
   }
@@ -657,7 +652,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
         features: this.dpFeatures.value,
         elementFeatures: this.elementFeatures.value,
       },
-      id: this.id!,
+      id: this.id()!,
       type: this.type.value,
       at: this.at.value,
       atAsIndex: this.atAsIndex.value || undefined,

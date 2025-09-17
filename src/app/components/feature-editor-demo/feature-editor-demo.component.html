@@ -10,16 +10,16 @@
     </fieldset>
     <hr />
     <gve-feature-editor
-      [featNames]="featNames"
-      [featValues]="featValues"
-      [feature]="feature"
+      [featNames]="featNames()"
+      [featValues]="featValues()"
+      [feature]="feature()"
       (featureChange)="onFeatureChange($event)"
     />
     <hr />
-    @if (feature) {
+    @if (feature()) {
     <div>
       <code>
-        <pre>{{ feature | json }}</pre>
+        <pre>{{ feature() | json }}</pre>
       </code>
     </div>
     }

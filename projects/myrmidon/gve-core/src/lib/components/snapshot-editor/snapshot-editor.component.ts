@@ -7,6 +7,7 @@ import {
   input,
   model,
   output,
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -157,11 +158,6 @@ export class SnapshotEditorComponent {
   public readonly noDecoration = input<boolean | undefined>();
 
   /**
-   * Emitted when the user saves the edited snapshot.
-   */
-  public readonly snapshotChange = output<Snapshot>();
-
-  /**
    * Emitted when the user cancels the snapshot editing.
    */
   public readonly snapshotCancel = output();
@@ -193,23 +189,29 @@ export class SnapshotEditorComponent {
   public defs: FormControl<string | null>;
   // timelines
   public timelines: FormControl<GveAnimationTimeline[]>;
+
+  public readonly showChain: FormControl<boolean> = new FormControl<boolean>(
+    false,
+    { nonNullable: true }
+  );
+
+  public readonly chain = signal<CharChain | undefined>(undefined);
+
   // list of operations output tags
-  public opTags: string[] = [];
+  public readonly opTags = signal<string[]>([]);
   // list of operation diplomatic.g element IDs
-  public opElementIds: string[] = [];
-
+  public readonly opElementIds = signal<string[]>([]);
   // the currently picked base text range
-  public textRange?: VarBaseTextRange;
+  public readonly textRange = signal<VarBaseTextRange | undefined>(undefined);
   // the lines count for the current base text
-  public lineCount = 0;
-
+  public readonly lineCount = signal<number>(0);
   // the currently edited operation
-  public editedOp?: CharChainOperation;
-  public editedOpIndex = -1;
+  public readonly editedOp = signal<CharChainOperation | undefined>(undefined);
+  public readonly editedOpIndex = signal<number>(-1);
 
-  public busy?: boolean;
-  public parseError?: string;
-  public opTypeMap = {
+  public readonly busy = signal<boolean>(false);
+
+  public readonly opTypeMap = {
     0: 'replace',
     1: 'delete',
     2: 'add-before',
@@ -230,12 +232,6 @@ export class SnapshotEditorComponent {
   public result?: CharChainResult;
   public resultOperationId?: string;
   public initialStepIndex = -1;
-
-  public readonly showChain: FormControl<boolean> = new FormControl<boolean>(
-    false,
-    { nonNullable: true }
-  );
-  public chain?: CharChain;
 
   constructor(
     formBuilder: FormBuilder,
@@ -402,7 +398,7 @@ export class SnapshotEditorComponent {
 
   // #region base text
   public inputBaseText(): void {
-    if (this.busy) {
+    if (this.busy()) {
       return;
     }
 
@@ -417,7 +413,7 @@ export class SnapshotEditorComponent {
         this.baseText.setValue(text);
         this.baseText.updateValueAndValidity();
         this.baseText.markAsDirty();
-        this.textRange = undefined;
+        this.textRange.set(undefined);
 
         // update the line count
         this.updateLineCount(text);
@@ -437,9 +433,9 @@ export class SnapshotEditorComponent {
    */
   private updateLineCount(text: CharNode[]) {
     if (!text.length) {
-      this.lineCount = 0;
+      this.lineCount.set(0);
     } else {
-      this.lineCount = text.filter((c) => c.data === '\n').length + 1;
+      this.lineCount.set(text.filter((c) => c.data === '\n').length + 1);
     }
   }
 
@@ -448,7 +444,7 @@ export class SnapshotEditorComponent {
    * @param range The picked range.
    */
   public onRangePick(range?: VarBaseTextRange) {
-    this.textRange = range;
+    this.textRange.set(range);
   }
   // #endregion
 
@@ -474,8 +470,8 @@ export class SnapshotEditorComponent {
       }
     }
 
-    this.opTags = [...tags];
-    this.opElementIds = [...ids];
+    this.opTags.set([...tags]);
+    this.opElementIds.set([...ids]);
   }
 
   /**
@@ -483,13 +479,13 @@ export class SnapshotEditorComponent {
    */
   public editNewOperation() {
     // create a new operation and edit it
-    this.editedOp = {
+    this.editedOp.set({
       id: this._nanoid(),
       type: 0,
-      at: this.textRange?.at || 0,
-      run: this.textRange?.run || 1,
-    };
-    this.editedOpIndex = -1;
+      at: this.textRange()?.at || 0,
+      run: this.textRange()?.run || 1,
+    });
+    this.editedOpIndex.set(-1);
   }
 
   /**
@@ -497,16 +493,16 @@ export class SnapshotEditorComponent {
    * @param index The operation index.
    */
   public editOperation(index: number) {
-    this.editedOpIndex = index;
-    this.editedOp = deepCopy(this.operations.value[index]);
+    this.editedOpIndex.set(index);
+    this.editedOp.set(deepCopy(this.operations.value[index]));
   }
 
   /**
    * Close the currently edited operation.
    */
   private closeEditedOperation() {
-    this.editedOpIndex = -1;
-    this.editedOp = undefined;
+    this.editedOpIndex.set(-1);
+    this.editedOp.set(undefined);
   }
 
   /**
@@ -531,9 +527,9 @@ export class SnapshotEditorComponent {
     const operations = [...this.operations.value];
 
     // replace or add the operation
-    let i = this.editedOpIndex;
-    if (this.editedOpIndex > -1) {
-      operations.splice(this.editedOpIndex, 1, op);
+    let i = this.editedOpIndex();
+    if (this.editedOpIndex() > -1) {
+      operations.splice(this.editedOpIndex(), 1, op);
     } else {
       operations.push(op);
       i = operations.length - 1;
@@ -567,7 +563,7 @@ export class SnapshotEditorComponent {
       .subscribe((yes: boolean) => {
         if (yes) {
           // close the edited operation if it is the one being deleted
-          if (this.editedOpIndex === index) {
+          if (this.editedOpIndex() === index) {
             this.closeEditedOperation();
           }
           // reset the result operation ID if it is the one being deleted
@@ -597,7 +593,7 @@ export class SnapshotEditorComponent {
    * snapshot operations.
    */
   public parseOperations() {
-    if (this.busy) {
+    if (this.busy()) {
       return;
     }
 
@@ -631,8 +627,8 @@ export class SnapshotEditorComponent {
     this.operations.reset();
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
-    this.opTags = [];
-    this.opElementIds = [];
+    this.opTags.set([]);
+    this.opElementIds.set([]);
     this.setViewData();
     this.result = undefined;
   }
@@ -755,7 +751,7 @@ export class SnapshotEditorComponent {
    * @returns A promise that resolves to the execution result.
    */
   public runTo(index: number, lastOperation?: CharChainOperation): void {
-    if (this.busy) {
+    if (this.busy()) {
       return;
     }
     console.log('run to: ' + index);
@@ -789,7 +785,7 @@ export class SnapshotEditorComponent {
     );
 
     // run the operations
-    this.busy = true;
+    this.busy.set(true);
     this.initialStepIndex = index;
     this._api
       .runOperations(snapshot.text as CharNode[], snapshot.operations)
@@ -845,7 +841,7 @@ export class SnapshotEditorComponent {
           this._snackbar.open('Error running operations', 'OK');
         },
         complete: () => {
-          this.busy = false;
+          this.busy.set(false);
         },
       });
   }
@@ -880,7 +876,7 @@ export class SnapshotEditorComponent {
       lastOperation = snapshot.operations[index];
       snapshot.operations = snapshot.operations.slice(0, index + 1);
     }
-    this.busy = true;
+    this.busy.set(true);
     this._api
       .getChain(snapshot.text as CharNode[], snapshot.operations)
       .subscribe({
@@ -888,9 +884,9 @@ export class SnapshotEditorComponent {
           // handle operation (non-fatal) error or result
           if (wrapper.error) {
             this._snackbar.open(wrapper.error, 'OK');
-            this.chain = undefined;
+            this.chain.set(undefined);
           } else {
-            this.chain = wrapper.result;
+            this.chain.set(wrapper.result);
           }
         },
         error: (error) => {
@@ -899,7 +895,7 @@ export class SnapshotEditorComponent {
           this._snackbar.open('Error running operations', 'OK');
         },
         complete: () => {
-          this.busy = false;
+          this.busy.set(false);
         },
       });
   }
@@ -912,12 +908,12 @@ export class SnapshotEditorComponent {
    */
   public onOperationPreview(operation: CharChainOperation): void {
     // no multiple previews or previewing a new operation
-    if (this._previewing || this.editedOpIndex < 0) {
+    if (this._previewing || this.editedOpIndex() < 0) {
       return;
     }
     this._previewing = true;
     setTimeout(() => {
-      this.runTo(this.editedOpIndex, operation);
+      this.runTo(this.editedOpIndex(), operation);
       this._previewing = false;
     }, 0);
   }
@@ -1225,6 +1221,5 @@ export class SnapshotEditorComponent {
       return;
     }
     this.snapshot.set(this.getSnapshot());
-    this.snapshotChange.emit(this.snapshot()!);
   }
 }

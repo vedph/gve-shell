@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { GveAnimationTimeline } from '@myrmidon/gve-snapshot-view';
 
-import { AnimationTimelineSetComponent } from '../../../../projects/myrmidon/gve-core/src/lib/components/animation-timeline-set/animation-timeline-set.component';
+import { AnimationTimelineSetComponent } from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-animation-timeline-set-demo',
@@ -29,9 +29,9 @@ import { AnimationTimelineSetComponent } from '../../../../projects/myrmidon/gve
   styleUrl: './animation-timeline-set-demo.component.scss',
 })
 export class AnimationTimelineSetDemoComponent {
-  public tags = ['v1', 'v2', 'v3'];
-  public elementIds = ['a', 'b', 'c', 'd'];
-  public timelines: GveAnimationTimeline[] = [
+  public readonly tags = ['v1', 'v2', 'v3'];
+  public readonly elementIds = ['a', 'b', 'c', 'd'];
+  public readonly timelines = signal<GveAnimationTimeline[]>([
     {
       tag: 'v1',
       tweens: [
@@ -39,19 +39,19 @@ export class AnimationTimelineSetDemoComponent {
           label: 'alpha',
           type: 'to',
           selector: '#a',
-          vars: '{ duration: 2, ease: "elastic" }',
+          vars: '{ "duration": 2, "ease": "elastic" }',
         },
         {
           label: 'beta',
           type: 'to',
           selector: '#b',
-          vars: '{ duration: 1 }',
+          vars: '{ "duration": 1 }',
         },
       ],
     },
-  ];
+  ]);
 
-  public onTimelinesChange(timelines?: GveAnimationTimeline[]) {
-    this.timelines = timelines!;
+  public onTimelinesChange(timelines: GveAnimationTimeline[]) {
+    this.timelines.set(timelines);
   }
 }

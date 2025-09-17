@@ -51,8 +51,8 @@
       </tr>
     </thead>
     <tbody>
-      @for (feature of filteredFeatures; track feature) {
-      <tr>
+      @for (feature of filteredFeatures(); track feature; let i = $index) {
+      <tr [class.selected]="i === editedFeatureIndex()">
         <td class="fit-width">
           <!-- edit -->
           <button
@@ -114,19 +114,24 @@
   }
 
   <!-- editor -->
-  <mat-expansion-panel [disabled]="!editedFeature" [expanded]="editedFeature">
+  @if (editedFeature()) {
+  <mat-expansion-panel
+    [disabled]="!editedFeature()"
+    [expanded]="editedFeature()"
+  >
     <mat-expansion-panel-header>
       <mat-panel-title>
-        <span>{{ editedFeature?.name || "feature" }}</span>
+        <span>{{ editedFeature()?.name || "feature" }}</span>
       </mat-panel-title>
     </mat-expansion-panel-header>
     <gve-feature-editor
       [isVar]="isVar()"
       [featNames]="featNames()"
       [featValues]="featValues()"
-      [feature]="editedFeature"
+      [feature]="editedFeature()"
       (featureChange)="onFeatureChange($event)"
       (featureCancel)="onFeatureCancel()"
     />
   </mat-expansion-panel>
+  }
 </div>

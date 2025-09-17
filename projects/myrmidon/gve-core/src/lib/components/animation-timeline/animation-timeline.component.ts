@@ -1,4 +1,4 @@
-import { Component, effect, input, model, output } from '@angular/core';
+import { Component, effect, input, model, output, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -19,7 +19,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { deepCopy, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import {
   GveAnimationTimeline,
   GveAnimationTween,
@@ -86,13 +86,13 @@ export class AnimationTimelineComponent {
    */
   public readonly timelineCancel = output();
 
+  public readonly editedTweenIndex = signal<number>(-1);
+  public readonly editedTween = signal<GveAnimationTween | undefined>(undefined);
+
   public tag: FormControl<string>;
   public tweens: FormControl<GveAnimationTween[]>;
   public vars: FormControl<string | null>;
   public form: FormGroup;
-
-  public editedTweenIndex = -1;
-  public editedTween?: GveAnimationTween;
 
   constructor(formBuilder: FormBuilder) {
     this.tag = formBuilder.control('', {
@@ -143,17 +143,17 @@ export class AnimationTimelineComponent {
   }
 
   public addTween(): void {
-    this.editedTweenIndex = -1;
-    this.editedTween = {
+    this.editedTweenIndex.set(-1);
+    this.editedTween.set({
       label: 'tween #' + (this.tweens.value.length + 1),
       type: 'to',
       selector: '',
-    };
+    });
   }
 
   public editTween(index: number): void {
-    this.editedTweenIndex = index;
-    this.editedTween = this.tweens.value[index];
+    this.editedTweenIndex.set(index);
+    this.editedTween.set(deepCopy(this.tweens.value[index]));
   }
 
   public deleteTween(index: number): void {
@@ -163,17 +163,17 @@ export class AnimationTimelineComponent {
   }
 
   public closeTween(): void {
-    this.editedTween = undefined;
-    this.editedTweenIndex = -1;
+    this.editedTween.set(undefined);
+    this.editedTweenIndex.set(-1);
   }
 
   public saveTween(tween?: GveAnimationTween): void {
-    if (this.editedTweenIndex === -1) {
+    if (this.editedTweenIndex() === -1) {
       this.tweens.setValue([...this.tweens.value, tween!]);
     } else {
       this.tweens.setValue(
         this.tweens.value.map((t, index) =>
-          index === this.editedTweenIndex ? tween! : t
+          index === this.editedTweenIndex() ? tween! : t
         )
       );
     }

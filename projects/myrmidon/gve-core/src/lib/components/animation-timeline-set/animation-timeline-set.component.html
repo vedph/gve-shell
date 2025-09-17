@@ -1,4 +1,4 @@
-<form [formGroup]="form">
+<div>
   <!-- add -->
   <div>
     <button
@@ -22,8 +22,8 @@
       </tr>
     </thead>
     <tbody>
-      @for (t of set.value; track t.tag; let index = $index) {
-      <tr>
+      @for (t of timelines(); track t.tag; let index = $index) {
+      <tr [class.selected]="editedIndex() === index">
         <td class="fit-width">
           <!-- edit -->
           <button type="button" mat-icon-button (click)="editTimeline(index)">
@@ -42,16 +42,18 @@
   </table>
 
   <!-- editor -->
+  @if (editedTimeline()) {
   <mat-expansion-panel [disabled]="!editedTimeline" [expanded]="editedTimeline">
     <mat-expansion-panel-header>
-      timeline {{ editedTimeline?.tag }}
+      timeline {{ editedTimeline()?.tag }}
     </mat-expansion-panel-header>
     <gve-animation-timeline
       [elementIds]="elementIds()"
       [tags]="tags()"
-      [timeline]="editedTimeline"
-      (timelineChange)="onTimelineChange($event)"
+      [timeline]="editedTimeline()"
+      (timelineChange)="onTimelineChange($event!)"
       (timelineCancel)="closeTimeline()"
     />
   </mat-expansion-panel>
-</form>
+  }
+</div>

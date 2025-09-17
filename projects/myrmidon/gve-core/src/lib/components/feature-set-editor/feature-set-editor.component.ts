@@ -1,4 +1,3 @@
-
 import {
   Component,
   effect,
@@ -6,7 +5,7 @@ import {
   model,
   OnDestroy,
   OnInit,
-  output,
+  signal,
 } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -20,13 +19,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { FlatLookupPipe } from '@myrmidon/ngx-tools';
+import { deepCopy, FlatLookupPipe } from '@myrmidon/ngx-tools';
 import {
   FeatureSetPolicy,
   LabeledId,
   Feature,
   OperationFeature,
 } from '@myrmidon/gve-snapshot-view';
+
 import {
   FeatureEditorComponent,
   FeatureMap,
@@ -66,16 +66,15 @@ import {
     MatSelectModule,
     MatTooltipModule,
     FlatLookupPipe,
-    FeatureEditorComponent
-],
+    FeatureEditorComponent,
+  ],
   templateUrl: './feature-set-editor.component.html',
   styleUrl: './feature-set-editor.component.css',
 })
 export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
-  private _editedFeatureIndex: number;
 
-  public POLICIES = ['M', 'S', 'SF'];
+  public readonly POLICIES = ['M', 'S', 'SF'];
 
   /**
    * True if the features are variable features.
@@ -108,21 +107,17 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
    */
   public readonly features = model<Feature[] | OperationFeature[]>([]);
 
-  /**
-   * Emitted when the features change.
-   */
-  public readonly featuresChange = output<Feature[] | OperationFeature[]>();
-
-  public editedFeature?: Feature | OperationFeature;
+  public readonly editedFeature = signal<
+    Feature | OperationFeature | undefined
+  >(undefined);
+  public readonly editedFeatureIndex = signal<number>(-1);
+  public filteredFeatures = signal<Feature[] | OperationFeature[]>([]);
 
   // filter
   public filter: FormControl<string | null>;
-  public filteredFeatures: Feature[] | OperationFeature[];
 
   constructor(formBuilder: FormBuilder) {
-    this.filteredFeatures = [];
     this.filter = formBuilder.control<string | null>(null);
-    this._editedFeatureIndex = -1;
 
     // when features change, apply the filter
     effect(() => {
@@ -134,10 +129,11 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     features: Feature[] | OperationFeature[],
     name?: string | null
   ): void {
-    this.filteredFeatures =
+    this.filteredFeatures.set(
       features.filter((feature) => {
         return !name || feature.name.toLowerCase().includes(name.toLowerCase());
-      }) || [];
+      }) || []
+    );
   }
 
   public ngOnInit(): void {
@@ -154,17 +150,17 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   }
 
   public addFeature(): void {
-    this.editedFeature = {
+    this.editedFeature.set({
       name: '',
       value: '',
       setPolicy: FeatureSetPolicy.multiple,
-    };
-    this._editedFeatureIndex = -1;
+    });
+    this.editedFeatureIndex.set(-1);
   }
 
   public editFeature(feature: Feature | OperationFeature): void {
-    this.editedFeature = feature;
-    this._editedFeatureIndex = this.features().indexOf(feature);
+    this.editedFeature.set(deepCopy(feature));
+    this.editedFeatureIndex.set(this.features().indexOf(feature));
   }
 
   public deleteFeature(feature: Feature | OperationFeature): void {
@@ -175,7 +171,6 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     const features = [...this.features()];
     features.splice(index, 1);
     this.features.set(features);
-    this.featuresChange.emit(this.features());
   }
 
   public onFeatureChange(feature?: Feature | OperationFeature): void {
@@ -195,19 +190,18 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (this._editedFeatureIndex === -1) {
+    if (this.editedFeatureIndex() === -1) {
       features.push(feature);
     } else {
-      features.splice(this._editedFeatureIndex, 1, feature);
+      features.splice(this.editedFeatureIndex(), 1, feature);
     }
 
     this.onFeatureCancel();
     this.features.set(features);
-    this.featuresChange.emit(this.features()!);
   }
 
   public onFeatureCancel(): void {
-    this.editedFeature = undefined;
-    this._editedFeatureIndex = -1;
+    this.editedFeature.set(undefined);
+    this.editedFeatureIndex.set(-1);
   }
 }

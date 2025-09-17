@@ -1,11 +1,5 @@
-
-import { Component, effect, input, model, output } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { Component, input, model, output, signal } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -16,7 +10,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { deepCopy } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
+
 import { GveAnimationTimeline } from '@myrmidon/gve-snapshot-view';
 
 import { AnimationTimelineComponent } from '../animation-timeline/animation-timeline.component';
@@ -46,8 +42,8 @@ import { AnimationTimelineComponent } from '../animation-timeline/animation-time
     MatSelectModule,
     MatTabsModule,
     MatTooltipModule,
-    AnimationTimelineComponent
-],
+    AnimationTimelineComponent,
+  ],
   templateUrl: './animation-timeline-set.component.html',
   styleUrl: './animation-timeline-set.component.css',
 })
@@ -69,88 +65,58 @@ export class AnimationTimelineSetComponent {
   public readonly tags = input<string[]>([]);
 
   /**
-   * Emitted when the timelines are changed.
-   */
-  public readonly timelinesChange = output<GveAnimationTimeline[]>();
-
-  /**
    * Emitted when the timeline editing is canceled.
    */
   public readonly timelinesCancel = output();
 
-  public editedTimeline?: GveAnimationTimeline;
-  public set: FormControl<GveAnimationTimeline[]>;
-  public form: FormGroup;
+  public readonly editedTimeline = signal<GveAnimationTimeline | undefined>(
+    undefined
+  );
+  public readonly editedIndex = signal<number>(-1);
 
-  constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
-    this.set = formBuilder.control<GveAnimationTimeline[]>([], {
-      nonNullable: true,
-    });
-    this.form = formBuilder.group({
-      sets: this.set,
-    });
-
-    effect(() => {
-      this.updateForm(this.timelines());
-    });
-  }
-
-  private updateForm(animations?: GveAnimationTimeline[] | null): void {
-    if (!animations?.length) {
-      this.form.reset();
-    } else {
-      this.set.setValue(animations);
-      this.set.markAsPristine();
-    }
-  }
+  constructor(private _dialogService: DialogService) {}
 
   public closeTimeline(): void {
-    this.editedTimeline = undefined;
+    this.editedTimeline.set(undefined);
+    this.editedIndex.set(-1);
   }
 
   public newTimeline(): void {
-    this.editedTimeline = {
+    this.editedTimeline.set({
       tag: '',
       tweens: [],
-    };
+    });
+    this.editedIndex.set(-1);
   }
 
   public editTimeline(index: number): void {
-    this.editedTimeline = this.timelines()[index];
+    this.editedTimeline.set(deepCopy(this.timelines()[index]));
+    this.editedIndex.set(index);
   }
 
-  public onTimelineChange(timeline?: GveAnimationTimeline | null): void {
-    const timelines = [...this.set.value];
-    const i = timelines.findIndex((t) => t.tag === timeline!.tag);
-    if (i === -1) {
-      timelines.push(timeline!);
+  public onTimelineChange(timeline: GveAnimationTimeline): void {
+    const timelines = [...this.timelines()];
+    if (this.editedIndex() === -1) {
+      timelines.push(timeline);
     } else {
-      timelines[i] = timeline!;
+      timelines.splice(this.editedIndex(), 1, timeline);
     }
-    this.closeTimeline();
 
     // sort timelines by tag
     timelines.sort((a, b) => a.tag.localeCompare(b.tag));
-    this.set.setValue(timelines);
-    this.set.markAsDirty();
-    this.set.updateValueAndValidity();
+    this.timelines.set(timelines);
 
-    this.timelines.set(this.set.value);
-    this.timelinesChange.emit(this.timelines()!);
+    this.closeTimeline();
   }
 
   public deleteTimeline(index: number): void {
     this._dialogService
-      .confirm('Confirm Deletion', `Delete ${this.set.value[index].tag}?`)
+      .confirm('Confirm Deletion', `Delete ${this.timelines()[index].tag}?`)
       .subscribe((yes) => {
         if (yes) {
-          const timelines = [...this.set.value];
+          const timelines = [...this.timelines()];
           timelines.splice(index, 1);
-          this.set.setValue(timelines);
-          this.set.markAsDirty();
-          this.set.updateValueAndValidity();
-          this.timelines.set(this.set.value);
-          this.timelinesChange.emit(this.timelines()!);
+          this.timelines.set(timelines);
         }
       });
   }

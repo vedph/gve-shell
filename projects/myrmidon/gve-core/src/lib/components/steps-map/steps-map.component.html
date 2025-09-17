@@ -3,7 +3,7 @@
   <div
     matRipple
     class="step form-row"
-    [ngClass]="{ selected: step === selectedStep() }"
+    [class.selected]="step === selectedStep()"
     (click)="onStepClick(step)"
   >
     <!-- tag -->
@@ -13,7 +13,7 @@
     </div>
     <!-- text lines -->
     <div class="text" [style.fontSize]="textFontSize()">
-      @for (line of lines[step.outputTag]; track $index) {
+      @for (line of lines()[step.outputTag]; track $index) {
       <div class="line">{{ line }}</div>
       }
       <div></div>

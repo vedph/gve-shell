@@ -1,4 +1,4 @@
-import { Component, effect, input, Input } from '@angular/core';
+import { Component, effect, input, Input, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -14,6 +14,7 @@ import {
   LabeledId,
   OperationFeature,
 } from '@myrmidon/gve-snapshot-view';
+
 import { FeatureMap } from '../feature-editor/feature-editor.component';
 
 /**
@@ -41,8 +42,8 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    FlatLookupPipe
-],
+    FlatLookupPipe,
+  ],
   templateUrl: './feature-set-view.component.html',
   styleUrl: './feature-set-view.component.css',
 })
@@ -75,9 +76,10 @@ export class FeatureSetViewComponent {
    */
   public readonly filterThreshold = input(5);
 
+  public readonly filteredFeatures = signal<Feature[] | OperationFeature[]>([]);
+
   // filter
   public filter: FormControl<string | null>;
-  public filteredFeatures: Feature[] | OperationFeature[] = [];
 
   constructor(formBuilder: FormBuilder) {
     this.filter = formBuilder.control(null);
@@ -91,9 +93,11 @@ export class FeatureSetViewComponent {
   }
 
   private applyFeatureFilter(name?: string | null): void {
-    this.filteredFeatures = this.features().filter((feature) => {
-      return !name || feature.name.toLowerCase().includes(name.toLowerCase());
-    });
+    this.filteredFeatures.set(
+      this.features().filter((feature) => {
+        return !name || feature.name.toLowerCase().includes(name.toLowerCase());
+      })
+    );
   }
 
   public ngOnInit(): void {

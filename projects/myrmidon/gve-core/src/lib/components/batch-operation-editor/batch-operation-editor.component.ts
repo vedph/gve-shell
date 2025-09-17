@@ -6,6 +6,7 @@ import {
   OnInit,
   Optional,
   output,
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -48,8 +49,9 @@ import { GveApiService } from '../../services/gve-api.service';
   styleUrl: './batch-operation-editor.component.css',
 })
 export class BatchOperationEditorComponent implements OnInit {
-  public busy?: boolean;
-  public parseError?: string;
+  public readonly busy = signal<boolean>(false);
+  public readonly parseError = signal<string | undefined>(undefined);
+
   public text: FormControl<string | null>;
   public form: FormGroup;
 
@@ -94,16 +96,16 @@ export class BatchOperationEditorComponent implements OnInit {
   }
 
   public parseOperations(text?: string): void {
-    if (this.busy || !text) {
+    if (this.busy() || !text) {
       return;
     }
-    this.busy = true;
-    this.parseError = undefined;
+    this.busy.set(true);
+    this.parseError.set(undefined);
 
     this._api.parseOperations(text).subscribe({
       next: (wrapper) => {
         if (wrapper.error) {
-          this.parseError = wrapper.error;
+          this.parseError.set(wrapper.error);
           return;
         }
         this.operationsChange.emit(wrapper.result || []);
@@ -112,10 +114,10 @@ export class BatchOperationEditorComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.parseError = error.message;
+        this.parseError.set(error.message);
       },
       complete: () => {
-        this.busy = false;
+        this.busy.set(false);
       },
     });
   }

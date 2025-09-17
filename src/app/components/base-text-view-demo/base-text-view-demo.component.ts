@@ -1,5 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 
 import {
   FormBuilder,
@@ -18,7 +17,7 @@ import {
   BaseTextCharEvent,
   BaseTextViewComponent,
   VarBaseTextRange,
-} from '../../../../projects/myrmidon/gve-core/src/public-api';
+} from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-var-base-text-view-demo',
@@ -28,16 +27,18 @@ import {
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    BaseTextViewComponent
-],
+    BaseTextViewComponent,
+  ],
   templateUrl: './base-text-view-demo.component.html',
   styleUrl: './base-text-view-demo.component.scss',
 })
 export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
+
   public text: FormControl<string | null>;
-  public range?: VarBaseTextRange;
-  public nodes: CharNode[] = [];
+
+  public readonly range = signal<VarBaseTextRange | undefined>(undefined);
+  public readonly nodes = signal<CharNode[]>([]);
 
   constructor(formBuilder: FormBuilder) {
     this.text = formBuilder.control('');
@@ -45,7 +46,7 @@ export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this._sub = this.text.valueChanges.subscribe((value) => {
-      this.nodes = value ? SnapshotViewService.stringToBaseChars(value) : [];
+      this.nodes.set(value ? SnapshotViewService.stringToBaseChars(value) : []);
     });
     this.text.setValue(
       'there was an old man with a beard\n' +
@@ -61,11 +62,11 @@ export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
   }
 
   public onCharPick(event: BaseTextCharEvent): void {
-    console.log('Char picked:', JSON.stringify(event.char));
+    console.log('Char picked:', event.char);
   }
 
   public onRangePick(range: VarBaseTextRange): void {
-    console.log('Range picked:', JSON.stringify(range));
-    this.range = range;
+    console.log('Range picked:', range);
+    this.range.set(range);
   }
 }

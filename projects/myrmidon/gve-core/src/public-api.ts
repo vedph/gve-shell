@@ -4,6 +4,7 @@
 
 export * from './lib/models';
 export * from './lib/components/animation-timeline/animation-timeline.component';
+export * from './lib/components/animation-timeline-set/animation-timeline-set.component';
 export * from './lib/components/animation-tween/animation-tween.component';
 export * from './lib/components/base-text-char/base-text-char.component';
 export * from './lib/components/base-text-editor/base-text-editor.component';

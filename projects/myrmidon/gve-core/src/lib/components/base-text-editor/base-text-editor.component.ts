@@ -1,5 +1,4 @@
-
-import { Component, effect, input, output } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -46,8 +45,8 @@ import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-edi
     MatInputModule,
     MatTooltipModule,
     BaseTextViewComponent,
-    FeatureSetEditorComponent
-],
+    FeatureSetEditorComponent,
+  ],
   templateUrl: './base-text-editor.component.html',
   styleUrl: './base-text-editor.component.css',
 })
@@ -77,12 +76,12 @@ export class BaseTextEditorComponent {
    */
   public readonly textChange = output<CharNode[]>();
 
+  public readonly selectedChar = signal<CharNode | undefined>(undefined);
+  public readonly selectedCharLabel = signal<string | undefined>(undefined);
+  public readonly textRange = signal<VarBaseTextRange | undefined>(undefined);
+
   public userText: FormControl<string>;
   public form: FormGroup;
-
-  public selectedChar?: CharNode;
-  public selectedCharLabel?: string;
-  public textRange?: VarBaseTextRange;
 
   constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
     this.userText = formBuilder.control('', {
@@ -110,22 +109,29 @@ export class BaseTextEditorComponent {
   }
 
   private resetSelectedChar(): void {
-    this.selectedChar = undefined;
-    this.selectedCharLabel = undefined;
+    this.selectedChar.set(undefined);
+    this.selectedCharLabel.set(undefined);
   }
 
   public onSelectedChar(event: BaseTextCharEvent): void {
-    this.selectedChar = this.text()!.find((c) => c.id === event.char.id);
-    this.selectedCharLabel = event.char.label;
+    this.selectedChar.set(this.text()!.find((c) => c.id === event.char.id));
+    this.selectedCharLabel.set(event.char.label);
   }
 
   public onFeaturesChange(features: Feature[]): void {
-    this.selectedChar!.features = features;
-    this.textChange.emit(this.text()!);
+    const char = this.selectedChar();
+    if (!char) {
+      return;
+    }
+    const chars = this.text()!.map((c) =>
+      c.id === char.id ? { ...c, features } : c
+    );
+    this.selectedChar.set({ ...char, features });
+    this.textChange.emit(chars);
   }
 
   public onRangePick(range: VarBaseTextRange) {
-    this.textRange = range;
+    this.textRange.set(range);
   }
 
   public patchTextFromUser(): void {

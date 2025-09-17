@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 import { RouterModule, RouterOutlet } from '@angular/router';
 
@@ -11,7 +11,7 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 
 import { EnvService } from '@myrmidon/ngx-tools';
 
-import { SettingsService } from '../../projects/myrmidon/gve-core/src/public-api';
+import { SettingsService } from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-root',
@@ -22,16 +22,16 @@ import { SettingsService } from '../../projects/myrmidon/gve-core/src/public-api
     MatIconModule,
     MatMenuModule,
     MatToolbarModule,
-    NgeMonacoModule
-],
+    NgeMonacoModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  public version?: string;
+  public readonly version = signal<string | undefined>(undefined);
 
   constructor(settings: SettingsService, env: EnvService) {
-    this.version = env.get('version') || '';
+    this.version.set(env.get('version') || '');
     settings.keyPrefix = 'gve-shell-';
 
     settings.set('svg-editor', 'https://editor.method.ac/');

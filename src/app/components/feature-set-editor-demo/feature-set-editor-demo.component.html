@@ -9,22 +9,27 @@
       <mat-checkbox [formControl]="hasFeatValues">feature values</mat-checkbox>
       <mat-form-field style="width: 7em; margin-left: 8px">
         <mat-label>filter tr.</mat-label>
-        <input matInput type="number" [formControl]="filterThreshold" min="-1" />
+        <input
+          matInput
+          type="number"
+          [formControl]="filterThreshold"
+          min="-1"
+        />
       </mat-form-field>
     </fieldset>
     <hr />
     <gve-feature-set-editor
-      [featNames]="featNames"
-      [featValues]="featValues"
+      [featNames]="featNames()"
+      [featValues]="featValues()"
       [filterThreshold]="filterThreshold.value"
-      [features]="features"
+      [features]="features()"
       (featuresChange)="onFeaturesChange($event)"
     />
     <hr />
-    @if (features.length) {
+    @if (features().length) {
     <div>
       <code>
-        <pre>{{ features | json }}</pre>
+        <pre>{{ features() | json }}</pre>
       </code>
     </div>
     }

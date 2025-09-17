@@ -39,10 +39,6 @@ export interface BaseTextCharEvent {
   styleUrl: './base-text-char.component.css',
 })
 export class BaseTextCharComponent {
-  public defaultColor = '#D8D8D8';
-  public defaultBorderColor = '#D8D8D8';
-  public defaultEmSize = 1.5;
-
   /**
    * The character to display.
    */
@@ -52,6 +48,10 @@ export class BaseTextCharComponent {
    * Emitted when the character is clicked.
    */
   public readonly charPick = output<BaseTextCharEvent>();
+
+  public readonly defaultColor = '#D8D8D8';
+  public readonly defaultBorderColor = '#D8D8D8';
+  public readonly defaultEmSize = 1.5;
 
   public onCharClick(event: MouseEvent): void {
     this.charPick.emit({ char: this.char()!, event });

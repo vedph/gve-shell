@@ -1,4 +1,9 @@
-import { CUSTOM_ELEMENTS_SCHEMA, Component, OnInit } from '@angular/core';
+import {
+  CUSTOM_ELEMENTS_SCHEMA,
+  Component,
+  OnInit,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -7,6 +12,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -36,9 +42,9 @@ import {
   FeatureSetEditorComponent,
   BaseTextViewComponent,
   BaseTextCharEvent,
-} from '../../../../projects/myrmidon/gve-core/src/public-api';
+} from '@myrmidon/gve-core';
+
 import { AssetService } from '../../services/asset.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-snapshot-view-demo',
@@ -75,17 +81,15 @@ export class SnapshotViewDemoComponent implements OnInit {
 
   public snapshot: FormControl<string>;
 
-  public characters: CharNode[] = [];
-  public selectedCharIndex = -1;
-  public selectedChar?: CharNode;
-  public selectedCharLabel?: string;
+  public readonly characters = signal<CharNode[]>([]);
+  public readonly selectedCharIndex = signal<number>(-1);
+  public readonly selectedChar = signal<CharNode | undefined>(undefined);
+  public readonly selectedCharLabel = signal<string | undefined>(undefined);
 
-  public svg?: string;
-  public visuals?: GveTextVisual[];
-  public events: GveVisualEvent[] = [];
-  public viewData?: SnapshotViewData;
-  public rulers = true;
-  public imageOpacity = 0.8;
+  public readonly events = signal<GveVisualEvent[]>([]);
+  public readonly viewData = signal<SnapshotViewData | undefined>(undefined);
+  public readonly rulers = signal<boolean>(true);
+  public readonly imageOpacity = signal<number>(0.8);
 
   constructor(
     formBuilder: FormBuilder,
@@ -147,17 +151,17 @@ export class SnapshotViewDemoComponent implements OnInit {
   }
 
   public setText(): void {
-    this.selectedCharIndex = -1;
-    this.selectedChar = undefined;
-    this.selectedCharLabel = undefined;
-    this.characters = SnapshotViewService.stringToBaseChars(this.text.value);
+    this.selectedCharIndex.set(-1);
+    this.selectedChar.set(undefined);
+    this.selectedCharLabel.set(undefined);
+    this.characters.set(SnapshotViewService.stringToBaseChars(this.text.value));
   }
 
   public copyTextCode(): void {
-    if (!this.characters?.length) {
+    if (!this.characters()?.length) {
       return;
     }
-    const json = JSON.stringify(this.characters, null, 2);
+    const json = JSON.stringify(this.characters(), null, 2);
     this._clipboard.copy(json);
     this._snackbar.open('Copied to clipboard', 'OK', {
       duration: 2000,
@@ -183,7 +187,7 @@ export class SnapshotViewDemoComponent implements OnInit {
       if (!snapshot) {
         return;
       }
-      snapshot.text = this.characters;
+      snapshot.text = this.characters();
       const json = JSON.stringify(snapshot, null, 2);
       this._editorModel?.setValue(json);
     } catch (error) {
@@ -195,12 +199,14 @@ export class SnapshotViewDemoComponent implements OnInit {
   }
 
   public onSelectedChar(event: BaseTextCharEvent): void {
-    this.selectedChar = this.characters.find((c) => c.id === event.char.id);
-    this.selectedCharLabel = event.char.label;
+    this.selectedChar.set(
+      this.characters().find((c) => c.id === event.char.id)
+    );
+    this.selectedCharLabel.set(event.char.label);
   }
 
   public onFeaturesChange(features: Feature[]): void {
-    this.selectedChar!.features = features;
+    this.selectedChar.set({ ...this.selectedChar()!, features: features });
   }
 
   private updateViewData(): void {
@@ -208,7 +214,7 @@ export class SnapshotViewDemoComponent implements OnInit {
     if (!snapshot) {
       return;
     }
-    this.viewData = {
+    this.viewData.set({
       snapshot: snapshot,
       options: {
         showRulers: true,
@@ -217,7 +223,7 @@ export class SnapshotViewDemoComponent implements OnInit {
         panZoom: true,
         debug: this.debug.value,
       },
-    };
+    });
   }
 
   public async render(): Promise<void> {
@@ -229,20 +235,18 @@ export class SnapshotViewDemoComponent implements OnInit {
   }
 
   public onVisualEvent(event: CustomEvent<GveVisualEvent>): void {
-    this.events.unshift(event.detail);
-    if (this.events.length > 10) {
-      this.events.pop();
-    }
+    this.events.update((events) => [event.detail, ...events.slice(0, 9)]);
   }
 
   public toggleRulers(): void {
     if (!this._renderer) {
       return;
     }
-    this.rulers = this._renderer.toggleRulers();
+    this.rulers.set(this._renderer.toggleRulers());
   }
 
   public onImageOpacityChange(value: number): void {
+    this.imageOpacity.set(value);
     if (this._renderer) {
       this._renderer.setImageOpacity(value);
     }

@@ -4,8 +4,8 @@
   </mat-card-header>
   <mat-card-content>
     <gve-chain-result-view
-      [result]="result"
-      [initialStepIndex]="initialStepIndex"
+      [result]="result()"
+      [initialStepIndex]="initialStepIndex()"
       (stepPick)="onStepPick($event)"
     />
   </mat-card-content>

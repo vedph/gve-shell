@@ -1,7 +1,6 @@
-
 import {
   Component,
-  effect,
+  computed,
   input,
   OnDestroy,
   OnInit,
@@ -37,8 +36,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+  ],
   templateUrl: './ln-heights-editor.component.html',
   styleUrl: './ln-heights-editor.component.css',
 })
@@ -65,19 +64,14 @@ export class LnHeightsEditorComponent implements OnInit, OnDestroy {
    */
   public readonly heightsChange = output<Record<number, number> | undefined>();
 
-  public lineNumbers: number[] = [];
+  // when lineCount changes, update lineNumbers
+  public readonly lineNumbers = computed(() =>
+    Array.from({ length: this.lineCount() }, (_, i) => i + 1)
+  );
 
   constructor(formBuilder: FormBuilder) {
     this.lineNumber = formBuilder.control(0, { nonNullable: true });
     this.height = formBuilder.control(0, { nonNullable: true });
-
-    // when lineCount changes, update lineNumbers
-    effect(() => {
-      this.lineNumbers = Array.from(
-        { length: this.lineCount() },
-        (_, i) => i + 1
-      );
-    });
   }
 
   private pruneHeights(): void {
@@ -101,8 +95,15 @@ export class LnHeightsEditorComponent implements OnInit, OnDestroy {
           if (!this._heights) {
             this._heights = {};
           }
-          this._heights[this.lineNumber.value] = value;
-          this.pruneHeights();
+          const ln = this.lineNumber.value;
+          const newHeights = { ...(this._heights || {}) };
+          newHeights[ln] = value;
+          this._heights = Object.fromEntries(
+            Object.entries(newHeights).filter(([_, v]) => v !== 0)
+          );
+          if (Object.keys(this._heights).length === 0) {
+            this._heights = undefined;
+          }
           this.heightsChange.emit(this._heights);
         })
     );

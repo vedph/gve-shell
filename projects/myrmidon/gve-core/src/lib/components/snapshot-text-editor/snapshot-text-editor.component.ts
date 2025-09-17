@@ -5,7 +5,6 @@ import {
   model,
   OnInit,
   Optional,
-  output,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -14,12 +13,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+
 import { CharNode, SnapshotViewService } from '@myrmidon/gve-snapshot-view';
+
 import { PayloadMatDialogConfig } from '../../models';
 
 /**
@@ -48,11 +50,6 @@ export class SnapshotTextEditorComponent implements OnInit {
   public form: FormGroup;
 
   public readonly text = model<CharNode[]>([]);
-
-  /**
-   * Emitted when text changes.
-   */
-  public readonly textChange = output<CharNode[]>();
 
   constructor(
     formBuilder: FormBuilder,
@@ -102,7 +99,6 @@ export class SnapshotTextEditorComponent implements OnInit {
       return;
     }
     this.text.set(SnapshotViewService.stringToBaseChars(this.userText.value));
-    this.textChange.emit(this.text());
     this.dialogRef?.close(this.text());
   }
 }

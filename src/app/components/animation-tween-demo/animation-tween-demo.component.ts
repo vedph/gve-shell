@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { GveAnimationTween } from '@myrmidon/gve-snapshot-view';
 
-import { AnimationTweenComponent } from '../../../../projects/myrmidon/gve-core/src/public-api';
+import { AnimationTweenComponent } from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-animation-tween-demo',
@@ -30,20 +30,16 @@ import { AnimationTweenComponent } from '../../../../projects/myrmidon/gve-core/
   styleUrl: './animation-tween-demo.component.scss',
 })
 export class AnimationTweenDemoComponent {
-  public tween: GveAnimationTween;
-  public elementIds = ['alpha', 'beta', 'gamma'];
+  public readonly elementIds = ['alpha', 'beta', 'gamma'];
+  public readonly tween = signal<GveAnimationTween>({
+    type: 'to',
+    label: 'alpha',
+    note: 'This is a sample tween',
+    selector: '#alpha',
+    vars: '{ "duration": 2, "ease": "elastic" }',
+  });
 
-  constructor() {
-    this.tween = {
-      type: 'to',
-      label: 'alpha',
-      note: 'This is a sample tween',
-      selector: '#alpha',
-      vars: '{ duration: 2, ease: "elastic" }',
-    };
-  }
-
-  public onTweenChange(tween?: GveAnimationTween) {
-    this.tween = tween!;
+  public onTweenChange(tween: GveAnimationTween) {
+    this.tween.set(tween);
   }
 }

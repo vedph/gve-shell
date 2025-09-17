@@ -2,168 +2,161 @@
   <div class="form-row">
     <!-- tag (bound) -->
     @if (tags().length) {
-      <mat-form-field>
-        <mat-label>tag</mat-label>
-        <mat-select [formControl]="tag">
-          @for (t of tags(); track t) {
-            <mat-option [value]="t">{{ t }}</mat-option>
-          }
-        </mat-select>
-        @if ($any(tag).errors?.required && (tag.dirty || tag.touched)) {
-          <mat-error
-            >tag required</mat-error
-            >
-          }
-        </mat-form-field>
-      } @else {
-        <!-- tag (free) -->
-        <mat-form-field>
-          <mat-label>tag</mat-label>
-          <input matInput [formControl]="tag" />
-          @if ($any(tag).errors?.required && (tag.dirty || tag.touched)) {
-            <mat-error
-              >tag required</mat-error
-              >
-            }
-            @if ($any(tag).errors?.maxLength && (tag.dirty || tag.touched)) {
-              <mat-error
-                >tag too long</mat-error
-                >
-              }
-            </mat-form-field>
-          }
+    <mat-form-field>
+      <mat-label>tag</mat-label>
+      <mat-select [formControl]="tag">
+        @for (t of tags(); track t) {
+        <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+      @if ($any(tag).errors?.required && (tag.dirty || tag.touched)) {
+      <mat-error>tag required</mat-error>
+      }
+    </mat-form-field>
+    } @else {
+    <!-- tag (free) -->
+    <mat-form-field>
+      <mat-label>tag</mat-label>
+      <input matInput [formControl]="tag" />
+      @if ($any(tag).errors?.required && (tag.dirty || tag.touched)) {
+      <mat-error>tag required</mat-error>
+      } @if ($any(tag).errors?.maxLength && (tag.dirty || tag.touched)) {
+      <mat-error>tag too long</mat-error>
+      }
+    </mat-form-field>
+    }
 
+    <button
+      mat-flat-button
+      type="button"
+      color="primary"
+      class="mat-primary"
+      (click)="addTween()"
+    >
+      <mat-icon>add_circle</mat-icon> tween
+    </button>
+  </div>
+
+  <!-- vars -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>vars</mat-label>
+      <textarea matInput [formControl]="vars"></textarea>
+      <mat-hint>JSON object</mat-hint>
+      @if ($any(vars).errors?.json && (vars.dirty || vars.touched)) {
+      <mat-error>invalid JSON</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <!-- tweens -->
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>label</th>
+        <th>type</th>
+        <th>selector</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (t of tweens.value; track t; let index = $index) {
+      <tr [class.selected]="index === editedTweenIndex()">
+        <td class="fit-width">
+          <!-- edit -->
           <button
-            mat-flat-button
+            mat-icon-button
             type="button"
             color="primary"
-            class="mat-primary"
-            (click)="addTween()"
-            >
-            <mat-icon>add_circle</mat-icon> tween
+            (click)="editTween(index)"
+            matTooltip="Edit tween"
+          >
+            <mat-icon class="mat-primary">edit</mat-icon>
           </button>
-        </div>
+          <!-- delete -->
+          <button
+            mat-icon-button
+            type="button"
+            color="warn"
+            (click)="deleteTween(index)"
+            matTooltip="Delete tween"
+          >
+            <mat-icon class="mat-warn">remove_circle</mat-icon>
+          </button>
+          <!-- up -->
+          <button
+            mat-icon-button
+            type="button"
+            (click)="moveTweenUp(index)"
+            matTooltip="Move tween up"
+            [disabled]="index === 0"
+          >
+            <mat-icon>arrow_circle_up</mat-icon>
+          </button>
+          <!-- down -->
+          <button
+            mat-icon-button
+            type="button"
+            (click)="moveTweenDown(index)"
+            matTooltip="Move tween down"
+            [disabled]="index === tweens.value.length - 1"
+          >
+            <mat-icon>arrow_circle_down</mat-icon>
+          </button>
+        </td>
+        <td>
+          {{ t.label }}
+        </td>
+        <td>
+          {{ t.type }}
+        </td>
+        <td>
+          {{ t.selector }}
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
 
-        <!-- vars -->
-        <div>
-          <mat-form-field class="long-text">
-            <mat-label>vars</mat-label>
-            <textarea matInput [formControl]="vars"></textarea>
-            <mat-hint>JSON object</mat-hint>
-            @if ($any(vars).errors?.json && (vars.dirty || vars.touched)) {
-              <mat-error
-                >invalid JSON</mat-error
-                >
-              }
-            </mat-form-field>
-          </div>
+  <!-- tween editor -->
+  @if (editedTween()) {
+  <mat-expansion-panel [expanded]="editedTween()" [disabled]="!editedTween()">
+    @if (editedTween()) {
+    <mat-expansion-panel-header>
+      <mat-panel-title>tween #{{ editedTweenIndex() + 1 }}</mat-panel-title>
+    </mat-expansion-panel-header>
+    }
+    <fieldset>
+      <gve-animation-tween
+        [elementIds]="elementIds()"
+        [tween]="editedTween()"
+        (tweenChange)="saveTween($event)"
+        (tweenCancel)="closeTween()"
+      />
+    </fieldset>
+  </mat-expansion-panel>
+  }
 
-          <!-- tweens -->
-          <table>
-            <thead>
-              <tr>
-                <th></th>
-                <th>label</th>
-                <th>type</th>
-                <th>selector</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (t of tweens.value; track t; let index = $index) {
-                <tr>
-                  <td class="fit-width">
-                    <!-- edit -->
-                    <button
-                      mat-icon-button
-                      type="button"
-                      color="primary"
-                      (click)="editTween(index)"
-                      matTooltip="Edit tween"
-                      >
-                      <mat-icon class="mat-primary">edit</mat-icon>
-                    </button>
-                    <!-- delete -->
-                    <button
-                      mat-icon-button
-                      type="button"
-                      color="warn"
-                      (click)="deleteTween(index)"
-                      matTooltip="Delete tween"
-                      >
-                      <mat-icon class="mat-warn">remove_circle</mat-icon>
-                    </button>
-                    <!-- up -->
-                    <button
-                      mat-icon-button
-                      type="button"
-                      (click)="moveTweenUp(index)"
-                      matTooltip="Move tween up"
-                      [disabled]="index === 0"
-                      >
-                      <mat-icon>arrow_circle_up</mat-icon>
-                    </button>
-                    <!-- down -->
-                    <button
-                      mat-icon-button
-                      type="button"
-                      (click)="moveTweenDown(index)"
-                      matTooltip="Move tween down"
-                      [disabled]="index === tweens.value.length - 1"
-                      >
-                      <mat-icon>arrow_circle_down</mat-icon>
-                    </button>
-                  </td>
-                  <td>
-                    {{ t.label }}
-                  </td>
-                  <td>
-                    {{ t.type }}
-                  </td>
-                  <td>
-                    {{ t.selector }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-
-          <!-- tween editor -->
-          <mat-expansion-panel [expanded]="editedTween" [disabled]="!editedTween">
-            @if (editedTween) {
-              <mat-expansion-panel-header>
-                <mat-panel-title>tween {{ editedTween.label }}</mat-panel-title>
-              </mat-expansion-panel-header>
-            }
-            <fieldset>
-              <gve-animation-tween
-                [elementIds]="elementIds()"
-                [tween]="editedTween"
-                (tweenChange)="saveTween($event)"
-                (tweenCancel)="closeTween()"
-                />
-              </fieldset>
-            </mat-expansion-panel>
-
-            <!-- buttons -->
-            <div class="button-row">
-              <button
-                type="button"
-                class="mat-warn"
-                mat-icon-button
-                matTooltip="Close timeline"
-                (click)="close()"
-                >
-                <mat-icon class="mat-warn">clear</mat-icon>
-              </button>
-              <button
-                type="submit"
-                class="mat-primary"
-                mat-flat-button
-                matTooltip="Save timeline"
-                [disabled]="form.invalid"
-                >
-                <mat-icon class="mat-primary">check_circle</mat-icon>
-                timeline
-              </button>
-            </div>
-          </form>
+  <!-- buttons -->
+  <div class="button-row">
+    <button
+      type="button"
+      class="mat-warn"
+      mat-icon-button
+      matTooltip="Close timeline"
+      (click)="close()"
+    >
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      class="mat-primary"
+      mat-flat-button
+      matTooltip="Save timeline"
+      [disabled]="form.invalid"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+      timeline
+    </button>
+  </div>
+</form>

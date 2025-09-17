@@ -13,23 +13,19 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 8px;
+}
+tbody tr:nth-child(odd) {
+  background-color: #e2e2e2;
 }
 th {
-  color: #909090;
-  font-weight: normal;
   text-align: left;
-  background-color: rgb(225, 224, 224);
-}
-th,
-td {
-  padding: 4px;
-  border-bottom: 1px solid silver;
-}
-tbody tr:nth-child(even) {
-  background-color: #e8e8e8;
+  font-weight: normal;
+  color: silver;
 }
 td.fit-width {
   width: 1px;
   white-space: nowrap;
+}
+tr.selected {
+  background-color: #d0d0d0 !important;
 }

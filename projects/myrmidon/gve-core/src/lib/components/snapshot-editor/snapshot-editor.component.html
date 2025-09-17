@@ -17,13 +17,15 @@
             color="mat-warn"
             matTooltip="Enter base text"
             (click)="inputBaseText()"
-            [disabled]="busy"
-            >
+            [disabled]="busy()"
+          >
             <mat-icon>edit</mat-icon> base text
           </button>
 
-          @if (textRange) {
-            <span id="text-range">{{ textRange.at }}×{{ textRange.run }}</span>
+          @if (textRange()) {
+          <span id="text-range"
+            >{{ textRange()!.at }}×{{ textRange()!.run }}</span
+          >
           }
         </div>
         <!-- base text metadata -->
@@ -37,475 +39,477 @@
                 type="number"
                 [formControl]="offsetX"
                 placeholder="X offset"
-                />
-              </mat-form-field>
+              />
+            </mat-form-field>
 
-              <!-- offsetY -->
-              <mat-form-field class="input-nr">
-                <mat-label>Y offset</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  [formControl]="offsetY"
-                  placeholder="Y offset"
-                  />
-                </mat-form-field>
+            <!-- offsetY -->
+            <mat-form-field class="input-nr">
+              <mat-label>Y offset</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="offsetY"
+                placeholder="Y offset"
+              />
+            </mat-form-field>
 
-                <!-- lineHeightOffset -->
-                <mat-form-field class="input-nr">
-                  <mat-label>ln h-offset</mat-label>
-                  <input
-                    matInput
-                    type="number"
-                    [formControl]="lineHeightOffset"
-                    placeholder="ln h-offset"
-                    />
-                  </mat-form-field>
+            <!-- lineHeightOffset -->
+            <mat-form-field class="input-nr">
+              <mat-label>ln h-offset</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="lineHeightOffset"
+                placeholder="ln h-offset"
+              />
+            </mat-form-field>
 
-                  <!-- charSpacingOffset -->
-                  <mat-form-field class="input-nr">
-                    <mat-label>char spacing</mat-label>
-                    <input
-                      matInput
-                      type="number"
-                      [formControl]="charSpacingOffset"
-                      placeholder="char spacing"
-                      />
-                    </mat-form-field>
+            <!-- charSpacingOffset -->
+            <mat-form-field class="input-nr">
+              <mat-label>char spacing</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="charSpacingOffset"
+                placeholder="char spacing"
+              />
+            </mat-form-field>
 
-                    <!-- spcWidthOffset -->
-                    <mat-form-field class="input-nr">
-                      <mat-label>spc w-offset</mat-label>
-                      <input
-                        matInput
-                        type="number"
-                        [formControl]="spcWidthOffset"
-                        placeholder="spc w-offset"
-                        />
-                      </mat-form-field>
-                      <!-- minLineHeights -->
-                      <div class="boxed">
-                        <gve-ln-heights-editor
-                          [lineCount]="lineCount"
-                          [heights]="lnHeights.value || undefined"
-                          (heightsChange)="onHeightsChange($event)"
-                          />
-                        </div>
-                      </div>
-                      <!-- textStyle -->
-                      <div>
-                        <mat-form-field class="long-text" appearance="outline">
-                          <mat-label>text style</mat-label>
-                          <textarea
-                            matInput
-                            [formControl]="textStyle"
-                            placeholder="text style"
-                          ></textarea>
-                        </mat-form-field>
-                      </div>
-                    </fieldset>
-                    <!-- text characters -->
-                    <gve-base-text-view
-                      [text]="baseText.value"
-                      [hasLineNumber]="true"
-                      (rangePick)="onRangePick($event)"
-                      />
-                    </mat-expansion-panel>
-                  </mat-tab>
+            <!-- spcWidthOffset -->
+            <mat-form-field class="input-nr">
+              <mat-label>spc w-offset</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="spcWidthOffset"
+                placeholder="spc w-offset"
+              />
+            </mat-form-field>
+            <!-- minLineHeights -->
+            <div class="boxed">
+              <gve-ln-heights-editor
+                [lineCount]="lineCount()"
+                [heights]="lnHeights.value || undefined"
+                (heightsChange)="onHeightsChange($event)"
+              />
+            </div>
+          </div>
+          <!-- textStyle -->
+          <div>
+            <mat-form-field class="long-text" appearance="outline">
+              <mat-label>text style</mat-label>
+              <textarea
+                matInput
+                [formControl]="textStyle"
+                placeholder="text style"
+              ></textarea>
+            </mat-form-field>
+          </div>
+        </fieldset>
+        <!-- text characters -->
+        <gve-base-text-view
+          [text]="baseText.value"
+          [hasLineNumber]="true"
+          (rangePick)="onRangePick($event)"
+        />
+      </mat-expansion-panel>
+    </mat-tab>
 
-                  <!-- operations -->
-                  <mat-tab>
-                    <ng-template mat-tab-label>
-                      <mat-icon>edit</mat-icon> <span class="label">operations</span>
-                    </ng-template>
+    <!-- operations -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>edit</mat-icon> <span class="label">operations</span>
+      </ng-template>
 
-                    <div id="snapshot-container">
-                      <div id="general">
-                        <div class="form-row">
-                          <!-- width -->
-                          <mat-form-field class="input-nr">
-                            <mat-label>width</mat-label>
-                            <input
-                              matInput
-                              type="number"
-                              min="0"
-                              [formControl]="width"
-                              placeholder="width"
-                              />
-                            </mat-form-field>
+      <div id="snapshot-container">
+        <div id="general">
+          <div class="form-row">
+            <!-- width -->
+            <mat-form-field class="input-nr">
+              <mat-label>width</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                [formControl]="width"
+                placeholder="width"
+              />
+            </mat-form-field>
 
-                            <!-- height -->
-                            <mat-form-field class="input-nr">
-                              <mat-label>height</mat-label>
-                              <input
-                                matInput
-                                type="number"
-                                min="0"
-                                [formControl]="height"
-                                placeholder="height"
-                                />
-                              </mat-form-field>
+            <!-- height -->
+            <mat-form-field class="input-nr">
+              <mat-label>height</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                [formControl]="height"
+                placeholder="height"
+              />
+            </mat-form-field>
 
-                              <!-- chain -->
-                              <mat-checkbox [formControl]="showChain">show chain</mat-checkbox>
+            <!-- chain -->
+            <mat-checkbox [formControl]="showChain">show chain</mat-checkbox>
 
-                              <div class="form-row right">
-                                <!-- remove ops -->
-                                <button
-                                  type="button"
-                                  class="mat-warn"
-                                  mat-flat-button
-                                  matTooltip="Remove all the operations"
-                                  [disabled]="!operations.value.length || busy"
-                                  (click)="clearOperations()"
-                                  >
-                                  <mat-icon>delete_forever</mat-icon> clear
-                                </button>
+            <div class="form-row right">
+              <!-- remove ops -->
+              <button
+                type="button"
+                class="mat-warn"
+                mat-flat-button
+                matTooltip="Remove all the operations"
+                [disabled]="!operations.value.length || busy()"
+                (click)="clearOperations()"
+              >
+                <mat-icon>delete_forever</mat-icon> clear
+              </button>
 
-                                <!-- batch add ops -->
-                                <button
-                                  type="button"
-                                  mat-flat-button
-                                  matTooltip="Add a batch of operations"
-                                  class="mat-primary"
-                                  [disabled]="busy"
-                                  (click)="parseOperations()"
-                                  >
-                                  <mat-icon>post_add</mat-icon> batch
-                                </button>
+              <!-- batch add ops -->
+              <button
+                type="button"
+                mat-flat-button
+                matTooltip="Add a batch of operations"
+                class="mat-primary"
+                [disabled]="busy()"
+                (click)="parseOperations()"
+              >
+                <mat-icon>post_add</mat-icon> batch
+              </button>
 
-                                <!-- add op -->
-                                <button
-                                  type="button"
-                                  mat-flat-button
-                                  class="mat-primary"
-                                  [disabled]="!baseText.value"
-                                  (click)="editNewOperation()"
-                                  >
-                                  <mat-icon>add_circle</mat-icon> operation
-                                </button>
-                              </div>
-                            </div>
-                          </div>
+              <!-- add op -->
+              <button
+                type="button"
+                mat-flat-button
+                class="mat-primary"
+                [disabled]="!baseText.value"
+                (click)="editNewOperation()"
+              >
+                <mat-icon>add_circle</mat-icon> operation
+              </button>
+            </div>
+          </div>
+        </div>
 
-                          <!-- ops -->
-                          <div id="ops">
-                            <!-- operations list -->
-                            @if (operations.value.length) {
-                              <table id="list">
-                                <thead>
-                                  <tr>
-                                    <th>nr.</th>
-                                    <th></th>
-                                    <th>ID</th>
-                                    <th>type</th>
-                                    <th>at</th>
-                                    <th>run</th>
-                                    <th>value</th>
-                                    <th>itag</th>
-                                    <th>otag</th>
-                                    <th>gid</th>
-                                    <th>feats</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  @for (operation of operations.value; track operation.id; let
-                                    index=$index) {
-                                    <tr
-                                      [ngClass]="{ selected: operation.id === resultOperationId }"
-                                      [ngClass]="{ edited: operation.id === editedOp?.id }"
-                                      >
-                                      <td class="fit-width">{{ index + 1 }}.</td>
-                                      <td class="fit-width">
-                                        <!-- edit -->
-                                        <button
-                                          type="button"
-                                          mat-icon-button
-                                          class="mat-primary"
-                                          (click)="editOperation(index)"
-                                          matTooltip="Edit operation"
-                                          >
-                                          <mat-icon>edit</mat-icon>
-                                        </button>
-                                        <!-- delete -->
-                                        <button
-                                          type="button"
-                                          mat-icon-button
-                                          class="mat-warn"
-                                          (click)="deleteOperation(index)"
-                                          matTooltip="Delete operation"
-                                          >
-                                          <mat-icon class="mat-warn">delete</mat-icon>
-                                        </button>
-                                        <!-- run to -->
-                                        <button
-                                          type="button"
-                                          mat-icon-button
-                                          class="mat-accent"
-                                          (click)="runTo(index)"
-                                          matTooltip="Run to this operation"
-                                          >
-                                          <mat-icon class="mat-accent">subscriptions</mat-icon>
-                                        </button>
-                                      </td>
-                                      <td>{{ operation.id }}</td>
-                                      <td>{{ operation.type | flatLookup : opTypeMap }}</td>
-                                      <td>{{ operation.at }}</td>
-                                      <td>{{ operation.run }}</td>
-                                      <td>{{ operation.value }}</td>
-                                      <td>{{ operation.inputTag }}</td>
-                                      <td>{{ operation.outputTag }}</td>
-                                      <td>{{ operation.groupId }}</td>
-                                      <td>{{ operation.features?.length }}</td>
-                                    </tr>
-                                  }
-                                </tbody>
-                              </table>
-                            }
+        <!-- ops -->
+        <div id="ops">
+          <!-- operations list -->
+          @if (operations.value.length) {
+          <table id="list">
+            <thead>
+              <tr>
+                <th>nr.</th>
+                <th></th>
+                <th>ID</th>
+                <th>type</th>
+                <th>at</th>
+                <th>run</th>
+                <th>value</th>
+                <th>itag</th>
+                <th>otag</th>
+                <th>gid</th>
+                <th>feats</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (operation of operations.value; track operation.id; let
+              index=$index) {
+              <tr
+                [class.selected]="operation.id === resultOperationId"
+                [class.edited]="operation.id === editedOp()?.id"
+              >
+                <td class="fit-width">{{ index + 1 }}.</td>
+                <td class="fit-width">
+                  <!-- edit -->
+                  <button
+                    type="button"
+                    mat-icon-button
+                    class="mat-primary"
+                    (click)="editOperation(index)"
+                    matTooltip="Edit operation"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <!-- delete -->
+                  <button
+                    type="button"
+                    mat-icon-button
+                    class="mat-warn"
+                    (click)="deleteOperation(index)"
+                    matTooltip="Delete operation"
+                  >
+                    <mat-icon class="mat-warn">delete</mat-icon>
+                  </button>
+                  <!-- run to -->
+                  <button
+                    type="button"
+                    mat-icon-button
+                    class="mat-accent"
+                    (click)="runTo(index)"
+                    matTooltip="Run to this operation"
+                  >
+                    <mat-icon class="mat-accent">subscriptions</mat-icon>
+                  </button>
+                </td>
+                <td>{{ operation.id }}</td>
+                <td>{{ operation.type | flatLookup : opTypeMap }}</td>
+                <td>{{ operation.at }}</td>
+                <td>{{ operation.run }}</td>
+                <td>{{ operation.value }}</td>
+                <td>{{ operation.inputTag }}</td>
+                <td>{{ operation.outputTag }}</td>
+                <td>{{ operation.groupId }}</td>
+                <td>{{ operation.features?.length }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
 
-                            <!-- operation editor -->
-                            <mat-expansion-panel [expanded]="editedOp" [disabled]="!editedOp">
-                              <mat-expansion-panel-header>
-                                <mat-panel-title>operation {{ editedOp?.id }}</mat-panel-title>
-                              </mat-expansion-panel-header>
-                              <fieldset>
-                                <gve-chain-operation-editor
-                                  [hidePreview]="editedOpIndex === -1"
-                                  [operation]="editedOp"
-                                  (operationCancel)="onOperationCancel()"
-                                  (operationChange)="onOperationChange($event)"
-                                  (operationPreview)="onOperationPreview($event)"
-                                  />
-                                </fieldset>
-                              </mat-expansion-panel>
+          <!-- operation editor -->
+          @if (editedOp()) {
+          <mat-expansion-panel [expanded]="editedOp()" [disabled]="!editedOp()">
+            <mat-expansion-panel-header>
+              <mat-panel-title>operation {{ editedOp()?.id }}</mat-panel-title>
+            </mat-expansion-panel-header>
+            <fieldset>
+              <gve-chain-operation-editor
+                [hidePreview]="editedOpIndex() === -1"
+                [operation]="editedOp()"
+                (operationCancel)="onOperationCancel()"
+                (operationChange)="onOperationChange($event)"
+                (operationPreview)="onOperationPreview($event)"
+              />
+            </fieldset>
+          </mat-expansion-panel>
+          }
 
-                              <!-- opStyle -->
-                              <div id="opStyle">
-                                <mat-form-field class="long-text" appearance="outline">
-                                  <mat-label>operations style</mat-label>
-                                  <textarea
-                                    matInput
-                                    [formControl]="opStyle"
-                                    placeholder="operations style"
-                                  ></textarea>
-                                </mat-form-field>
-                              </div>
-                            </div>
-                          </div>
-                        </mat-tab>
+          <!-- opStyle -->
+          <div id="opStyle">
+            <mat-form-field class="long-text" appearance="outline">
+              <mat-label>operations style</mat-label>
+              <textarea
+                matInput
+                [formControl]="opStyle"
+                placeholder="operations style"
+              ></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
 
-                        <!-- image -->
-                        <mat-tab>
-                          <ng-template mat-tab-label>
-                            <mat-icon>image</mat-icon> <span class="label">image</span>
-                          </ng-template>
+    <!-- image -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>image</mat-icon> <span class="label">image</span>
+      </ng-template>
 
-                          <div id="image">
-                            <div id="image-ctl">
-                              <!-- url -->
-                              <mat-form-field class="long-text">
-                                <mat-label>URL</mat-label>
-                                <input matInput [formControl]="imageUrl" />
-                              </mat-form-field>
-                              <div class="form-row">
-                                <!-- x -->
-                                <mat-form-field class="input-nr">
-                                  <mat-label>X</mat-label>
-                                  <input
-                                    matInput
-                                    type="number"
-                                    [formControl]="imageX"
-                                    placeholder="X"
-                                    />
-                                  </mat-form-field>
-                                  <!-- y -->
-                                  <mat-form-field class="input-nr">
-                                    <mat-label>Y</mat-label>
-                                    <input
-                                      matInput
-                                      type="number"
-                                      [formControl]="imageY"
-                                      placeholder="Y"
-                                      />
-                                    </mat-form-field>
-                                    <!-- width -->
-                                    <mat-form-field class="input-nr">
-                                      <mat-label>width</mat-label>
-                                      <input
-                                        matInput
-                                        type="number"
-                                        min="0"
-                                        [formControl]="imageWidth"
-                                        />
-                                      </mat-form-field>
-                                      <!-- height -->
-                                      <mat-form-field class="input-nr">
-                                        <mat-label>height</mat-label>
-                                        <input
-                                          matInput
-                                          type="number"
-                                          min="0"
-                                          [formControl]="imageHeight"
-                                          />
-                                        </mat-form-field>
-                                        <!-- reset -->
-                                        <button
-                                          type="button"
-                                          mat-icon-button
-                                          matTooltip="Reset image metadata"
-                                          (click)="resetImgMetadata()"
-                                          >
-                                          <mat-icon class="mat-warn">clear</mat-icon>
-                                        </button>
-                                      </div>
-                                      <div>
-                                        <!-- image opacity -->
-                                        <mat-slider
-                                          min="0"
-                                          max="1"
-                                          step="0.01"
-                                          thumbLabel
-                                          color="primary"
-                                          class="mat-primary"
-                                          matTooltip="Image opacity"
-                                          >
-                                          <input
-                                            matSliderThumb
-                                            [value]="imageOpacity.value"
-                                            (valueChange)="onImageOpacityChange($event)"
-                                            />
-                                          </mat-slider>
-                                          <span id="opacity-value">{{
-                                            imageOpacity.value | number : "1.2-2"
-                                          }}</span>
-                                        </div>
-                                        <!-- defs -->
-                                        <div>
-                                          <mat-form-field class="long-text">
-                                            <mat-label>defs</mat-label>
-                                            <textarea matInput [formControl]="defs" rows="3"></textarea>
-                                          </mat-form-field>
-                                        </div>
-                                      </div>
-                                      <div id="image-view">
-                                        @if (imageUrl.value) {
-                                          <img
-                                            #imgElement
-                                            alt="background"
-                                            [src]="imageUrl.value"
-                                            width="600"
-                                            (load)="onImageLoad(imgElement)"
-                                            />
-                                          }
-                                        </div>
-                                      </div>
-                                    </mat-tab>
+      <div id="image">
+        <div id="image-ctl">
+          <!-- url -->
+          <mat-form-field class="long-text">
+            <mat-label>URL</mat-label>
+            <input matInput [formControl]="imageUrl" />
+          </mat-form-field>
+          <div class="form-row">
+            <!-- x -->
+            <mat-form-field class="input-nr">
+              <mat-label>X</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="imageX"
+                placeholder="X"
+              />
+            </mat-form-field>
+            <!-- y -->
+            <mat-form-field class="input-nr">
+              <mat-label>Y</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControl]="imageY"
+                placeholder="Y"
+              />
+            </mat-form-field>
+            <!-- width -->
+            <mat-form-field class="input-nr">
+              <mat-label>width</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                [formControl]="imageWidth"
+              />
+            </mat-form-field>
+            <!-- height -->
+            <mat-form-field class="input-nr">
+              <mat-label>height</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                [formControl]="imageHeight"
+              />
+            </mat-form-field>
+            <!-- reset -->
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Reset image metadata"
+              (click)="resetImgMetadata()"
+            >
+              <mat-icon class="mat-warn">clear</mat-icon>
+            </button>
+          </div>
+          <div>
+            <!-- image opacity -->
+            <mat-slider
+              min="0"
+              max="1"
+              step="0.01"
+              thumbLabel
+              color="primary"
+              class="mat-primary"
+              matTooltip="Image opacity"
+            >
+              <input
+                matSliderThumb
+                [value]="imageOpacity.value"
+                (valueChange)="onImageOpacityChange($event)"
+              />
+            </mat-slider>
+            <span id="opacity-value">{{
+              imageOpacity.value | number : "1.2-2"
+            }}</span>
+          </div>
+          <!-- defs -->
+          <div>
+            <mat-form-field class="long-text">
+              <mat-label>defs</mat-label>
+              <textarea matInput [formControl]="defs" rows="3"></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+        <div id="image-view">
+          @if (imageUrl.value) {
+          <img
+            #imgElement
+            alt="background"
+            [src]="imageUrl.value"
+            width="600"
+            (load)="onImageLoad(imgElement)"
+          />
+          }
+        </div>
+      </div>
+    </mat-tab>
 
-                                    <!-- timelines -->
-                                    <mat-tab>
-                                      <ng-template mat-tab-label>
-                                        <mat-icon>animation</mat-icon> <span class="label">animation</span>
-                                      </ng-template>
+    <!-- timelines -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>animation</mat-icon> <span class="label">animation</span>
+      </ng-template>
 
-                                      <gve-animation-timeline-set
-                                        [tags]="opTags"
-                                        [elementIds]="opElementIds"
-                                        [timelines]="timelines.value"
-                                        (timelinesChange)="onTimelinesChange($event)"
-                                        />
-                                      </mat-tab>
-                                    </mat-tab-group>
+      <gve-animation-timeline-set
+        [tags]="opTags()"
+        [elementIds]="opElementIds()"
+        [timelines]="timelines.value"
+        (timelinesChange)="onTimelinesChange($event)"
+      />
+    </mat-tab>
+  </mat-tab-group>
 
-                                    <!-- progress -->
-                                    <div>
-                                      @if (busy) {
-                                        <mat-progress-bar mode="indeterminate" />
-                                      }
-                                    </div>
+  <!-- progress -->
+  <div>
+    @if (busy()) {
+    <mat-progress-bar mode="indeterminate" />
+    }
+  </div>
 
-                                    <!-- result -->
-                                    @if (result) {
-                                      <fieldset id="result">
-                                        <legend>result</legend>
-                                        <gve-chain-result-view
-                                          [result]="result"
-                                          [initialStepIndex]="initialStepIndex"
-                                          (stepPick)="onStepPick($event)"
-                                          />
-                                        </fieldset>
-                                      }
+  <!-- result -->
+  @if (result) {
+  <fieldset id="result">
+    <legend>result</legend>
+    <gve-chain-result-view
+      [result]="result"
+      [initialStepIndex]="initialStepIndex"
+      (stepPick)="onStepPick($event)"
+    />
+  </fieldset>
+  }
 
-                                      <!-- snapshot view -->
-                                      <fieldset id="preview">
-                                        <legend class="button-row">
-                                          <span>{{ viewTitle }}</span>
-                                        </legend>
-                                        <!-- snapshot view -->
-                                        <gve-snapshot-view
-                                          #snapshotView
-                                          [debug]="debug()"
-                                          [data]="viewData"
-                                          (snapshotRender)="onSnapshotRender($any($event))"
-                                          (visualEvent)="onVisualEvent($any($event))"
-                                          />
-                                          <div class="button-row">
-                                            <!-- toggle ruler -->
-                                            <mat-button-toggle
-                                              type="button"
-                                              mat-icon-button
-                                              color="primary"
-                                              matTooltip="Toggle rulers"
-                                              [checked]="rulers"
-                                              (change)="toggleRulers()"
-                                              >
-                                              <mat-icon class="mat-primary">straighten</mat-icon>
-                                            </mat-button-toggle>
-                                            <!-- run to last -->
-                                            <button
-                                              type="button"
-                                              mat-icon-button
-                                              class="primary"
-                                              matTooltip="Refresh preview"
-                                              (click)="runToLast()"
-                                              >
-                                              <mat-icon>refresh</mat-icon>
-                                            </button>
-                                          </div>
-                                          @if (visualInfo) {
-                                            <div id="visual-info">{{ visualInfo }}</div>
-                                          }
-                                        </fieldset>
+  <!-- snapshot view -->
+  <fieldset id="preview">
+    <legend class="button-row">
+      <span>{{ viewTitle }}</span>
+    </legend>
+    <!-- snapshot view -->
+    <gve-snapshot-view
+      #snapshotView
+      [debug]="debug()"
+      [data]="viewData"
+      (snapshotRender)="onSnapshotRender($any($event))"
+      (visualEvent)="onVisualEvent($any($event))"
+    />
+    <div class="button-row">
+      <!-- toggle ruler -->
+      <mat-button-toggle
+        type="button"
+        mat-icon-button
+        color="primary"
+        matTooltip="Toggle rulers"
+        [checked]="rulers"
+        (change)="toggleRulers()"
+      >
+        <mat-icon class="mat-primary">straighten</mat-icon>
+      </mat-button-toggle>
+      <!-- run to last -->
+      <button
+        type="button"
+        mat-icon-button
+        class="primary"
+        matTooltip="Refresh preview"
+        (click)="runToLast()"
+      >
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+    @if (visualInfo) {
+    <div id="visual-info">{{ visualInfo }}</div>
+    }
+  </fieldset>
 
-                                        <!-- chain view -->
-                                        @if (chain) {
-                                          <div id="chain-view">
-                                            <gve-chain-view [chain]="chain" />
-                                          </div>
-                                        }
+  <!-- chain view -->
+  @if (chain()) {
+  <div id="chain-view">
+    <gve-chain-view [chain]="chain()" />
+  </div>
+  }
 
-                                        <!--buttons -->
-                                        <div class="form-row-center">
-                                          <button
-                                            type="button"
-                                            class="mat-warn"
-                                            mat-flat-button
-                                            matTooltip="Discard changes"
-                                            (click)="close()"
-                                            >
-                                            <mat-icon>clear</mat-icon>
-                                            close
-                                          </button>
-                                          @if (!noSave()) {
-                                            <button
-                                              type="submit"
-                                              class="mat-primary"
-                                              mat-flat-button
-                                              matTooltip="Save changes"
-                                              [disabled]="form.invalid"
-                                              >
-                                              <mat-icon>check_circle</mat-icon>
-                                              save
-                                            </button>
-                                          }
-                                        </div>
-                                      </form>
+  <!--buttons -->
+  <div class="form-row-center">
+    <button
+      type="button"
+      class="mat-warn"
+      mat-flat-button
+      matTooltip="Discard changes"
+      (click)="close()"
+    >
+      <mat-icon>clear</mat-icon>
+      close
+    </button>
+    @if (!noSave()) {
+    <button
+      type="submit"
+      class="mat-primary"
+      mat-flat-button
+      matTooltip="Save changes"
+      [disabled]="form.invalid"
+    >
+      <mat-icon>check_circle</mat-icon>
+      save
+    </button>
+    }
+  </div>
+</form>
