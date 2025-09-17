@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-09-17:
+  - updated Angular and packages.
+  - ⚠️ refactored all components for full reactivity.
 - 2025-08-02:
   - updated Angular and packages.
   - updated peer dependencies and version in library.
