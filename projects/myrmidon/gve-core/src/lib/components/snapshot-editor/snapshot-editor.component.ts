@@ -57,7 +57,10 @@ import {
   BaseTextViewComponent,
   VarBaseTextRange,
 } from '../base-text-view/base-text-view.component';
-import { ChainOperationEditorComponent } from '../chain-operation-editor/chain-operation-editor.component';
+import {
+  ChainOperationEditorComponent,
+  FeatureDefinitions,
+} from '../chain-operation-editor/chain-operation-editor.component';
 import {
   ChainOperationContextStep,
   CharChain,
@@ -156,6 +159,23 @@ export class SnapshotEditorComponent {
    * features in nodes.
    */
   public readonly noDecoration = input<boolean | undefined>();
+
+  /**
+   * Definitions for features, including names and values.
+   */
+  public readonly featureDefs = input<FeatureDefinitions | undefined>();
+
+  /**
+   * Definitions for element features, including names and values.
+   */
+  public readonly elementFeatureDefs = input<FeatureDefinitions | undefined>();
+
+  /**
+   * Definitions for diplomatic features, including names and values.
+   */
+  public readonly diplomaticFeatureDefs = input<
+    FeatureDefinitions | undefined
+  >();
 
   /**
    * Emitted when the user cancels the snapshot editing.

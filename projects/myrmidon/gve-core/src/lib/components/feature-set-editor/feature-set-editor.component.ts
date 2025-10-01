@@ -77,7 +77,8 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   public readonly POLICIES = ['M', 'S', 'SF'];
 
   /**
-   * True if the features are variable features.
+   * True if the feature is a variant operation feature, which has
+   * additional properties like negation, global, and short-lived.
    */
   public readonly isVar = input(false);
 

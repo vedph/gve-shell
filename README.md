@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 5.0.1
+
+- 2025-10-01: propagate feature definitions up to snapshot editor so we can define them from consumer code (here Cadmus): the hierarchy from bottom to top is feature-set-editor -> chain-operation-editor -> snapshot-editor.
 - 2025-09-17:
   - updated Angular and packages.
   - ⚠️ refactored all components for full reactivity.

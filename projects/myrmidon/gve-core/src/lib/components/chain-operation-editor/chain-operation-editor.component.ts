@@ -45,6 +45,7 @@ import {
   OperationType,
   OperationSource,
   SnapshotBase,
+  LabeledId,
 } from '@myrmidon/gve-snapshot-view';
 
 // local
@@ -52,6 +53,25 @@ import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-edi
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
 import { SettingsService } from '../../services/settings.service';
 import { SvgValidators } from '../../validators/svg-validators';
+import { FeatureMap } from '../feature-editor/feature-editor.component';
+
+/**
+ * Definitions for features, including names and values.
+ */
+export interface FeatureDefinitions {
+  /**
+   * The list of feature names to display in the name selection.
+   * This is used when you have a closed list of features.
+   */
+  names?: LabeledId[];
+
+  /**
+   * The feature values map. When specified and the user selects a feature
+   * name present in the map keys, the corresponding values will be used
+   * to populate the value selection.
+   */
+  values?: FeatureMap;
+}
 
 /**
  * 🔑 `gve-chain-operation-editor`
@@ -148,6 +168,23 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
    * Whether to hide the preview request button.
    */
   public readonly hidePreview = input<boolean | undefined>();
+
+  /**
+   * Definitions for features, including names and values.
+   */
+  public readonly featureDefs = input<FeatureDefinitions | undefined>();
+
+  /**
+   * Definitions for element features, including names and values.
+   */
+  public readonly elementFeatureDefs = input<FeatureDefinitions | undefined>();
+
+  /**
+   * Definitions for diplomatic features, including names and values.
+   */
+  public readonly diplomaticFeatureDefs = input<
+    FeatureDefinitions | undefined
+  >();
 
   /**
    * Emitted when the operation is changed.

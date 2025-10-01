@@ -139,9 +139,11 @@
           <legend>operation features</legend>
           <gve-feature-set-editor
             [isVar]="true"
+            [featNames]="featureDefs()?.names"
+            [featValues]="featureDefs()?.values"
             [features]="features.value"
             (featuresChange)="onFeaturesChange($event)"
-          ></gve-feature-set-editor>
+          />
         </fieldset>
       </div>
     </mat-tab>
@@ -349,6 +351,8 @@
           editedElementId()
         }}</mat-expansion-panel-header>
         <gve-feature-set-editor
+          [featNames]="elementFeatureDefs()?.names"
+          [featValues]="elementFeatureDefs()?.values"
           [features]="elementFeatures.value[editedElementId()!] || []"
           (featuresChange)="onElementFeaturesChange($event)"
         />
@@ -362,6 +366,8 @@
         <mat-checkbox [formControl]="newTextHidden">hide new text</mat-checkbox>
       </div>
       <gve-feature-set-editor
+        [featNames]="diplomaticFeatureDefs()?.names"
+        [featValues]="diplomaticFeatureDefs()?.values"
         [features]="dpFeatures.value"
         (featuresChange)="onDpFeaturesChange($event)"
       />
