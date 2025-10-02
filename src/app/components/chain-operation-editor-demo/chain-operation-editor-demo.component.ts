@@ -13,7 +13,10 @@ import {
   Snapshot,
 } from '@myrmidon/gve-snapshot-view';
 
-import { ChainOperationEditorComponent } from '@myrmidon/gve-core';
+import {
+  ChainOperationEditorComponent,
+  FeatureDefinitions,
+} from '@myrmidon/gve-core';
 
 @Component({
   selector: 'app-chain-operation-editor-demo',
@@ -38,6 +41,35 @@ export class ChainOperationEditorDemoComponent {
     textOptions: DEFAULT_SVG_BASE_TEXT_OPTIONS,
     operations: [],
   };
+  public readonly featureDefs: FeatureDefinitions = {
+    names: [
+      {
+        id: 'clr',
+        label: 'color',
+      },
+      {
+        id: 'sz',
+        label: 'size',
+      },
+    ],
+    values: {
+      clr: [
+        {
+          id: 'r',
+          label: 'red',
+        },
+        {
+          id: 'g',
+          label: 'green',
+        },
+        {
+          id: 'b',
+          label: 'blue',
+        },
+      ],
+    },
+  };
+
   public readonly operation = signal<CharChainOperation>({
     id: '4f90d13a42',
     type: OperationType.replace,

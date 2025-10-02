@@ -4,6 +4,7 @@
   </mat-card-header>
   <mat-card-content>
     <gve-chain-operation-editor
+      [featureDefs]="featureDefs"
       [snapshot]="snapshot"
       [operation]="operation()"
       (operationChange)="onOperationChange($event!)"
