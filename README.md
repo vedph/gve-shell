@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-10-24:
+  - added flags to features set editor.
 - 2025-10-23: updated Angular and packages.
 
 ### 5.0.1

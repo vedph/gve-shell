@@ -109,6 +109,18 @@ legend {
 span.label {
   margin-left: 8px;
 }
+.feature {
+  color: silver;
+}
+.fname {
+  color: silver;
+}
+.fvalue {
+  color: white;
+  background-color: #b5bdc9;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
 gve-animation-timeline-set {
   margin: 8px 0;
 }

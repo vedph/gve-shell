@@ -151,6 +151,11 @@
             <!-- chain -->
             <mat-checkbox [formControl]="showChain">show chain</mat-checkbox>
 
+            <!-- feat details -->
+            <mat-checkbox [formControl]="featDetails"
+              >feat. details</mat-checkbox
+            >
+
             <div class="form-row right">
               <!-- remove ops -->
               <button
@@ -258,7 +263,22 @@
                 <td>{{ operation.inputTag }}</td>
                 <td>{{ operation.outputTag }}</td>
                 <td>{{ operation.groupId }}</td>
-                <td>{{ operation.features?.length }}</td>
+                <td>
+                  @if (operation.features?.length) { @if (featDetails.value) {
+                  <div class="form-row">
+                    @for (feat of operation.features; track $index; let
+                    i=$index) {
+                    <div class="feature">
+                      <span class="fname">{{ feat.name }}</span
+                      >=
+                      <span class="fvalue">{{ feat.value }}</span>
+                    </div>
+                    }
+                  </div>
+                  } @else {
+                  {{ operation.features?.length }}
+                  } }
+                </td>
               </tr>
               }
             </tbody>

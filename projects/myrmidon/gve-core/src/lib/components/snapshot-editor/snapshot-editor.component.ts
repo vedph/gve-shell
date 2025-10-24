@@ -214,6 +214,10 @@ export class SnapshotEditorComponent {
     false,
     { nonNullable: true }
   );
+  public readonly featDetails: FormControl<boolean> = new FormControl<boolean>(
+    false,
+    { nonNullable: true }
+  );
 
   public readonly chain = signal<CharChain | undefined>(undefined);
 
