@@ -350,6 +350,14 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  private toggleLfEscape(
+    text: string | null | undefined,
+    on: boolean
+  ): string | null | undefined {
+    if (!text) return text;
+    return on ? text.replace(/\\/g, '\n') : text.replace(/\n/g, '\\');
+  }
+
   private hasTextChanges(snapshot?: SnapshotBase): boolean {
     if ((!snapshot && this.snapshot()) || (snapshot && !this.snapshot())) {
       return true;
@@ -660,7 +668,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     this.outputTag.setValue(operation.outputTag || null);
     this.run.setValue(operation.run);
     this.toRun.setValue(operation.toRun || 0);
-    this.value.setValue(operation.value || null);
+    // escape line feeds in value for editing
+    this.value.setValue(this.toggleLfEscape(operation.value, true) || null);
 
     this.svg.setValue(operation.diplomatics?.g || '');
     this._editorModel?.setValue(this.svg.value || '');
@@ -699,7 +708,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       outputTag: this.outputTag.value || undefined,
       run: this.run.value,
       toRun: this.toRun.value || undefined,
-      value: this.value.value || undefined,
+      // un-escape line feeds in value for storage
+      value: this.toggleLfEscape(this.value.value, false) || undefined,
     };
   }
 
