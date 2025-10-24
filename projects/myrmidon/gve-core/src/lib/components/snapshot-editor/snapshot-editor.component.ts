@@ -427,7 +427,7 @@ export class SnapshotEditorComponent {
     }
 
     const dialogRef = this._dialog.open(SnapshotTextEditorComponent, {
-      data: { payload: { text: this.baseText.value } },
+      data: { payload: { text: [...this.baseText.value] } },
       width: '80%',
     });
 

@@ -61,6 +61,7 @@ To publish the documentation via GitHub:
 
 - 2025-10-24:
   - added flags to features set editor.
+  - fix: use `\` as LF escape in operation's value editor so we can type LF in it.
 - 2025-10-23: updated Angular and packages.
 
 ### 5.0.1

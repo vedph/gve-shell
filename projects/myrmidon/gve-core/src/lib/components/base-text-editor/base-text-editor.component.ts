@@ -99,7 +99,7 @@ export class BaseTextEditorComponent {
       } else {
         this.userText.setValue(
           this.text()!
-            .map((c) => c.label)
+            .map((c) => c.data)
             .join('')
         );
         this.userText.markAsPristine();
