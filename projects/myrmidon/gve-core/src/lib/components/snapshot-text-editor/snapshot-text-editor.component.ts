@@ -75,7 +75,7 @@ export class SnapshotTextEditorComponent implements OnInit {
   }
 
   private updateUserText(nodes: CharNode[]): void {
-    this.userText.setValue(nodes.map((node) => node.label).join(''));
+    this.userText.setValue(nodes.map((node) => node.data).join(''));
     this.userText.markAsPristine();
     this.userText.updateValueAndValidity();
   }

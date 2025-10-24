@@ -149,11 +149,13 @@
             </mat-form-field>
 
             <!-- chain -->
-            <mat-checkbox [formControl]="showChain">show chain</mat-checkbox>
+            <mat-slide-toggle [formControl]="showChain"
+              >show chain</mat-slide-toggle
+            >
 
             <!-- feat details -->
-            <mat-checkbox [formControl]="featDetails"
-              >feat. details</mat-checkbox
+            <mat-slide-toggle [formControl]="featDetails"
+              >feat. details</mat-slide-toggle
             >
 
             <div class="form-row right">
@@ -269,9 +271,7 @@
                     @for (feat of operation.features; track $index; let
                     i=$index) {
                     <div class="feature">
-                      <span class="fname">{{ feat.name }}</span
-                      >=
-                      <span class="fvalue">{{ feat.value }}</span>
+                      <span class="fname">{{ feat.name }}</span>=<span class="fvalue">{{ feat.value }}</span>
                     </div>
                     }
                   </div>

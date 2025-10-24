@@ -28,6 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -107,6 +108,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     MatInputModule,
     MatProgressBarModule,
     MatSliderModule,
+    MatSlideToggle,
     MatSnackBarModule,
     MatTabsModule,
     MatTooltipModule,
