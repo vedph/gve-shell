@@ -80,7 +80,7 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
    * True if the feature is a variant operation feature, which has
    * additional properties like negation, global, and short-lived.
    */
-  public readonly isVar = input(false);
+  public readonly isVar = input(true);
 
   /**
    * The list of feature names to display in the name selection.

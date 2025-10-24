@@ -44,9 +44,7 @@
         <th>value</th>
         <th>policy</th>
         @if (isVar()) {
-        <th>negated</th>
-        <th>global</th>
-        <th>short-lived</th>
+        <th>flags</th>
         }
       </tr>
     </thead>
@@ -98,13 +96,19 @@
         </td>
         @if (isVar()) {
         <td>
-          <span>{{ $any(feature).isNegated ? "yes" : "no" }}</span>
-        </td>
-        <td>
-          <span>{{ $any(feature).isGlobal ? "yes" : "no" }}</span>
-        </td>
-        <td>
-          <span>{{ $any(feature).isShortLived ? "yes" : "no" }}</span>
+          @if ($any(feature).isNegated) {
+          <span class="icon" matTooltip="Negated: remove if present">
+            <mat-icon class="mat-warn">remove_circle</mat-icon>
+          </span>
+          } @if ($any(feature).isGlobal) {
+          <span class="icon" matTooltip="Global: apply to whole output">
+            <mat-icon class="mat-primary">public</mat-icon>
+          </span>
+          } @if ($any(feature).isShortLived) {
+          <span class="icon" matTooltip="Short-lived: removed on next operation">
+            <mat-icon class="mat-accent">timer</mat-icon>
+          </span>
+          }
         </td>
         }
       </tr>
