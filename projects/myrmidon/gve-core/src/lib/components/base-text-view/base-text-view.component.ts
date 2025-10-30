@@ -1,4 +1,11 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 
 import { CharNode } from '@myrmidon/gve-snapshot-view';
 
@@ -43,7 +50,7 @@ export interface VarBaseTextRange {
   styleUrl: './base-text-view.component.css',
 })
 export class BaseTextViewComponent {
-  private _lastSelectedChar?: BaseTextChar;
+  private _lastSelectedPosition?: number;
 
   /**
    * The default color for the text.
@@ -98,22 +105,62 @@ export class BaseTextViewComponent {
    */
   public readonly rangePick = output<VarBaseTextRange>();
 
-  public readonly lines = signal<BaseTextChar[][]>([]);
+  /**
+   * The base characters organized by lines, computed from text input.
+   */
+  private readonly baseLines = computed(() => {
+    return this.buildLines(
+      this.text(),
+      this.colorCallback(),
+      this.borderColorCallback()
+    );
+  });
+
+  /**
+   * Signal for tracking selected range state.
+   */
+  private readonly selectedRange = signal<{
+    start: number;
+    end: number;
+  } | null>(null);
+
+  /**
+   * The lines with selection state applied, computed from base lines and selection.
+   */
+  public readonly lines = computed(() => {
+    const base = this.baseLines();
+    const range = this.selectedRange();
+
+    if (!range) {
+      return base;
+    }
+
+    const { start, end } = range;
+    let position = 0;
+
+    return base.map((line) =>
+      line.map((char) => {
+        const currentPos = position++;
+        if (currentPos >= start && currentPos <= end) {
+          return {
+            ...char,
+            oldColor: char.oldColor || char.color,
+            oldBorderColor: char.oldBorderColor || char.borderColor,
+            color: this.selectionColor(),
+            borderColor: this.selectionColor(),
+          };
+        }
+        return char;
+      })
+    );
+  });
 
   constructor() {
-    // build lines when text or border color callback change
-    effect(() => {
-      this.buildLines(
-        this.text(),
-        this.colorCallback(),
-        this.borderColorCallback()
-      );
-    });
-
-    // reset _lastSelectedChar when text changes
+    // reset selection when text changes
     effect(() => {
       this.text();
-      this._lastSelectedChar = undefined;
+      this._lastSelectedPosition = undefined;
+      this.selectedRange.set(null);
     });
   }
 
@@ -121,10 +168,9 @@ export class BaseTextViewComponent {
     text: CharNode[],
     colorCallback?: (node: CharNode) => string | null,
     borderColorCallback?: (node: CharNode) => string | null
-  ): void {
-    if (!text) {
-      this.lines.set([]);
-      return;
+  ): BaseTextChar[][] {
+    if (!text || text.length === 0) {
+      return [];
     }
 
     const newLines: BaseTextChar[][] = [];
@@ -155,23 +201,7 @@ export class BaseTextViewComponent {
       }
     }
 
-    this.lines.set(newLines);
-  }
-
-  private resetColors(): void {
-    if (!this.lines()) return;
-
-    const newLines = this.lines().map((line) =>
-      line.map((c) => {
-        if (!c) return c;
-        return {
-          ...c,
-          color: c.oldColor || this.defaultColor(),
-          borderColor: c.oldBorderColor || this.defaultBorderColor(),
-        };
-      })
-    );
-    this.lines.set(newLines);
+    return newLines;
   }
 
   public onCharPick(event: BaseTextCharEvent): void {
@@ -180,61 +210,37 @@ export class BaseTextViewComponent {
       return;
     }
 
-    // first reset all colors before updating
-    this.resetColors();
+    // find the position of the clicked character in the flat array
+    const clickedPosition = this.findCharPosition(event.char.id);
+    if (clickedPosition === -1) {
+      return; // character not found
+    }
 
     // calculate selection state
     const isRangeSelection =
-      Boolean(this._lastSelectedChar) &&
-      this._lastSelectedChar !== event.char &&
+      this._lastSelectedPosition !== undefined &&
+      this._lastSelectedPosition !== clickedPosition &&
       event.event?.ctrlKey;
 
     let rangeToEmit: VarBaseTextRange;
 
-    if (isRangeSelection && this._lastSelectedChar) {
-      const minId = Math.min(this._lastSelectedChar.id, event.char.id);
-      const maxId = Math.max(this._lastSelectedChar.id, event.char.id);
+    if (isRangeSelection && this._lastSelectedPosition !== undefined) {
+      // range selection: use positions, not IDs
+      const minPos = Math.min(this._lastSelectedPosition, clickedPosition);
+      const maxPos = Math.max(this._lastSelectedPosition, clickedPosition);
 
-      // update UI to highlight range - create new objects
-      const newLines = this.lines().map((line) =>
-        line.map((c) => {
-          if (!c) return c;
-          if (c.id >= minId && c.id <= maxId) {
-            return {
-              ...c,
-              oldColor: c.color,
-              oldBorderColor: c.borderColor,
-              color: this.selectionColor(),
-              borderColor: this.selectionColor(),
-            };
-          }
-          return c;
-        })
-      );
-      this.lines.set(newLines);
+      // update selection range
+      this.selectedRange.set({ start: minPos, end: maxPos });
 
-      rangeToEmit = { at: minId, run: maxId - minId + 1 };
+      // emit range based on the first character's ID at minPos and the count
+      const firstCharId = this.getCharIdAtPosition(minPos);
+      rangeToEmit = { at: firstCharId, run: maxPos - minPos + 1 };
     } else {
-      // single character selection - create new objects
-      const newLines = this.lines().map((line) =>
-        line.map((c) => {
-          if (!c) return c;
-          if (c.id === event.char.id) {
-            const updatedChar = {
-              ...c,
-              oldColor: c.color,
-              oldBorderColor: c.borderColor,
-              color: this.selectionColor(),
-              borderColor: this.selectionColor(),
-            };
-            // update last selected character reference
-            this._lastSelectedChar = updatedChar;
-            return updatedChar;
-          }
-          return c;
-        })
-      );
-      this.lines.set(newLines);
+      // single character selection
+      this.selectedRange.set({ start: clickedPosition, end: clickedPosition });
+
+      // update last selected character and position
+      this._lastSelectedPosition = clickedPosition;
 
       rangeToEmit = { at: event.char.id, run: 1 };
     }
@@ -242,5 +248,45 @@ export class BaseTextViewComponent {
     // emit events last, after all internal state is updated
     this.charPick.emit(event);
     this.rangePick.emit(rangeToEmit);
+  }
+
+  /**
+   * Find the position (index in flat array) of a character by its ID.
+   * Returns -1 if not found.
+   */
+  private findCharPosition(charId: number): number {
+    const baseLines = this.baseLines();
+    let position = 0;
+
+    for (const line of baseLines) {
+      for (const char of line) {
+        if (char.id === charId) {
+          return position;
+        }
+        position++;
+      }
+    }
+
+    return -1;
+  }
+
+  /**
+   * Get the character ID at a specific position in the flat array.
+   * Returns the ID or -1 if position is out of bounds.
+   */
+  private getCharIdAtPosition(position: number): number {
+    const baseLines = this.baseLines();
+    let currentPos = 0;
+
+    for (const line of baseLines) {
+      for (const char of line) {
+        if (currentPos === position) {
+          return char.id;
+        }
+        currentPos++;
+      }
+    }
+
+    return -1;
   }
 }

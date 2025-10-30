@@ -61,6 +61,7 @@ To publish the documentation via GitHub:
 
 - 2025-10-30:
   - added logic to patch the currently edited operation in snapshot from the range picked in the operation result.
+  - refactored `BaseTextViewComponent` to use indexes rather than IDs when selecting ranges.
 - 2025-10-24:
   - added flags to features set editor.
   - added toggle button to show/hide features details in operations list.
