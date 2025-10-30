@@ -13,6 +13,12 @@
   align-items: start;
   flex-wrap: wrap;
 }
+.range {
+  color: silver;
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding: 4px;
+}
 
 div#container {
   display: grid;

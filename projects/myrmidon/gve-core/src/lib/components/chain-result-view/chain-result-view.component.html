@@ -24,6 +24,22 @@
       </mat-select>
     </mat-form-field>
     }
+    <!-- range picker -->
+    @if (selectionRange()) {
+    <div class="range">
+      {{ selectionRange()!.at }}×{{ selectionRange()!.run }}
+    </div>
+    @if (!disabledRangePick()) {
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Pick this range for the edited operation"
+      (click)="pickRange()"
+      [disabled]="disabledRangePick()"
+    >
+      <mat-icon class="mat-warn">file_open</mat-icon>
+    </button>
+    } }
   </div>
 
   <!-- step -->

@@ -33,6 +33,7 @@ import {
   CharChainResult,
 } from '../../services/gve-api.service';
 import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
+import { MatTooltip } from "@angular/material/tooltip";
 
 /**
  * 🔑 `gve-chain-result-view`
@@ -58,7 +59,8 @@ import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
     FeatureSetViewComponent,
     StepsMapComponent,
     BaseTextViewComponent,
-  ],
+    MatTooltip
+],
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
 })
@@ -94,6 +96,21 @@ export class ChainResultViewComponent
   );
   public readonly selection = signal<string | undefined>(undefined);
   public readonly selectionFeatures = signal<OperationFeature[]>([]);
+  public readonly selectionRange = signal<VarBaseTextRange | undefined>(
+    undefined
+  );
+
+  /**
+   * True to disable range picking. For instance the snapshot editor,
+   * which uses rangePick to set the edited operation's range, disables
+   * this when no operation is being edited.
+   */
+  public readonly disabledRangePick = input<boolean>(true);
+
+  /**
+   * Emitted when a range is picked.
+   */
+  public readonly rangePick = output<VarBaseTextRange>();
 
   public versionTag: FormControl<string | null>;
   public tag: FormControl<string | null>;
@@ -286,6 +303,8 @@ export class ChainResultViewComponent
     const node = this.findNode(event.char.id)!;
     this.selection.set(`${event.char.label} (${node.sourceTag})`);
     this.selectionFeatures.set([...features]);
+
+    this.selectionRange.set({ at: event.char.id, run: 1 });
   }
 
   public onTextRangePick(range: VarBaseTextRange): void {
@@ -294,6 +313,7 @@ export class ChainResultViewComponent
       return;
     }
     this.selection.set(range.at + '×' + range.run);
+    this.selectionRange.set(range);
     const end = range.at + range.run;
 
     const features: Feature[] = [];
@@ -329,6 +349,12 @@ export class ChainResultViewComponent
     if (step) {
       // setting the tag will trigger the step change
       this.tag.setValue(step.outputTag);
+    }
+  }
+
+  public pickRange(): void {
+    if (this.selectionRange()) {
+      this.rangePick.emit(this.selectionRange()!);
     }
   }
 }

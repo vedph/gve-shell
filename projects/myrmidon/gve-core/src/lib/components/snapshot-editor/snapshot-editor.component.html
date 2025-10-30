@@ -271,7 +271,8 @@
                     @for (feat of operation.features; track $index; let
                     i=$index) {
                     <div class="feature">
-                      <span class="fname">{{ feat.name }}</span>=<span class="fvalue">{{ feat.value }}</span>
+                      <span class="fname">{{ feat.name }}</span
+                      >=<span class="fvalue">{{ feat.value }}</span>
                     </div>
                     }
                   </div>
@@ -298,6 +299,7 @@
                 [diplomaticFeatureDefs]="diplomaticFeatureDefs()"
                 [hidePreview]="editedOpIndex() === -1"
                 [operation]="editedOp()"
+                [rangePatch]="editedOpRangePatch()"
                 (operationCancel)="onOperationCancel()"
                 (operationChange)="onOperationChange($event)"
                 (operationPreview)="onOperationPreview($event)"
@@ -457,7 +459,9 @@
     <gve-chain-result-view
       [result]="result"
       [initialStepIndex]="initialStepIndex"
+      [disabledRangePick]="editedOp() ? false : true"
       (stepPick)="onStepPick($event)"
+      (rangePick)="onRangePick($event, true)"
     />
   </fieldset>
   }

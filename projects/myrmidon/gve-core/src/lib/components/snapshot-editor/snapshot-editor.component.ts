@@ -234,6 +234,10 @@ export class SnapshotEditorComponent {
   // the currently edited operation
   public readonly editedOp = signal<CharChainOperation | undefined>(undefined);
   public readonly editedOpIndex = signal<number>(-1);
+  // the patch to apply to the edited operation's range
+  public readonly editedOpRangePatch = signal<VarBaseTextRange | undefined>(
+    undefined
+  );
 
   public readonly busy = signal<boolean>(false);
 
@@ -468,9 +472,14 @@ export class SnapshotEditorComponent {
   /**
    * Handle the event fired by the base text editor to pick a text range.
    * @param range The picked range.
+   * @param applyToOp True to also apply the picked range to the edited operation.
    */
-  public onRangePick(range?: VarBaseTextRange) {
+  public onRangePick(range?: VarBaseTextRange, applyToOp = false): void {
     this.textRange.set(range);
+
+    if (applyToOp) {
+      this.editedOpRangePatch.set({ ...range } as VarBaseTextRange);
+    }
   }
   // #endregion
 
@@ -504,12 +513,15 @@ export class SnapshotEditorComponent {
    * Edit a new operation.
    */
   public editNewOperation() {
-    // create a new operation and edit it
+    // create a new operation and edit it, using as the initial range
+    // the base text range if any
+    const range = this.textRange();
+
     this.editedOp.set({
       id: this._nanoid(),
       type: 0,
-      at: this.textRange()?.at || 0,
-      run: this.textRange()?.run || 1,
+      at: range?.at || 0,
+      run: range?.run || 1,
     });
     this.editedOpIndex.set(-1);
   }

@@ -54,6 +54,7 @@ import { OperationSourceEditorComponent } from '../operation-source-editor/opera
 import { SettingsService } from '../../services/settings.service';
 import { SvgValidators } from '../../validators/svg-validators';
 import { FeatureMap } from '../feature-editor/feature-editor.component';
+import { VarBaseTextRange } from '../base-text-view/base-text-view.component';
 
 /**
  * Definitions for features, including names and values.
@@ -185,6 +186,11 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly diplomaticFeatureDefs = input<
     FeatureDefinitions | undefined
   >();
+
+  /**
+   * Set when the edited operation's text range is to be patched.
+   */
+  public readonly rangePatch = input<VarBaseTextRange | undefined>();
 
   /**
    * Emitted when the operation is changed.
@@ -320,6 +326,28 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       if (dirty) {
         this.requestPreview();
         this._editorModel?.setValue(this.svg.value || '');
+      }
+    });
+
+    // when rangePatch changes, patch operation range (at and run,
+    // resetting atAsIndex to false)
+    effect(() => {
+      const range = this.rangePatch();
+
+      if (range) {
+        console.log('patching range', range);
+
+        this.at.setValue(range.at);
+        this.at.markAsDirty();
+        this.at.updateValueAndValidity();
+
+        this.atAsIndex.setValue(false);
+        this.atAsIndex.markAsDirty();
+        this.atAsIndex.updateValueAndValidity();
+
+        this.run.setValue(range.run);
+        this.run.markAsDirty();
+        this.run.updateValueAndValidity();
       }
     });
   }
