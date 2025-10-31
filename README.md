@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 5.0.2
+
 - 2025-10-30:
   - added logic to patch the currently edited operation in snapshot from the range picked in the operation result.
   - refactored `BaseTextViewComponent` to use indexes rather than IDs when selecting ranges.
