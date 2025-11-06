@@ -59,7 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
-- 2025-11-06: added lookup pipe to features in snapshot editor.
+- 2025-11-06:
+  - added lookup pipe to features in snapshot editor.
+  - updated Angular.
 
 ### 5.0.2
 
