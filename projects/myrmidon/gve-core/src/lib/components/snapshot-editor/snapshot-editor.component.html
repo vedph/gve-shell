@@ -271,8 +271,14 @@
                     @for (feat of operation.features; track $index; let
                     i=$index) {
                     <div class="feature">
-                      <span class="fname">{{ feat.name }}</span
-                      >=<span class="fvalue">{{ feat.value }}</span>
+                      <span class="fname">{{
+                        feat.name
+                          | flatLookup : featureDefs()?.names : "id" : "label"
+                      }}</span
+                      >=<span
+                        class="fvalue"
+                        >{{ feat.value | flatLookup:(featureDefs()?.values?.[feat.name]): "id" : "label" }}</span
+                      >
                     </div>
                     }
                   </div>

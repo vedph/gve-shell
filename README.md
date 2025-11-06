@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2025-11-06: added lookup pipe to features in snapshot editor.
+
 ### 5.0.2
 
 - 2025-10-30:
