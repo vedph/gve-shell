@@ -12,7 +12,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 🐋 Quick Docker image build:
 
-1. `npm run build-lib`.
+1. `pnpm run build-lib`.
 2. update version in `env.js` and `ng build --configuration=production`.
 3. `docker build . -t vedph2020/gve-shell:3.0.4 -t vedph2020/gve-shell:latest` (replace with the current version).
 
@@ -35,14 +35,14 @@ To just run the image, use `docker run -d --name gve-shell -p 4200:80 vedph2020/
 
 Main third-party dependencies:
 
-- [GSAP](https://gsap.com): `npm i gsap`, `npm i --save-dev @types/gsap`.
-- [SVG.js](https://svgjs.dev/docs/3.0/): `npm i @svgdotjs/svg.js`: this is used to parse SVG code building objects. There seem to be glitches in doing this via a `DOMParser`, like `getBBox()` not being available on SVG elements, even though they were created from the SVG namespace.
+- [GSAP](https://gsap.com): `pnpm i gsap`, `pnpm i --save-dev @types/gsap`.
+- [SVG.js](https://svgjs.dev/docs/3.0/): `pnpm i @svgdotjs/svg.js`: this is used to parse SVG code building objects. There seem to be glitches in doing this via a `DOMParser`, like `getBBox()` not being available on SVG elements, even though they were created from the SVG namespace.
 
 ## Documentation
 
 📖 Build as follows:
 
-1. `npm run compodoc`.
+1. `pnpm run compodoc`.
 2. FIX: run `./mvdocimg.ps1` to move conceptual documentation images in the right place.
 3. see the results with `compodoc -s`.
 

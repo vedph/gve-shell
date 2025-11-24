@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -35,7 +35,7 @@ import { ChainOperationContextStep } from '../../services/gve-api.service';
  */
 @Component({
   selector: 'gve-steps-map',
-  imports: [CommonModule, MatButtonModule, MatRippleModule, MatTooltipModule],
+  imports: [MatButtonModule, MatRippleModule, MatTooltipModule],
   templateUrl: './steps-map.component.html',
   styleUrl: './steps-map.component.css',
 })
