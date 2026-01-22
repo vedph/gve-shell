@@ -437,6 +437,53 @@ export class SnapshotEditorComponent {
       });
   }
 
+  /**
+   * Duplicate the operation at the specified index, inserting the copy
+   * immediately after the original.
+   * @param index The index of the operation to duplicate.
+   */
+  public duplicateOperation(index: number): void {
+    const operations = [...this.operations.value];
+    const clone = structuredClone(operations[index]);
+    clone.id = this._nanoid();
+    operations.splice(index + 1, 0, clone);
+    this.operations.setValue(operations);
+    this.operations.markAsDirty();
+    this.operations.updateValueAndValidity();
+  }
+
+  /**
+   * Move the operation at the specified index up by one position.
+   * @param index The index of the operation to move up.
+   */
+  public moveOperationUp(index: number): void {
+    if (index < 1) {
+      return;
+    }
+    const operations = [...this.operations.value];
+    const op = operations.splice(index, 1)[0];
+    operations.splice(index - 1, 0, op);
+    this.operations.setValue(operations);
+    this.operations.markAsDirty();
+    this.operations.updateValueAndValidity();
+  }
+
+  /**
+   * Move the operation at the specified index down by one position.
+   * @param index The index of the operation to move down.
+   */
+  public moveOperationDown(index: number): void {
+    const operations = [...this.operations.value];
+    if (index >= operations.length - 1) {
+      return;
+    }
+    const op = operations.splice(index, 1)[0];
+    operations.splice(index + 1, 0, op);
+    this.operations.setValue(operations);
+    this.operations.markAsDirty();
+    this.operations.updateValueAndValidity();
+  }
+
   public copyOperationsJson() {
     const json = JSON.stringify(this.operations.value, null, 2);
     navigator.clipboard.writeText(json).then(() => {

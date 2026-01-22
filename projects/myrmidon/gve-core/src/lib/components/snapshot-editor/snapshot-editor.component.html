@@ -164,6 +164,35 @@
                       >
                         <mat-icon class="mat-accent">subscriptions</mat-icon>
                       </button>
+                      <!-- duplicate -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        (click)="duplicateOperation(index)"
+                        matTooltip="Duplicate operation"
+                      >
+                        <mat-icon>control_point_duplicate</mat-icon>
+                      </button>
+                      <!-- move up -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        (click)="moveOperationUp(index)"
+                        matTooltip="Move operation up"
+                        [disabled]="index === 0"
+                      >
+                        <mat-icon>arrow_circle_up</mat-icon>
+                      </button>
+                      <!-- move down -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        (click)="moveOperationDown(index)"
+                        matTooltip="Move operation down"
+                        [disabled]="index === operations.value.length - 1"
+                      >
+                        <mat-icon>arrow_circle_down</mat-icon>
+                      </button>
                     </td>
                     <td>{{ operation.id }}</td>
                     <td>{{ operation.type | flatLookup: opTypeMap }}</td>
