@@ -38,12 +38,6 @@ export class SnapshotEditorDemoComponent implements OnInit {
   public debug: FormControl<boolean> = new FormControl(false, {
     nonNullable: true,
   });
-  // public batchOps: string =
-  //   '3- [*log="delete Z" reason="don\'t like Z"]\n' +
-  //   '2=V [*log="replace R with V" *version^:=alpha]\n' +
-  //   '6=B [*log="replace V with B" reason="like B"]\n' +
-  //   '(v1:) 2=P [*log="replace R with P" *version^:=beta]\n' +
-  //   '(v3:) 4<>5 [*version^:=gamma]';
 
   constructor(private _asset: AssetService) {}
 

@@ -54,7 +54,6 @@ import {
 import { ChainResultViewComponent } from '../chain-result-view/chain-result-view.component';
 import { BatchOperationEditorComponent } from '../batch-operation-editor/batch-operation-editor.component';
 import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-text-editor.component';
-import { ChainViewComponent } from '../chain-view/chain-view.component';
 import { CharChainOperation, CharNode, Snapshot } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 
@@ -99,7 +98,6 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainResultViewComponent,
     BaseTextViewComponent,
     FlatLookupPipe,
-    ChainViewComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './snapshot-editor.component.html',

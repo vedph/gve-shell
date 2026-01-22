@@ -9,7 +9,6 @@ export * from './lib/components/base-text-view/base-text-view.component';
 export * from './lib/components/batch-operation-editor/batch-operation-editor.component';
 export * from './lib/components/chain-operation-editor/chain-operation-editor.component';
 export * from './lib/components/chain-result-view/chain-result-view.component';
-export * from './lib/components/chain-view/chain-view.component';
 export * from './lib/components/feature-editor/feature-editor.component';
 export * from './lib/components/feature-set-editor/feature-set-editor.component';
 export * from './lib/components/feature-set-view/feature-set-view.component';
