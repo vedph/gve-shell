@@ -4,7 +4,7 @@
     <!-- version -->
     @if (versionTags().length) {
     <mat-form-field>
-      <mat-label>version</mat-label>
+      <mat-label>stage</mat-label>
       <mat-select [formControl]="versionTag">
         <mat-option [value]="null">-</mat-option>
         @for (t of versionTags(); track t) {
