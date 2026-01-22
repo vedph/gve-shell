@@ -1,4 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
 import { MatRippleModule } from '@angular/material/core';
 
 import { ColorToContrastPipe } from '@myrmidon/ngx-tools';
@@ -37,6 +42,7 @@ export interface BaseTextCharEvent {
   imports: [MatRippleModule, ColorToContrastPipe],
   templateUrl: './base-text-char.component.html',
   styleUrl: './base-text-char.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaseTextCharComponent {
   /**

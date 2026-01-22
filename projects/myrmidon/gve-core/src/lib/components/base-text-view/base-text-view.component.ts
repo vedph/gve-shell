@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -70,6 +71,7 @@ export interface BaseTextRange {
   ],
   templateUrl: './base-text-view.component.html',
   styleUrl: './base-text-view.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaseTextViewComponent implements OnInit {
   private readonly _destroyRef = inject(DestroyRef);
@@ -478,9 +480,9 @@ export class BaseTextViewComponent implements OnInit {
   /**
    * Check if there is an active selection.
    */
-  public hasSelection(): boolean {
+  public readonly hasSelection = computed(() => {
     return this.selectedRange() !== null;
-  }
+  });
 
   /**
    * Get the total count of matched characters.
