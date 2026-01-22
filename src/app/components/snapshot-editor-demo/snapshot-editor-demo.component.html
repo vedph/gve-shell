@@ -6,6 +6,7 @@
   <mat-card-content>
     <gve-snapshot-editor
       [debug]="debug.value"
+      [hints]="hints()"
       [snapshot]="snapshot()"
       (snapshotChange)="onSnapshotChange($event!)"
     />

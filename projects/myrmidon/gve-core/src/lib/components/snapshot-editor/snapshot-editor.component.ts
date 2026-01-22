@@ -1,11 +1,14 @@
 import {
+  AfterViewInit,
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
   effect,
+  ElementRef,
   input,
   model,
   output,
   signal,
+  ViewChild,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -36,6 +39,12 @@ import { customAlphabet } from 'nanoid';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
+import {
+  DEFAULT_SETTINGS,
+  GveRenditionSettings,
+  GveSnapshotRendition,
+  OperationHint,
+} from '@myrmidon/gve-snapshot-rendition';
 
 import {
   BaseTextViewComponent,
@@ -103,10 +112,16 @@ const SVG_TRANSP_SUFFIX = '_t';
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
 })
-export class SnapshotEditorComponent {
+export class SnapshotEditorComponent implements AfterViewInit {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
   private _previewing?: boolean;
   private _stepPickFrozen?: boolean;
+
+  /**
+   * Reference to the snapshot rendition web component.
+   */
+  @ViewChild('rendition', { static: false })
+  public renditionRef!: ElementRef<GveSnapshotRendition>;
 
   /**
    * The snapshot to edit.
@@ -150,6 +165,12 @@ export class SnapshotEditorComponent {
   public readonly diplomaticFeatureDefs = input<
     FeatureDefinitions | undefined
   >();
+
+  /**
+   * Hints for rendering the snapshot. These are passed to the snapshot rendition
+   * component.
+   */
+  public readonly hints = input<Record<string, OperationHint> | undefined>();
 
   /**
    * Emitted when the user cancels the snapshot editing.
@@ -199,9 +220,9 @@ export class SnapshotEditorComponent {
   };
 
   // operations execution result
-  public result?: CharChainResult;
-  public resultOperationId?: string;
-  public initialStepIndex = -1;
+  public readonly result = signal<CharChainResult | undefined>(undefined);
+  public readonly resultOperationId = signal<string | undefined>(undefined);
+  public readonly initialStepIndex = signal<number>(-1);
 
   constructor(
     formBuilder: FormBuilder,
@@ -235,6 +256,56 @@ export class SnapshotEditorComponent {
     });
   }
 
+  public ngAfterViewInit(): void {
+    const rendition = this.renditionRef?.nativeElement;
+    if (!rendition) {
+      return;
+    }
+
+    // set initial settings with hints
+    this.applyRenditionSettings();
+
+    // listen to version change events
+    rendition.addEventListener('versionTagChange', (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('Version changed:', customEvent.detail);
+    });
+  }
+
+  /**
+   * Apply settings including hints to the rendition component.
+   */
+  private applyRenditionSettings(): void {
+    const rendition = this.renditionRef?.nativeElement;
+    if (!rendition) {
+      return;
+    }
+
+    const hints = this.hints();
+    const settings: Partial<GveRenditionSettings> = {
+      ...DEFAULT_SETTINGS,
+      hints: hints || {},
+      debug: this.debug() || false,
+    };
+    rendition.settings = settings as GveRenditionSettings;
+  }
+
+  /**
+   * Update the snapshot rendition component with the current result data.
+   */
+  private updateRendition(): void {
+    const rendition = this.renditionRef?.nativeElement;
+    const result = this.result();
+    if (rendition && result) {
+      // update settings with latest hints
+      this.applyRenditionSettings();
+      // supply the base text (not returned by API, must be provided by caller)
+      result.text = this.baseText.value;
+      // set data
+      rendition.data = result;
+    }
+  }
+
   /**
    * Set the view data for the snapshot view.
    *
@@ -252,7 +323,7 @@ export class SnapshotEditorComponent {
   }
 
   private updateForm(snapshot: Snapshot | undefined) {
-    this.initialStepIndex = -1;
+    this.initialStepIndex.set(-1);
 
     if (!snapshot) {
       this.form.reset();
@@ -419,8 +490,8 @@ export class SnapshotEditorComponent {
             this.closeEditedOperation();
           }
           // reset the result operation ID if it is the one being deleted
-          if (this.resultOperationId === this.operations.value[index].id) {
-            this.resultOperationId = undefined;
+          if (this.resultOperationId() === this.operations.value[index].id) {
+            this.resultOperationId.set(undefined);
           }
           // delete the operation and update the form control
           const operations = [...this.operations.value];
@@ -525,13 +596,13 @@ export class SnapshotEditorComponent {
    * Remove all the operations, close the edited operation and update the view data.
    */
   private removeAllOperations(): void {
-    this.resultOperationId = undefined;
+    this.resultOperationId.set(undefined);
     this.closeEditedOperation();
     this.operations.reset();
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
     this.setViewData();
-    this.result = undefined;
+    this.result.set(undefined);
   }
 
   /**
@@ -674,11 +745,11 @@ export class SnapshotEditorComponent {
     }
 
     // update result operation ID
-    this.resultOperationId = snapshot.operations[index].id;
+    this.resultOperationId.set(snapshot.operations[index].id);
 
     // run the operations
     this.busy.set(true);
-    this.initialStepIndex = index;
+    this.initialStepIndex.set(index);
     this._api
       .runOperations(snapshot.text as CharNode[], snapshot.operations)
       .subscribe({
@@ -691,7 +762,10 @@ export class SnapshotEditorComponent {
 
           // set the result
           console.log('result:', wrapper.result);
-          this.result = wrapper.result;
+          this.result.set(wrapper.result);
+
+          // update the rendition component
+          this.updateRendition();
 
           // supply the last operation output tag from its result step if not set
           if (!lastOperation.outputTag) {
@@ -736,7 +810,7 @@ export class SnapshotEditorComponent {
       this.runTo(this.operations.value.length - 1);
     } else {
       this.setViewData();
-      this.result = undefined;
+      this.result.set(undefined);
     }
   }
 
@@ -804,7 +878,8 @@ export class SnapshotEditorComponent {
    * @param step The step to pick.
    */
   public onStepPick(step: ChainOperationContextStep): void {
-    if (!this.result || this._stepPickFrozen) {
+    const result = this.result();
+    if (!result || this._stepPickFrozen) {
       return;
     }
 
@@ -821,10 +896,10 @@ export class SnapshotEditorComponent {
     snapshot.operations = snapshot.operations.slice(0, index + 1);
 
     // update result operation ID
-    this.resultOperationId = snapshot.operations[index].id;
+    this.resultOperationId.set(snapshot.operations[index].id);
 
     // update the snapshot text nodes with those introduced by operations
-    this.supplyOpNodes(snapshot, this.result, step.outputTag);
+    this.supplyOpNodes(snapshot, result, step.outputTag);
 
     // update the view data
     this.setViewData(snapshot, step.outputTag);

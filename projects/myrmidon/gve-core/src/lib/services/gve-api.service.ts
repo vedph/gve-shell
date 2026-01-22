@@ -51,6 +51,12 @@ export interface ChainOperationContextStep {
  */
 export interface CharChainResult {
   /**
+   * The base text, as an array of character nodes or string.
+   * This is not returned by the API, but can be supplied
+   * by the caller for rendering purposes.
+   */
+  text?: CharNode[] | string;
+  /**
    * The execution steps of the chain.
    */
   steps: ChainOperationContextStep[];

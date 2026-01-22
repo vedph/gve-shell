@@ -129,7 +129,7 @@
                   let index = $index
                 ) {
                   <tr
-                    [class.selected]="operation.id === resultOperationId"
+                    [class.selected]="operation.id === resultOperationId()"
                     [class.edited]="operation.id === editedOp()?.id"
                   >
                     <td class="fit-width">{{ index + 1 }}.</td>
@@ -279,12 +279,12 @@
   </div>
 
   <!-- result -->
-  @if (result) {
+  @if (result()) {
     <fieldset id="result">
       <legend>result</legend>
       <gve-chain-result-view
-        [result]="result"
-        [initialStepIndex]="initialStepIndex"
+        [result]="result()!"
+        [initialStepIndex]="initialStepIndex()"
         [disabledRangePick]="editedOp() ? false : true"
         (stepPick)="onStepPick($event)"
         (rangePick)="onRangePick($event, true)"
@@ -293,9 +293,12 @@
   }
 
   <!-- snapshot view -->
-  <div id="preview">
-    <legend class="button-row">TODO: snapshot preview</legend>
-  </div>
+  @if (result()) {
+    <div id="preview">
+      <gve-snapshot-rendition #rendition class="rendition">
+      </gve-snapshot-rendition>
+    </div>
+  }
 
   <!--buttons -->
   <div class="form-row-center">
