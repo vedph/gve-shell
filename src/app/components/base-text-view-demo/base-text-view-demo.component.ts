@@ -16,7 +16,7 @@ import {
   BaseTextCharEvent,
   BaseTextViewComponent,
   CharNode,
-  VarBaseTextRange,
+  BaseTextRange,
   GveBaseTextService,
 } from '@myrmidon/gve-core';
 
@@ -38,7 +38,7 @@ export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
 
   public text: FormControl<string | null>;
 
-  public readonly range = signal<VarBaseTextRange | undefined>(undefined);
+  public readonly range = signal<BaseTextRange | undefined>(undefined);
   public readonly nodes = signal<CharNode[]>([]);
 
   constructor(formBuilder: FormBuilder) {
@@ -66,7 +66,7 @@ export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
     console.log('Char picked:', event.char);
   }
 
-  public onRangePick(range: VarBaseTextRange): void {
+  public onRangePick(range: BaseTextRange): void {
     console.log('Range picked:', range);
     this.range.set(range);
   }

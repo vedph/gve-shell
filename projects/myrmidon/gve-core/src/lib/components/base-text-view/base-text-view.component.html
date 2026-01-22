@@ -1,13 +1,66 @@
+<!-- Toolbar -->
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <input
+      matInput
+      [ngModel]="searchQuery()"
+      (ngModelChange)="onSearchInput($event)"
+      placeholder="search"
+    />
+    @if (searchQuery()) {
+      <button
+        type="button"
+        matSuffix
+        mat-icon-button
+        matTooltip="Clear search"
+        (click)="clearSearch()"
+      >
+        <mat-icon class="mat-warn">close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+
+  @if (isSearchActive()) {
+    <span class="match-count" [class.no-matches]="matchCount() === 0">
+      {{ matchCount() }}
+    </span>
+  }
+
+  <button
+    type="button"
+    mat-stroked-button
+    matTooltip="Copy selection text to clipboard"
+    [disabled]="!hasSelection()"
+    (click)="copySelection()"
+  >
+    <mat-icon>content_copy</mat-icon>
+    copy
+  </button>
+
+  <button
+    type="button"
+    mat-stroked-button
+    matTooltip="Copy selection coordinates to clipboard"
+    [disabled]="!hasSelection()"
+    (click)="copyCoordinates()"
+  >
+    <mat-icon>pin_drop</mat-icon>
+    copy coords
+  </button>
+</div>
+
+<!-- Text display -->
 <div id="text">
   @for (line of lines(); track $index) {
-  <div class="line">
-    @if (hasLineNumber()) {
-    <div class="nr">
-      {{ lines().indexOf(line) + 1 }}
+    <div class="line">
+      @if (hasLineNumber()) {
+        <div class="nr">
+          {{ lines().indexOf(line) + 1 }}
+        </div>
+      }
+      @for (c of line; track c.id) {
+        <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" />
+      }
     </div>
-    } @for (c of line; track c.id) {
-    <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" />
-    }
-  </div>
   }
 </div>

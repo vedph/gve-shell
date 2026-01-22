@@ -1,11 +1,24 @@
 import {
   Component,
   computed,
+  DestroyRef,
   effect,
+  inject,
   input,
+  OnInit,
   output,
   signal,
 } from '@angular/core';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Clipboard } from '@angular/cdk/clipboard';
 
 import {
   BaseTextChar,
@@ -46,11 +59,23 @@ export interface BaseTextRange {
  */
 @Component({
   selector: 'gve-base-text-view',
-  imports: [BaseTextCharComponent],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatTooltipModule,
+    BaseTextCharComponent,
+  ],
   templateUrl: './base-text-view.component.html',
   styleUrl: './base-text-view.component.css',
 })
-export class BaseTextViewComponent {
+export class BaseTextViewComponent implements OnInit {
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _clipboard = inject(Clipboard);
+  private readonly _snackBar = inject(MatSnackBar);
+  private readonly _searchSubject = new Subject<string>();
   private _lastSelectedPosition?: number;
 
   /**
@@ -69,9 +94,26 @@ export class BaseTextViewComponent {
   public readonly selectionColor = input('#3E92CC');
 
   /**
+   * The color for search match highlights.
+   */
+  public readonly searchHighlightColor = input('#FFD54F');
+
+  /**
    * True if line numbers should be displayed next to each line.
    */
   public readonly hasLineNumber = input(false);
+
+  /**
+   * The search query entered in the toolbar.
+   */
+  public readonly searchQuery = signal('');
+
+  /**
+   * The positions of search matches (start and length pairs).
+   */
+  private readonly searchMatches = signal<{ start: number; length: number }[]>(
+    []
+  );
 
   /**
    * The text to display.
@@ -126,12 +168,38 @@ export class BaseTextViewComponent {
   } | null>(null);
 
   /**
-   * The lines with selection state applied, computed from base lines and selection.
+   * The lines with selection or search highlight state applied.
+   * Search highlights take priority over selection when present.
    */
   public readonly lines = computed(() => {
     const base = this.baseLines();
     const range = this.selectedRange();
+    const matches = this.searchMatches();
 
+    // If there are search matches, highlight them instead of selection
+    if (matches.length > 0) {
+      let position = 0;
+      return base.map((line) =>
+        line.map((char) => {
+          const currentPos = position++;
+          const isMatch = matches.some(
+            (m) => currentPos >= m.start && currentPos < m.start + m.length
+          );
+          if (isMatch) {
+            return {
+              ...char,
+              oldColor: char.oldColor || char.color,
+              oldBorderColor: char.oldBorderColor || char.borderColor,
+              color: this.searchHighlightColor(),
+              borderColor: this.searchHighlightColor(),
+            };
+          }
+          return char;
+        })
+      );
+    }
+
+    // Otherwise, apply selection highlight if present
     if (!range) {
       return base;
     }
@@ -162,7 +230,21 @@ export class BaseTextViewComponent {
       this.text();
       this._lastSelectedPosition = undefined;
       this.selectedRange.set(null);
+      this.clearSearch();
     });
+  }
+
+  public ngOnInit(): void {
+    // Setup debounced search
+    this._searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this._destroyRef)
+      )
+      .subscribe((query) => {
+        this.performSearch(query);
+      });
   }
 
   private buildLines(
@@ -290,4 +372,128 @@ export class BaseTextViewComponent {
 
     return -1;
   }
+
+  /**
+   * Handle search input changes and trigger debounced search.
+   */
+  public onSearchInput(query: string): void {
+    this.searchQuery.set(query);
+    this._searchSubject.next(query);
+  }
+
+  /**
+   * Perform the actual search and update match positions.
+   */
+  private performSearch(query: string): void {
+    if (!query || query.length === 0) {
+      this.searchMatches.set([]);
+      return;
+    }
+
+    const text = this.text();
+    if (!text || text.length === 0) {
+      this.searchMatches.set([]);
+      return;
+    }
+
+    // Build the full text string from CharNodes
+    const fullText = text.map((node) => node.data).join('');
+
+    // Find all matches (case-insensitive)
+    const matches: { start: number; length: number }[] = [];
+    const lowerQuery = query.toLowerCase();
+    const lowerText = fullText.toLowerCase();
+    let startIndex = 0;
+
+    while (startIndex < lowerText.length) {
+      const index = lowerText.indexOf(lowerQuery, startIndex);
+      if (index === -1) {
+        break;
+      }
+      matches.push({ start: index, length: query.length });
+      startIndex = index + 1;
+    }
+
+    this.searchMatches.set(matches);
+  }
+
+  /**
+   * Clear the search query and remove search highlights.
+   */
+  public clearSearch(): void {
+    this.searchQuery.set('');
+    this.searchMatches.set([]);
+  }
+
+  /**
+   * Copy the currently selected text to the clipboard.
+   */
+  public copySelection(): void {
+    const range = this.selectedRange();
+    if (!range) {
+      return;
+    }
+
+    const text = this.text();
+    if (!text || text.length === 0) {
+      return;
+    }
+
+    // Extract the selected characters
+    const selectedChars = text
+      .slice(range.start, range.end + 1)
+      .map((node) => node.data)
+      .join('');
+
+    this._clipboard.copy(selectedChars);
+    this._snackBar.open('Text copied', 'OK', { duration: 2000 });
+  }
+
+  /**
+   * Copy the currently selected range coordinates to the clipboard.
+   * Format: "ID" for single character, "IDxCOUNT" for range.
+   */
+  public copyCoordinates(): void {
+    const range = this.selectedRange();
+    if (!range) {
+      return;
+    }
+
+    const text = this.text();
+    if (!text || text.length === 0) {
+      return;
+    }
+
+    const startId = text[range.start].id;
+    const count = range.end - range.start + 1;
+
+    const coords = count === 1 ? `${startId}` : `${startId}x${count}`;
+
+    this._clipboard.copy(coords);
+    this._snackBar.open(`Coordinates copied: ${coords}`, 'OK', {
+      duration: 2000,
+    });
+  }
+
+  /**
+   * Check if there is an active selection.
+   */
+  public hasSelection(): boolean {
+    return this.selectedRange() !== null;
+  }
+
+  /**
+   * Get the total count of matched characters.
+   */
+  public readonly matchCount = computed(() => {
+    const matches = this.searchMatches();
+    return matches.reduce((sum, m) => sum + m.length, 0);
+  });
+
+  /**
+   * Check if a search is active (query is not empty).
+   */
+  public readonly isSearchActive = computed(() => {
+    return this.searchQuery().length > 0;
+  });
 }
