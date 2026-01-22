@@ -437,6 +437,15 @@ export class SnapshotEditorComponent {
       });
   }
 
+  public copyOperationsJson() {
+    const json = JSON.stringify(this.operations.value, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      this._snackbar.open('Operations JSON copied to clipboard', 'OK', {
+        duration: 3000,
+      });
+    });
+  }
+
   /**
    * Parse the operations from their text and append them to the current
    * snapshot operations.

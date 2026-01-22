@@ -95,5 +95,642 @@
     { "id": 93, "label": "n", "index": 92, "data": "n" },
     { "id": 94, "label": "e", "index": 93, "data": "e" }
   ],
-  "operations": []
+  "operations": [
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_char-offsets",
+          "value": "35:x=100 70:x=100"
+        }
+      ],
+      "sources": [],
+      "id": "75cdbc64b4",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 35,
+      "run": 1,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "diagonal-stroke"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        }
+      ],
+      "sources": [],
+      "id": "151cb33550",
+      "type": 1,
+      "atAsIndex": false,
+      "at": 1,
+      "run": 3,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-position",
+          "value": "n"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_font-size",
+          "value": "14"
+        }
+      ],
+      "sources": [],
+      "id": "f59c3de9dc",
+      "type": 0,
+      "atAsIndex": false,
+      "at": 4,
+      "run": 1,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0,
+      "value": "T"
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "diagonal-stroke"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        }
+      ],
+      "sources": [],
+      "id": "452497e36e",
+      "type": 1,
+      "atAsIndex": false,
+      "at": 14,
+      "run": 2,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-position",
+          "value": "ne"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_font-size",
+          "value": "14"
+        }
+      ],
+      "sources": [],
+      "id": "8b4769f2b0",
+      "type": 3,
+      "atAsIndex": false,
+      "at": 19,
+      "run": 0,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0,
+      "value": "s"
+    },
+    {
+      "rank": 0,
+      "groupId": "swap-complex-long",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "note",
+          "value": "1"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "note-interlinear-above"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        }
+      ],
+      "sources": [],
+      "id": "afab032739",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 64,
+      "run": 4,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "swap-complex-long",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "note",
+          "value": "2"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "note-interlinear-above"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        }
+      ],
+      "sources": [],
+      "id": "892699b407",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 60,
+      "run": 3,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "swap-complex-long",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "note",
+          "value": "3"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "note-interlinear-above"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        }
+      ],
+      "sources": [],
+      "id": "1f6d690c0f",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 52,
+      "run": 7,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "red"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": true,
+          "isShortLived": true,
+          "setPolicy": 0,
+          "name": "version",
+          "value": "alpha"
+        }
+      ],
+      "sources": [],
+      "id": "b07aca6c55",
+      "type": 6,
+      "atAsIndex": false,
+      "at": 52,
+      "run": 7,
+      "toAsIndex": false,
+      "to": 64,
+      "toRun": 4
+    },
+    {
+      "rank": 0,
+      "groupId": "add-stuff",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "diagonal-stroke"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        }
+      ],
+      "sources": [],
+      "id": "fc45a4359d",
+      "type": 1,
+      "atAsIndex": false,
+      "at": 40,
+      "run": 1,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "add-stuff",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-position",
+          "value": "e"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-offset-y",
+          "value": "0.4th"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        }
+      ],
+      "sources": [],
+      "id": "ec5a63689c",
+      "type": 3,
+      "atAsIndex": false,
+      "at": 39,
+      "run": 0,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0,
+      "value": " AND SOME STUFF."
+    },
+    {
+      "rank": 0,
+      "groupId": "stuff-hints",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "box"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        }
+      ],
+      "sources": [],
+      "id": "730de488d3",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 107,
+      "run": 6,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "stuff-hints",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-position",
+          "value": "n"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_position",
+          "value": "n"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-displaced-span",
+          "value": "21x7"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-offset-y",
+          "value": "-30"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "box"
+        }
+      ],
+      "sources": [],
+      "id": "d9831f4d0c",
+      "type": 0,
+      "atAsIndex": false,
+      "at": 107,
+      "run": 6,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0,
+      "value": "HINTS."
+    },
+    {
+      "rank": 0,
+      "groupId": "stuff-hints",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "box"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        }
+      ],
+      "sources": [],
+      "id": "b2a46ce230",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 113,
+      "run": 6,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "mov-too",
+      "features": [],
+      "sources": [],
+      "id": "53d9f5ef59",
+      "type": 1,
+      "atAsIndex": false,
+      "at": 75,
+      "run": 5,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    },
+    {
+      "rank": 0,
+      "groupId": "mov-too",
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-position",
+          "value": "e"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-offset-x",
+          "value": "20"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-offset-y",
+          "value": "0.4th"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "green"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": true,
+          "isShortLived": true,
+          "setPolicy": 0,
+          "name": "version",
+          "value": "beta"
+        }
+      ],
+      "sources": [],
+      "id": "d4bfc4f81c",
+      "type": 3,
+      "atAsIndex": false,
+      "at": 94,
+      "run": 0,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0,
+      "value": " TOO."
+    },
+    {
+      "rank": 0,
+      "features": [
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "note",
+          "value": "12"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_t-fore-color",
+          "value": "blue"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_fore-color",
+          "value": "blue"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_hints",
+          "value": "note-underline"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_h-scale-x",
+          "value": "2"
+        },
+        {
+          "isNegated": false,
+          "isGlobal": false,
+          "isShortLived": false,
+          "setPolicy": 0,
+          "name": "r_h-rotation",
+          "value": "-45"
+        }
+      ],
+      "sources": [],
+      "id": "a7ac0771ec",
+      "type": 7,
+      "atAsIndex": false,
+      "at": 1,
+      "run": 1,
+      "toAsIndex": false,
+      "to": 0,
+      "toRun": 0
+    }
+  ]
 }

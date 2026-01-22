@@ -42,7 +42,7 @@ export class SnapshotEditorDemoComponent implements OnInit {
   constructor(private _asset: AssetService) {}
 
   public ngOnInit(): void {
-    this._asset.loadObject<Snapshot>('arzdc').subscribe((snapshot) => {
+    this._asset.loadObject<Snapshot>('test').subscribe((snapshot) => {
       this.snapshot.set(snapshot);
     });
   }

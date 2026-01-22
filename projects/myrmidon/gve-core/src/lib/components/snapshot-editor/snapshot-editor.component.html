@@ -53,6 +53,17 @@
             >
 
             <div class="form-row right">
+              <!-- copy ops JSON -->
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Copy operations as JSON to clipboard"
+                [disabled]="!operations.value.length || busy()"
+                (click)="copyOperationsJson()"
+              >
+                <mat-icon>content_copy</mat-icon>
+              </button>
+
               <!-- remove ops -->
               <button
                 type="button"
