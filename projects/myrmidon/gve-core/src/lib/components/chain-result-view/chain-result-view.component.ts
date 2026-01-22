@@ -26,7 +26,7 @@ import { FeatureSetViewComponent } from '../feature-set-view/feature-set-view.co
 import { StepsMapComponent } from '../steps-map/steps-map.component';
 import {
   BaseTextViewComponent,
-  VarBaseTextRange,
+  BaseTextRange,
 } from '../base-text-view/base-text-view.component';
 import {
   ChainOperationContextStep,
@@ -96,7 +96,7 @@ export class ChainResultViewComponent
   );
   public readonly selection = signal<string | undefined>(undefined);
   public readonly selectionFeatures = signal<OperationFeature[]>([]);
-  public readonly selectionRange = signal<VarBaseTextRange | undefined>(
+  public readonly selectionRange = signal<BaseTextRange | undefined>(
     undefined
   );
 
@@ -110,7 +110,7 @@ export class ChainResultViewComponent
   /**
    * Emitted when a range is picked.
    */
-  public readonly rangePick = output<VarBaseTextRange>();
+  public readonly rangePick = output<BaseTextRange>();
 
   public versionTag: FormControl<string | null>;
   public tag: FormControl<string | null>;
@@ -307,7 +307,7 @@ export class ChainResultViewComponent
     this.selectionRange.set({ at: event.char.id, run: 1 });
   }
 
-  public onTextRangePick(range: VarBaseTextRange): void {
+  public onTextRangePick(range: BaseTextRange): void {
     if (range.run === 1) {
       // already handled by onStepCharPick
       return;

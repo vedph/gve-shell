@@ -17,7 +17,7 @@ import { CharNode } from '../../models';
 /**
  * A range in the base text.
  */
-export interface VarBaseTextRange {
+export interface BaseTextRange {
   at: number;
   run: number;
 }
@@ -26,7 +26,9 @@ export interface VarBaseTextRange {
  * 🔑 `gve-base-text-view`
  *
  * A component to display a selectable base text. Its input is either a string or an
- * array of `CharNode`'s.
+ * array of `CharNode`'s. The base text is the starting text in a set of transformations,
+ * and is represented as a sequence of characters with optional metadata.
+ * This component allows users to view and select characters or ranges of characters.
  * Used by the chain result view component and the base text editor component.
  *
  * - ▶️ `defaultColor` (`string`): the default color for the text.
@@ -40,7 +42,7 @@ export interface VarBaseTextRange {
  * to each line.
  * - ▶️ `text` (`string` | `CharNode[]`): the text to display.
  * - 🔥 `charPick` (`BaseTextCharEvent`): emitted when a character is picked.
- * - 🔥 `rangePick` (`VarBaseTextRange`): emitted when a range is picked.
+ * - 🔥 `rangePick` (`BaseTextRange`): emitted when a range is picked.
  */
 @Component({
   selector: 'gve-base-text-view',
@@ -102,7 +104,7 @@ export class BaseTextViewComponent {
    * The range is defined by the starting character and the number of characters.
    * The range is inclusive.
    */
-  public readonly rangePick = output<VarBaseTextRange>();
+  public readonly rangePick = output<BaseTextRange>();
 
   /**
    * The base characters organized by lines, computed from text input.
@@ -221,7 +223,7 @@ export class BaseTextViewComponent {
       this._lastSelectedPosition !== clickedPosition &&
       event.event?.ctrlKey;
 
-    let rangeToEmit: VarBaseTextRange;
+    let rangeToEmit: BaseTextRange;
 
     if (isRangeSelection && this._lastSelectedPosition !== undefined) {
       // range selection: use positions, not IDs

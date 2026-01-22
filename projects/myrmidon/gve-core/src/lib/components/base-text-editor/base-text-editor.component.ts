@@ -17,7 +17,7 @@ import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
 import {
   BaseTextViewComponent,
-  VarBaseTextRange,
+  BaseTextRange,
 } from '../base-text-view/base-text-view.component';
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import { CharNode, Feature } from '../../models';
@@ -75,7 +75,7 @@ export class BaseTextEditorComponent {
 
   public readonly selectedChar = signal<CharNode | undefined>(undefined);
   public readonly selectedCharLabel = signal<string | undefined>(undefined);
-  public readonly textRange = signal<VarBaseTextRange | undefined>(undefined);
+  public readonly textRange = signal<BaseTextRange | undefined>(undefined);
 
   public userText: FormControl<string>;
   public form: FormGroup;
@@ -130,7 +130,7 @@ export class BaseTextEditorComponent {
     this.textChange.emit(chars);
   }
 
-  public onRangePick(range: VarBaseTextRange) {
+  public onRangePick(range: BaseTextRange) {
     this.textRange.set(range);
   }
 

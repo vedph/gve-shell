@@ -53,7 +53,7 @@ import { OperationSourceEditorComponent } from '../operation-source-editor/opera
 import { SettingsService } from '../../services/settings.service';
 import { SvgValidators } from '../../validators/svg-validators';
 import { FeatureMap } from '../feature-editor/feature-editor.component';
-import { VarBaseTextRange } from '../base-text-view/base-text-view.component';
+import { BaseTextRange } from '../base-text-view/base-text-view.component';
 
 /**
  * Definitions for features, including names and values.
@@ -188,7 +188,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   /**
    * Set when the edited operation's text range is to be patched.
    */
-  public readonly rangePatch = input<VarBaseTextRange | undefined>();
+  public readonly rangePatch = input<BaseTextRange | undefined>();
 
   /**
    * Emitted when the operation is changed.

@@ -39,7 +39,7 @@ import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 import {
   BaseTextViewComponent,
-  VarBaseTextRange,
+  BaseTextRange,
 } from '../base-text-view/base-text-view.component';
 import {
   ChainOperationEditorComponent,
@@ -176,14 +176,14 @@ export class SnapshotEditorComponent {
   public readonly chain = signal<CharChain | undefined>(undefined);
 
   // the currently picked base text range
-  public readonly textRange = signal<VarBaseTextRange | undefined>(undefined);
+  public readonly textRange = signal<BaseTextRange | undefined>(undefined);
   // the lines count for the current base text
   public readonly lineCount = signal<number>(0);
   // the currently edited operation
   public readonly editedOp = signal<CharChainOperation | undefined>(undefined);
   public readonly editedOpIndex = signal<number>(-1);
   // the patch to apply to the edited operation's range
-  public readonly editedOpRangePatch = signal<VarBaseTextRange | undefined>(
+  public readonly editedOpRangePatch = signal<BaseTextRange | undefined>(
     undefined,
   );
 
@@ -318,11 +318,11 @@ export class SnapshotEditorComponent {
    * @param range The picked range.
    * @param applyToOp True to also apply the picked range to the edited operation.
    */
-  public onRangePick(range?: VarBaseTextRange, applyToOp = false): void {
+  public onRangePick(range?: BaseTextRange, applyToOp = false): void {
     this.textRange.set(range);
 
     if (applyToOp) {
-      this.editedOpRangePatch.set({ ...range } as VarBaseTextRange);
+      this.editedOpRangePatch.set({ ...range } as BaseTextRange);
     }
   }
   // #endregion
