@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
 .form-row {
   display: flex;
   gap: 8px;
@@ -13,6 +18,7 @@
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 0;
 }
 th {
   text-align: left;

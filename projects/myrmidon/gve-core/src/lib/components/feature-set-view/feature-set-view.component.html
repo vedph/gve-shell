@@ -2,53 +2,53 @@
   <!-- filter -->
   <div>
     @if (filterThreshold() === 0 || features()!.length > filterThreshold()) {
-    <div class="form-row">
-      <mat-form-field id="filter">
-        <mat-label>filter</mat-label>
-        <input matInput [formControl]="filter" />
-        <button
-          type="button"
-          mat-icon-button
-          matSuffix
-          (click)="filter.reset()"
-          [disabled]="!filter.value"
-          [attr.aria-label]="'Reset filter'"
-        >
-          <mat-icon color="warn" class="mat-warn">cancel</mat-icon>
-        </button>
-      </mat-form-field>
-      <span id="badge">{{ filteredFeatures().length }}</span>
-    </div>
+      <div class="form-row">
+        <mat-form-field id="filter">
+          <mat-label>filter</mat-label>
+          <input matInput [formControl]="filter" />
+          <button
+            type="button"
+            mat-icon-button
+            matSuffix
+            (click)="filter.reset()"
+            [disabled]="!filter.value"
+            [attr.aria-label]="'Reset filter'"
+          >
+            <mat-icon color="warn" class="mat-warn">cancel</mat-icon>
+          </button>
+        </mat-form-field>
+        <span id="badge">{{ filteredFeatures().length }}</span>
+      </div>
     }
 
     <!-- list -->
     @if (filteredFeatures().length) {
-    <table>
-      <tbody>
-        @for (feature of filteredFeatures(); track $index) {
-        <tr>
-          <th>
-            @if (featNames.length) {
-            <span>{{
-              feature.name | flatLookup : featNames : "id" : "label"
-            }}</span>
-            } @else {
-            <span>{{ feature.name }}</span>
-            }
-          </th>
-          <td>
-            @if (featValues()) {
-            <span>{{
-              feature.value | flatLookup : featValues()![feature.name]
-            }}</span>
-            } @else {
-            <span>{{ feature.value }}</span>
-            }
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+      <table>
+        <tbody>
+          @for (feature of filteredFeatures(); track $index) {
+            <tr>
+              <th>
+                @if (featNames()?.length) {
+                  <span>{{
+                    feature.name | flatLookup: featNames() : "id" : "label"
+                  }}</span>
+                } @else {
+                  <span>{{ feature.name }}</span>
+                }
+              </th>
+              <td>
+                @if (featValues()) {
+                  <span>{{
+                    feature.value | flatLookup: featValues()![feature.name]
+                  }}</span>
+                } @else {
+                  <span>{{ feature.value }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     }
   </div>
 </div>

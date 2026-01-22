@@ -12,6 +12,14 @@
   gap: 8px;
   align-items: start;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure the direct children (g-feats, n-feats) grow to fill the row and can shrink */
+.form-row-top > div {
+  flex: 1 1 0%;
+  min-width: 0;
 }
 .range {
   color: silver;
