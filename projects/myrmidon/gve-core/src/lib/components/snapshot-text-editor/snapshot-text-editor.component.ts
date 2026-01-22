@@ -22,6 +22,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { CharNode, PayloadMatDialogConfig } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 /**
  * 🔑 `gve-snapshot-text-editor`
@@ -52,12 +53,13 @@ export class SnapshotTextEditorComponent implements OnInit {
 
   constructor(
     formBuilder: FormBuilder,
+    private _snackbar: MatSnackBar,
     // this component can be used as a dialog
     @Optional()
     public dialogRef?: MatDialogRef<SnapshotTextEditorComponent>,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
-    public data?: PayloadMatDialogConfig<{ text?: CharNode[] }>
+    public data?: PayloadMatDialogConfig<{ text?: CharNode[] }>,
   ) {
     this.userText = formBuilder.control<string>('', {
       nonNullable: true,
@@ -87,6 +89,14 @@ export class SnapshotTextEditorComponent implements OnInit {
 
   public close(): void {
     this.dialogRef?.close();
+  }
+
+  public copyToClipboard(): void {
+    const json = JSON.stringify(
+      GveBaseTextService.stringToBaseChars(this.userText.value),
+    );
+    navigator.clipboard.writeText(json);
+    this._snackbar.open('Copied JSON code to clipboard', undefined, { duration: 2000 });
   }
 
   public save(): void {

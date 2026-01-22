@@ -1,8 +1,8 @@
 <div [style.padding]="dialogRef ? '8px' : '0'">
   @if (dialogRef) {
-  <div id="heading">
-    <h2>Set Base Text</h2>
-  </div>
+    <div id="heading">
+      <h2>Set Base Text</h2>
+    </div>
   }
   <form [formGroup]="form" (submit)="save()">
     <fieldset>
@@ -11,28 +11,43 @@
           <mat-form-field class="full-width">
             <mat-label>base text</mat-label>
             <textarea matInput [formControl]="userText" rows="8"></textarea>
-            @if ($any(userText).errors?.required && (userText.dirty ||
-            userText.touched)) {
-            <mat-error>text required</mat-error>
-            } @if ($any(userText).errors?.maxLength && (userText.dirty ||
-            userText.touched)) {
-            <mat-error>text too long</mat-error>
+            @if (
+              $any(userText).errors?.required &&
+              (userText.dirty || userText.touched)
+            ) {
+              <mat-error>text required</mat-error>
+            }
+            @if (
+              $any(userText).errors?.maxLength &&
+              (userText.dirty || userText.touched)
+            ) {
+              <mat-error>text too long</mat-error>
             }
           </mat-form-field>
         </div>
       </div>
       <div class="form-row-center">
         @if (dialogRef) {
+          <button
+            type="button"
+            class="mat-warn"
+            mat-flat-button
+            matTooltip="Close dialog"
+            (click)="close()"
+          >
+            close
+          </button>
+        }
         <button
           type="button"
-          class="mat-warn"
+          class="mat-primary"
           mat-flat-button
-          matTooltip="Close dialog"
-          (click)="close()"
+          matTooltip="Copy JSON to clipboard"
+          [disabled]="form.invalid"
+          (click)="copyToClipboard()"
         >
-          close
+          JSON
         </button>
-        }
         <button
           type="button"
           class="mat-primary"

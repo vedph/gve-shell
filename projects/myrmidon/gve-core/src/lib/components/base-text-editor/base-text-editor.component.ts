@@ -134,10 +134,6 @@ export class BaseTextEditorComponent {
     this.textRange.set(range);
   }
 
-  public patchTextFromUser(): void {
-    // TODO
-  }
-
   public setTextFromUser(): void {
     this._dialogService
       .confirm('Confirm', 'Reset text?')
