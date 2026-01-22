@@ -148,12 +148,8 @@ export interface FeatureDefinitions {
   styleUrl: './chain-operation-editor.component.css',
 })
 export class ChainOperationEditorComponent implements OnInit, OnDestroy {
-  // monaco
-  private readonly _disposables: monaco.IDisposable[] = [];
   private readonly _subs: Subscription[];
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
-  private _editorModel?: monaco.editor.ITextModel;
-  private _editor?: monaco.editor.IStandaloneCodeEditor;
 
   /**
    * The operation to edit.
@@ -319,16 +315,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       this.updateForm(this.operation());
     });
 
-    // when snapshot changes, update SVG
-    effect(() => {
-      const snapshot = this.snapshot();
-      const dirty = this.hasTextChanges(snapshot || undefined);
-      if (dirty) {
-        this.requestPreview();
-        this._editorModel?.setValue(this.svg.value || '');
-      }
-    });
-
     // when rangePatch changes, patch operation range (at and run,
     // resetting atAsIndex to false)
     effect(() => {
@@ -372,7 +358,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this._disposables.forEach((d) => d.dispose());
     for (const sub of this._subs) {
       sub.unsubscribe();
     }
@@ -394,34 +379,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       return true;
     }
     return false;
-  }
-
-  public onCreateEditor(editor: monaco.editor.IEditor) {
-    console.log('creating editor');
-    editor.updateOptions({
-      minimap: {
-        side: 'right',
-      },
-      wordWrap: 'on',
-      automaticLayout: true,
-    });
-    this._editorModel =
-      this._editorModel || monaco.editor.createModel(this.svg.value, 'xml');
-    editor.setModel(this._editorModel);
-    this._editor = editor as monaco.editor.IStandaloneCodeEditor;
-
-    this._disposables.push(
-      // when the editor content changes, update the SVG control value
-      this._editorModel.onDidChangeContent((e) => {
-        console.log('change content');
-        const code = this._editorModel!.getValue();
-        if (code !== this.svg.value) {
-          this.svg.setValue(code);
-          this.svg.markAsDirty();
-          this.svg.updateValueAndValidity();
-        }
-      }),
-    );
   }
 
   public onFeaturesChange(features: OperationFeature[]): void {
@@ -459,153 +416,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     }
     this.sources.setValue(sources);
     this.closeSource();
-  }
-  // #endregion
-
-  // #region svg
-  public saveSvg(): void {
-    if (!this.svg.value) {
-      return;
-    }
-    const blob = new Blob([this.svg.value], { type: 'application/xml' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    // create filename from date and time
-    const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().split(' ')[0].replace(':', '-');
-    a.download = `svg-${date}_${time}.svg`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  public openSvgEditor(): void {
-    const url = this._settings.get<string>(
-      'svg-editor',
-      'https://editor.method.ac/',
-      // 'https://boxy-svg.com/app'
-    );
-    if (url) {
-      if (this.svg.value) {
-        this._clipboard.copy(this.svg.value);
-      }
-      window.open(url, '_blank');
-    }
-  }
-
-  public loadSvg(): void {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.svg';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this._editorModel?.setValue(e.target?.result as string);
-        };
-        reader.readAsText(file);
-      }
-    };
-    input.click();
-  }
-
-  public setSvgFromClipboard(): void {
-    navigator.clipboard.readText().then((text) => {
-      this._editorModel?.setValue(text);
-    });
-  }
-
-  private parseSvg(svg?: string): SVGElement[] {
-    if (!svg) {
-      return [];
-    }
-    try {
-      // parse SVG code extracting all the SVG elements with an id attribute
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(svg, 'image/svg+xml');
-      const elements = Array.from(doc.querySelectorAll('[id]'));
-
-      // for each element, read x and y and add a transform with a translate
-      // equal to -x and -y so that the element is at the origin. This is useful
-      // so that the element can be previewed in its box without wasting space
-      // just because it happens not to be placed at the SVG origin
-      for (const element of elements) {
-        const x = parseFloat(element.getAttribute('x') || '0');
-        const y = parseFloat(element.getAttribute('y') || '0');
-        element.setAttribute('transform', `translate(${-x},${-y})`);
-      }
-
-      return elements as SVGElement[];
-    } catch (e) {
-      this.svg.setErrors({ invalidSvg: true });
-      return [];
-    }
-  }
-
-  public removeDecimals(): void {
-    const svg = this.svg.value;
-    const newSvg = svg.replace(/(\d+)\.\d+/g, '$1');
-    this._editorModel?.setValue(newSvg);
-  }
-
-  public wrapInGroup(): void {
-    // wrap SVG code in <g>...</g> if it does not already start with <g>
-    const svg = this.svg.value;
-    if (!svg.startsWith('<g')) {
-      this._editorModel?.setValue(`<g>${svg}</g>`);
-    }
-  }
-  // #endregion
-
-  // #region element features
-  public onTabIndexChange(index: number): void {
-    this.tabIndex.set(index);
-    if (index === 3) {
-      this.elements.set(this.parseSvg(this.svg.value));
-    }
-  }
-
-  public editElementFeatures(element: SVGElement): void {
-    const id = element.id;
-    const features = this.elementFeatures.value[id] || [];
-    this.elementFeatures.setValue({
-      ...this.elementFeatures.value,
-      [id]: features,
-    });
-    this.editedElementId.set(id);
-  }
-
-  public deleteElementFeatures(element: SVGElement): void {
-    const id = element.id;
-    const elementFeatures = { ...this.elementFeatures.value };
-    if (!elementFeatures[id]) {
-      return;
-    }
-
-    this._dialogService
-      .confirm('Confirm', 'Delete element features?')
-      .subscribe((yes: boolean) => {
-        if (yes) {
-          delete elementFeatures[id];
-          this.elementFeatures.setValue(elementFeatures);
-
-          if (this.editedElementId() === id) {
-            this.editedElementId.set(undefined);
-          }
-        }
-      });
-  }
-
-  public onElementFeaturesChange(features: Feature[]): void {
-    if (this.editedElementId()) {
-      this.elementFeatures.setValue({
-        ...this.elementFeatures.value,
-        [this.editedElementId()!]: features,
-      });
-      this.editedElementId.set(undefined);
-    }
   }
   // #endregion
 
@@ -673,8 +483,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     this.toRun.setValue(operation.toRun || 0);
     // escape line feeds in value for editing
     this.value.setValue(this.toggleLfEscape(operation.value, true) || null);
-
-    this._editorModel?.setValue(this.svg.value || '');
 
     this.form.markAsPristine();
 

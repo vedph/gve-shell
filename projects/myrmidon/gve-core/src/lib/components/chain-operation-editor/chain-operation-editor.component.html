@@ -1,9 +1,6 @@
 <form [formGroup]="form" (submit)="save()">
   <!-- tabs -->
-  <mat-tab-group
-    [selectedIndex]="tabIndex()"
-    (selectedIndexChange)="onTabIndexChange($event)"
-  >
+  <mat-tab-group [selectedIndex]="tabIndex()">
     <!-- GENERAL -->
     <mat-tab label="general">
       <div class="form-row">
@@ -40,7 +37,7 @@
             >
           </mat-select>
           @if ($any(type).errors?.required && (type.dirty || type.touched)) {
-          <mat-error>type required</mat-error>
+            <mat-error>type required</mat-error>
           }
         </mat-form-field>
 
@@ -49,7 +46,7 @@
           <mat-label>at</mat-label>
           <input matInput [formControl]="at" type="number" min="0" />
           @if ($any(at).errors?.required && (at.dirty || at.touched)) {
-          <mat-error>at required</mat-error>
+            <mat-error>at required</mat-error>
           }
         </mat-form-field>
 
@@ -61,41 +58,43 @@
           <mat-label>run</mat-label>
           <input matInput [formControl]="run" type="number" min="0" />
           @if ($any(run).errors?.required && (run.dirty || run.touched)) {
-          <mat-error>run required</mat-error>
+            <mat-error>run required</mat-error>
           }
         </mat-form-field>
 
         <!-- to -->
         @if (hasTo()) {
-        <mat-form-field class="nr">
-          <mat-label>to</mat-label>
-          <input matInput [formControl]="to" type="number" min="0" />
-          @if ($any(to).errors?.required && (to.dirty || to.touched)) {
-          <mat-error>to required</mat-error>
-          }
-        </mat-form-field>
+          <mat-form-field class="nr">
+            <mat-label>to</mat-label>
+            <input matInput [formControl]="to" type="number" min="0" />
+            @if ($any(to).errors?.required && (to.dirty || to.touched)) {
+              <mat-error>to required</mat-error>
+            }
+          </mat-form-field>
 
-        <!-- toAsIndex -->
-        <mat-checkbox [formControl]="toAsIndex">idx</mat-checkbox>
+          <!-- toAsIndex -->
+          <mat-checkbox [formControl]="toAsIndex">idx</mat-checkbox>
 
-        <!-- toRun -->
-        @if (hasToRun()) {
-        <mat-form-field class="nr">
-          <mat-label>to run</mat-label>
-          <input matInput [formControl]="toRun" type="number" min="0" />
-          @if ( $any(toRun).errors?.required && (toRun.dirty || toRun.touched) )
-          {
-          <mat-error>to run required</mat-error>
+          <!-- toRun -->
+          @if (hasToRun()) {
+            <mat-form-field class="nr">
+              <mat-label>to run</mat-label>
+              <input matInput [formControl]="toRun" type="number" min="0" />
+              @if (
+                $any(toRun).errors?.required && (toRun.dirty || toRun.touched)
+              ) {
+                <mat-error>to run required</mat-error>
+              }
+            </mat-form-field>
           }
-        </mat-form-field>
-        } }
+        }
 
         <!-- value -->
         @if (hasValue()) {
-        <mat-form-field>
-          <mat-label>value</mat-label>
-          <input matInput [formControl]="value" />
-        </mat-form-field>
+          <mat-form-field>
+            <mat-label>value</mat-label>
+            <input matInput [formControl]="value" />
+          </mat-form-field>
         }
       </div>
       <div class="form-row">
@@ -104,7 +103,7 @@
           <mat-label>rank</mat-label>
           <input matInput [formControl]="rank" type="number" min="0" />
           @if ($any(rank).errors?.required && (rank.dirty || rank.touched)) {
-          <mat-error>rank required</mat-error>
+            <mat-error>rank required</mat-error>
           }
         </mat-form-field>
 
@@ -112,9 +111,10 @@
         <mat-form-field>
           <mat-label>group ID</mat-label>
           <input matInput [formControl]="groupId" />
-          @if ( $any(groupId).errors?.required && (groupId.dirty ||
-          groupId.touched) ) {
-          <mat-error>group ID required</mat-error>
+          @if (
+            $any(groupId).errors?.required && (groupId.dirty || groupId.touched)
+          ) {
+            <mat-error>group ID required</mat-error>
           }
         </mat-form-field>
 
@@ -172,42 +172,42 @@
         </thead>
         <tbody>
           @for (s of sources.value; track s) {
-          <tr [class.selected]="s === editedSource()">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                color="primary"
-                (click)="editSource($index)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button type="button" mat-icon-button color="warn">
-                <mat-icon class="mat-warn">delete</mat-icon>
-              </button>
-            </td>
-            <td>{{ s.type }}</td>
-            <td>{{ s.id }}</td>
-            <td>{{ s.rank }}</td>
-          </tr>
+            <tr [class.selected]="s === editedSource()">
+              <td class="fit-width">
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="primary"
+                  (click)="editSource($index)"
+                >
+                  <mat-icon class="mat-primary">edit</mat-icon>
+                </button>
+                <button type="button" mat-icon-button color="warn">
+                  <mat-icon class="mat-warn">delete</mat-icon>
+                </button>
+              </td>
+              <td>{{ s.type }}</td>
+              <td>{{ s.id }}</td>
+              <td>{{ s.rank }}</td>
+            </tr>
           }
         </tbody>
       </table>
       @if (editedSource()) {
-      <!-- source editor -->
-      <mat-expansion-panel
-        [disabled]="!editedSource()"
-        [expanded]="editedSource()"
-      >
-        <mat-expansion-panel-header>
-          <mat-panel-title>source</mat-panel-title>
-        </mat-expansion-panel-header>
-        <gve-operation-source-editor
-          [source]="editedSource()"
-          (sourceChange)="onSourceChange($event!)"
-          (sourceCancel)="closeSource()"
-        />
-      </mat-expansion-panel>
+        <!-- source editor -->
+        <mat-expansion-panel
+          [disabled]="!editedSource()"
+          [expanded]="editedSource()"
+        >
+          <mat-expansion-panel-header>
+            <mat-panel-title>source</mat-panel-title>
+          </mat-expansion-panel-header>
+          <gve-operation-source-editor
+            [source]="editedSource()"
+            (sourceChange)="onSourceChange($event!)"
+            (sourceCancel)="closeSource()"
+          />
+        </mat-expansion-panel>
       }
     </mat-tab>
   </mat-tab-group>
@@ -224,15 +224,15 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     @if (!hidePreview()) {
-    <button
-      type="button"
-      color="primary"
-      mat-icon-button
-      matTooltip="Preview operation"
-      (click)="requestPreview()"
-    >
-      <mat-icon class="mat-primary">preview</mat-icon>
-    </button>
+      <button
+        type="button"
+        color="primary"
+        mat-icon-button
+        matTooltip="Preview operation"
+        (click)="requestPreview()"
+      >
+        <mat-icon class="mat-primary">preview</mat-icon>
+      </button>
     }
     <button
       type="submit"
