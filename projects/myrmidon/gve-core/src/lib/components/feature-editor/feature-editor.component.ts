@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   effect,
   ElementRef,
@@ -67,6 +68,7 @@ export interface FeatureMap {
  */
 @Component({
   selector: 'gve-feature-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,

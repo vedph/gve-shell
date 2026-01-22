@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -125,6 +126,7 @@ export interface FeatureDefinitions {
  */
 @Component({
   selector: 'gve-chain-operation-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     ClipboardModule,

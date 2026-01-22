@@ -1,5 +1,12 @@
 
-import { Component, effect, input, model, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  model,
+  output,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -35,6 +42,7 @@ import { LabeledId, OperationSource } from '../../models';
  */
 @Component({
   selector: 'gve-operation-source-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,

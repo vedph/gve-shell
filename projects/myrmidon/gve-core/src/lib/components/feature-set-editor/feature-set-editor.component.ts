@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -56,6 +57,7 @@ import {
  */
 @Component({
   selector: 'gve-feature-set-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
