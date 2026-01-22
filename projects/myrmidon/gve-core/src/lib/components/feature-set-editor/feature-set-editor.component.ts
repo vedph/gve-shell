@@ -25,7 +25,7 @@ import {
   LabeledId,
   Feature,
   OperationFeature,
-} from '@myrmidon/gve-snapshot-view';
+} from '../../models';
 
 import {
   FeatureEditorComponent,

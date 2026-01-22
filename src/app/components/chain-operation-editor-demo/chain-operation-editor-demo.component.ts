@@ -7,15 +7,11 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 
 import {
+  ChainOperationEditorComponent,
   CharChainOperation,
-  DEFAULT_SVG_BASE_TEXT_OPTIONS,
+  FeatureDefinitions,
   OperationType,
   Snapshot,
-} from '@myrmidon/gve-snapshot-view';
-
-import {
-  ChainOperationEditorComponent,
-  FeatureDefinitions,
 } from '@myrmidon/gve-core';
 
 @Component({
@@ -33,12 +29,7 @@ import {
 })
 export class ChainOperationEditorDemoComponent {
   public readonly snapshot: Snapshot = {
-    size: {
-      width: 800,
-      height: 300,
-    },
     text: 'ABC',
-    textOptions: DEFAULT_SVG_BASE_TEXT_OPTIONS,
     operations: [],
   };
   public readonly featureDefs: FeatureDefinitions = {
@@ -84,13 +75,6 @@ export class ChainOperationEditorDemoComponent {
         note: 'in rasura',
       },
     ],
-    diplomatics: {
-      g:
-        '<g>\n' +
-        '<circle id="my-circle" style="fill: red" cx="30" cy="30" r="30" opacity="0.5"/>\n' +
-        '<rect id="my-rect" style="fill: green" x="40" y="40" width="20" height="15" />\n' +
-        '</g>',
-    },
   });
   public readonly codeVisible = signal<boolean>(false);
 

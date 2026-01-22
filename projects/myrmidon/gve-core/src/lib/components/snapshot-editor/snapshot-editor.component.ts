@@ -1,8 +1,6 @@
 import {
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
-  ElementRef,
-  ViewChild,
   effect,
   input,
   model,
@@ -36,23 +34,8 @@ import { MatDialog } from '@angular/material/dialog';
 
 import { customAlphabet } from 'nanoid';
 
-import { deepCopy, FlatLookupPipe } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
-
-import {
-  CharChainOperation,
-  CharDecoration,
-  CharNode,
-  DEFAULT_SVG_BASE_TEXT_OPTIONS,
-  Feature,
-  GveAnimationTimeline,
-  GveVisualEvent,
-  Snapshot,
-  SnapshotViewComponent,
-  SnapshotViewData,
-  SnapshotViewRenderEvent,
-  SnapshotViewService,
-} from '@myrmidon/gve-snapshot-view';
 
 import {
   BaseTextViewComponent,
@@ -69,11 +52,11 @@ import {
   GveApiService,
 } from '../../services/gve-api.service';
 import { ChainResultViewComponent } from '../chain-result-view/chain-result-view.component';
-import { LnHeightsEditorComponent } from '../ln-heights-editor/ln-heights-editor.component';
-import { AnimationTimelineSetComponent } from '../animation-timeline-set/animation-timeline-set.component';
 import { BatchOperationEditorComponent } from '../batch-operation-editor/batch-operation-editor.component';
 import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-text-editor.component';
 import { ChainViewComponent } from '../chain-view/chain-view.component';
+import { CharChainOperation, CharNode, Snapshot } from '../../models';
+import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 // default snapshot view title
 const VIEW_TITLE = 'preview';
@@ -115,8 +98,6 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainOperationEditorComponent,
     ChainResultViewComponent,
     BaseTextViewComponent,
-    LnHeightsEditorComponent,
-    AnimationTimelineSetComponent,
     FlatLookupPipe,
     ChainViewComponent,
   ],
@@ -126,15 +107,8 @@ const SVG_TRANSP_SUFFIX = '_t';
 })
 export class SnapshotEditorComponent {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
-  private _renderer?: SnapshotViewService;
   private _previewing?: boolean;
-  private _transparentIds?: string[];
   private _stepPickFrozen?: boolean;
-  private _handlingOver?: boolean;
-  private _lastOverId?: string;
-
-  @ViewChild('snapshotView', { static: false })
-  public snapshotView?: ElementRef<SnapshotViewComponent>;
 
   /**
    * The snapshot to edit.
@@ -184,49 +158,23 @@ export class SnapshotEditorComponent {
    */
   public readonly snapshotCancel = output();
 
-  // general
-  public width: FormControl<number>;
-  public height: FormControl<number>;
-  public style: FormControl<string | null>;
   // base text
   public baseText: FormControl<CharNode[]>;
-  public offsetX: FormControl<number>;
-  public offsetY: FormControl<number>;
-  public lineHeightOffset: FormControl<number>;
-  public lnHeights: FormControl<Record<number, number> | null>;
-  public charSpacingOffset: FormControl<number>;
-  public spcWidthOffset: FormControl<number>;
-  public textStyle: FormControl<string | null>;
   // operations
   public operations: FormControl<CharChainOperation[]>;
-  public opStyle: FormControl<string | null>;
   public form: FormGroup;
-  // image and defs
-  public imageUrl: FormControl<string | null>;
-  public imageOpacity: FormControl<number>;
-  public imageX: FormControl<number>;
-  public imageY: FormControl<number>;
-  public imageWidth: FormControl<number>;
-  public imageHeight: FormControl<number>;
-  public defs: FormControl<string | null>;
-  // timelines
-  public timelines: FormControl<GveAnimationTimeline[]>;
 
   public readonly showChain: FormControl<boolean> = new FormControl<boolean>(
     false,
-    { nonNullable: true }
+    { nonNullable: true },
   );
   public readonly featDetails: FormControl<boolean> = new FormControl<boolean>(
     false,
-    { nonNullable: true }
+    { nonNullable: true },
   );
 
   public readonly chain = signal<CharChain | undefined>(undefined);
 
-  // list of operations output tags
-  public readonly opTags = signal<string[]>([]);
-  // list of operation diplomatic.g element IDs
-  public readonly opElementIds = signal<string[]>([]);
   // the currently picked base text range
   public readonly textRange = signal<VarBaseTextRange | undefined>(undefined);
   // the lines count for the current base text
@@ -236,7 +184,7 @@ export class SnapshotEditorComponent {
   public readonly editedOpIndex = signal<number>(-1);
   // the patch to apply to the edited operation's range
   public readonly editedOpRangePatch = signal<VarBaseTextRange | undefined>(
-    undefined
+    undefined,
   );
 
   public readonly busy = signal<boolean>(false);
@@ -252,12 +200,6 @@ export class SnapshotEditorComponent {
     7: 'annotate',
   };
 
-  // snapshot view data
-  public viewTitle = VIEW_TITLE;
-  public viewData?: SnapshotViewData;
-  public visualInfo?: string;
-  public rulers = true;
-
   // operations execution result
   public result?: CharChainResult;
   public resultOperationId?: string;
@@ -268,72 +210,22 @@ export class SnapshotEditorComponent {
     private _api: GveApiService,
     private _dialog: MatDialog,
     private _dialogService: DialogService,
-    private _snackbar: MatSnackBar
+    private _snackbar: MatSnackBar,
   ) {
-    // general
-    this.width = new FormControl<number>(800, { nonNullable: true });
-    this.height = new FormControl<number>(600, { nonNullable: true });
-    this.style = new FormControl<string | null>(null);
     // base text
     this.baseText = new FormControl<CharNode[]>([], {
       nonNullable: true,
       validators: [Validators.required],
     });
-    this.offsetX = new FormControl<number>(0, { nonNullable: true });
-    this.offsetY = new FormControl<number>(0, { nonNullable: true });
-    this.lineHeightOffset = new FormControl<number>(
-      DEFAULT_SVG_BASE_TEXT_OPTIONS.lineHeightOffset,
-      { nonNullable: true }
-    );
-    this.lnHeights = new FormControl<Record<number, number> | null>(null);
-    this.charSpacingOffset = new FormControl<number>(0, { nonNullable: true });
-    this.spcWidthOffset = new FormControl<number>(0, { nonNullable: true });
-    this.textStyle = new FormControl<string | null>(null);
-
     // operations
     this.operations = new FormControl<CharChainOperation[]>([], {
-      nonNullable: true,
-    });
-    this.opStyle = new FormControl<string | null>(null);
-    // image
-    this.imageUrl = new FormControl<string | null>(null);
-    this.imageOpacity = new FormControl<number>(1, { nonNullable: true });
-    this.imageX = new FormControl<number>(0, { nonNullable: true });
-    this.imageY = new FormControl<number>(0, { nonNullable: true });
-    this.imageWidth = new FormControl<number>(0, { nonNullable: true });
-    this.imageHeight = new FormControl<number>(0, { nonNullable: true });
-    this.defs = new FormControl<string | null>(null);
-
-    // timelines
-    this.timelines = new FormControl<GveAnimationTimeline[]>([], {
       nonNullable: true,
     });
 
     // form
     this.form = formBuilder.group({
-      width: this.width,
-      height: this.height,
-      style: this.style,
       baseText: this.baseText,
-      offsetX: this.offsetX,
-      offsetY: this.offsetY,
-      lineHeightOffset: this.lineHeightOffset,
-      lnHeights: this.lnHeights,
-      charSpacingOffset: this.charSpacingOffset,
-      spcWidthOffset: this.spcWidthOffset,
-      textStyle: this.textStyle,
       operations: this.operations,
-      opStyle: this.opStyle,
-      // image
-      imageUrl: this.imageUrl,
-      imageOpacity: this.imageOpacity,
-      imageX: this.imageX,
-      imageY: this.imageY,
-      imageWidth: this.imageWidth,
-      imageHeight: this.imageHeight,
-      defs: this.defs,
-      // timelines
-      timelines: this.timelines,
     });
 
     // when snapshot changes, update the form
@@ -359,69 +251,24 @@ export class SnapshotEditorComponent {
     if (!snapshot) {
       snapshot = this.getSnapshot();
     }
-
-    // update view data
-    this.viewTitle = title;
-    this.visualInfo = undefined;
-    this.viewData = {
-      snapshot: snapshot,
-      options: {
-        debug: this.debug(),
-        delayedRender: true,
-        showRulers: true,
-        showGrid: true,
-        panZoom: true,
-        transparentIds: this._transparentIds,
-      },
-    };
-
-    console.log('view data: ', this.viewData);
   }
 
   private updateForm(snapshot: Snapshot | undefined) {
-    this._transparentIds = undefined;
     this.initialStepIndex = -1;
 
     if (!snapshot) {
       this.form.reset();
     } else {
-      this.width.setValue(snapshot.size.width);
-      this.height.setValue(snapshot.size.height);
-      this.style.setValue(snapshot.style || null);
-      this.imageUrl.setValue(snapshot.image?.url || null);
-      this.imageOpacity.setValue(snapshot.image?.opacity || 0);
-      this.imageX.setValue(snapshot.image?.canvas?.x || 0);
-      this.imageY.setValue(snapshot.image?.canvas?.y || 0);
-      this.imageWidth.setValue(snapshot.image?.canvas?.width || 0);
-      this.imageHeight.setValue(snapshot.image?.canvas?.height || 0);
-      this.defs.setValue(snapshot.defs || null);
       if (Array.isArray(snapshot.text)) {
         this.baseText.setValue(snapshot.text);
       } else {
         this.baseText.setValue(
-          SnapshotViewService.stringToBaseChars(snapshot.text)
+          GveBaseTextService.stringToBaseChars(snapshot.text),
         );
       }
-      this.offsetX.setValue(snapshot.textOptions?.offset?.x || 0);
-      this.offsetY.setValue(snapshot.textOptions?.offset?.y || 0);
-      this.lineHeightOffset.setValue(snapshot.textOptions?.lineHeightOffset);
-      this.lnHeights.setValue(snapshot.textOptions?.minLineHeights || null);
-      this.charSpacingOffset.setValue(snapshot.textOptions?.charSpacingOffset);
-      this.spcWidthOffset.setValue(snapshot.textOptions?.spcWidthOffset);
-      this.textStyle.setValue(snapshot.textStyle || null);
       this.operations.setValue(snapshot.operations);
-      this.opStyle.setValue(snapshot.opStyle || null);
-      // timelines
-      const timelines: GveAnimationTimeline[] = [];
-      if (snapshot.timelines) {
-        for (let tag in snapshot.timelines) {
-          timelines.push(snapshot.timelines[tag]);
-        }
-      }
-      this.timelines.setValue(timelines);
     }
     this.updateLineCount(this.baseText.value);
-    this.updateOpLists();
 
     this.form.markAsPristine();
   }
@@ -450,9 +297,6 @@ export class SnapshotEditorComponent {
 
         // remove all operations and update the view data
         this.removeAllOperations();
-
-        // remove all timelines
-        this.timelines.reset();
       }
     });
   }
@@ -485,31 +329,6 @@ export class SnapshotEditorComponent {
 
   // #region operations
   /**
-   * Update the lists of operation output tags and element IDs by collecting
-   * all the operation tags and the IDs of the elements in their diplomatic.g
-   * SVG code if any.
-   */
-  private updateOpLists() {
-    const tags = new Set<string>();
-    const ids = new Set<string>();
-
-    let n = 0;
-    for (const op of this.operations.value) {
-      // output tag
-      n++;
-      tags.add(op.outputTag || `v${n}`);
-
-      // element IDs
-      if (op.diplomatics?.g) {
-        this.parseSvgIds(op.diplomatics.g)?.forEach((id) => ids.add(id));
-      }
-    }
-
-    this.opTags.set([...tags]);
-    this.opElementIds.set([...ids]);
-  }
-
-  /**
    * Edit a new operation.
    */
   public editNewOperation() {
@@ -532,7 +351,7 @@ export class SnapshotEditorComponent {
    */
   public editOperation(index: number) {
     this.editedOpIndex.set(index);
-    this.editedOp.set(deepCopy(this.operations.value[index]));
+    this.editedOp.set(structuredClone(this.operations.value[index]));
   }
 
   /**
@@ -578,9 +397,6 @@ export class SnapshotEditorComponent {
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
 
-    // update the operation lists
-    this.updateOpLists();
-
     // run to the edited operation
     this.runTo(i);
 
@@ -596,7 +412,7 @@ export class SnapshotEditorComponent {
     this._dialogService
       .confirm(
         'Confirm Deletion',
-        `Delete operation "${this.operations.value[index].id}"?`
+        `Delete operation "${this.operations.value[index].id}"?`,
       )
       .subscribe((yes: boolean) => {
         if (yes) {
@@ -614,9 +430,6 @@ export class SnapshotEditorComponent {
           this.operations.setValue(operations);
           this.operations.markAsDirty();
           this.operations.updateValueAndValidity();
-
-          // update the operation lists
-          this.updateOpLists();
 
           // update the view data
           setTimeout(() => {
@@ -646,8 +459,6 @@ export class SnapshotEditorComponent {
         this.operations.setValue(operations);
         this.operations.markAsDirty();
         this.operations.updateValueAndValidity();
-        // update the operation lists
-        this.updateOpLists();
         // update the view data
         setTimeout(() => {
           this.runToLast();
@@ -665,8 +476,6 @@ export class SnapshotEditorComponent {
     this.operations.reset();
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
-    this.opTags.set([]);
-    this.opElementIds.set([]);
     this.setViewData();
     this.result = undefined;
   }
@@ -734,7 +543,7 @@ export class SnapshotEditorComponent {
   private supplyOpNodes(
     snapshot: Snapshot,
     result: CharChainResult,
-    tag: string
+    tag: string,
   ): void {
     // get the original nodes from the snapshot base text
     const nodes = snapshot.text as CharNode[];
@@ -813,15 +622,6 @@ export class SnapshotEditorComponent {
     // update result operation ID
     this.resultOperationId = snapshot.operations[index].id;
 
-    // extract the IDs from the last operation's diplomatics and filter
-    // them so that only the ones ending with _t are kept. By convention,
-    // all the IDs ending with this suffix are to be made invisible at
-    // their first rendition (opacity=0). An animation will then make
-    // them visible.
-    this._transparentIds = this.getTransparentIds(
-      snapshot.operations[index].diplomatics?.g
-    );
-
     // run the operations
     this.busy.set(true);
     this.initialStepIndex = index;
@@ -842,7 +642,7 @@ export class SnapshotEditorComponent {
           // supply the last operation output tag from its result step if not set
           if (!lastOperation.outputTag) {
             const step = wrapper.result!.steps.find(
-              (s) => s.operation.id === lastOperation.id
+              (s) => s.operation.id === lastOperation.id,
             );
             lastOperation.outputTag = step!.outputTag;
           }
@@ -851,22 +651,11 @@ export class SnapshotEditorComponent {
           this.supplyOpNodes(
             snapshot,
             wrapper.result!,
-            lastOperation.outputTag
+            lastOperation.outputTag,
           );
 
           // update the view data
           this.setViewData(snapshot, lastOperation!.outputTag);
-
-          // play animation if any
-          const tl = this.timelines.value.find(
-            (t) => t.tag === lastOperation!.outputTag
-          );
-          if (tl) {
-            // play the timeline
-            setTimeout(() => {
-              this.playTimeline(tl);
-            }, 0);
-          }
 
           // get the chain model if requested
           if (this.showChain.value) {
@@ -875,7 +664,6 @@ export class SnapshotEditorComponent {
         },
         error: (error) => {
           console.error(error);
-          this._transparentIds = undefined;
           this._snackbar.open('Error running operations', 'OK');
         },
         complete: () => {
@@ -929,7 +717,6 @@ export class SnapshotEditorComponent {
         },
         error: (error) => {
           console.error(error);
-          this._transparentIds = undefined;
           this._snackbar.open('Error running operations', 'OK');
         },
         complete: () => {
@@ -957,20 +744,6 @@ export class SnapshotEditorComponent {
   }
   // #endregion
 
-  private playTimeline(tl: GveAnimationTimeline): void {
-    const shadowRoot = this.snapshotView?.nativeElement?.shadowRoot;
-    if (tl && shadowRoot) {
-      console.log('play timeline', tl);
-      this._renderer?.playTimeline(tl, undefined, shadowRoot);
-    } else {
-      if (!this.snapshotView) {
-        console.warn('no snapshotView for timeline');
-      } else {
-        console.warn('no shadowRoot for timeline');
-      }
-    }
-  }
-
   /**
    * Handle the event fired by the chain result view to pick a step.
    *
@@ -986,7 +759,7 @@ export class SnapshotEditorComponent {
 
     // get the step index
     const index = snapshot.operations.findIndex(
-      (o) => o.id === step.operation.id
+      (o) => o.id === step.operation.id,
     );
 
     // remove snapshot operations after the picked step to avoid
@@ -996,100 +769,11 @@ export class SnapshotEditorComponent {
     // update result operation ID
     this.resultOperationId = snapshot.operations[index].id;
 
-    // extract the IDs from the last operation's diplomatics and filter
-    // them so that only the ones ending with _t are kept. By convention,
-    // all the IDs ending with this suffix are to be made invisible at
-    // their first rendition (opacity=0). An animation will then make
-    // them visible.
-    this._transparentIds = this.getTransparentIds(
-      snapshot.operations[index].diplomatics?.g
-    );
-
     // update the snapshot text nodes with those introduced by operations
     this.supplyOpNodes(snapshot, this.result, step.outputTag);
 
     // update the view data
     this.setViewData(snapshot, step.outputTag);
-
-    // play animation if any
-    const tl = this.timelines.value.find((t) => t.tag === step.outputTag);
-    if (tl) {
-      // play the timeline
-      setTimeout(() => {
-        this.playTimeline(tl);
-      }, 0);
-    }
-  }
-
-  /**
-   * Handle the event fired by a visual in the snapshot view.
-   *
-   * @param event The event.
-   */
-  public onVisualEvent(event: CustomEvent<GveVisualEvent>): void {
-    if (this._handlingOver) {
-      return;
-    }
-    const d = event.detail;
-
-    if (d.event.type === 'mouseover') {
-      const visual = d.source;
-      if (visual.id === this._lastOverId) {
-        return;
-      }
-      this._handlingOver = true;
-      const sb: string[] = [];
-      // id (type)
-      sb.push('#' + visual.id);
-      sb.push(` (${visual.type})`);
-      // : label and features
-      if (visual.data?.label) {
-        sb.push(': ');
-        sb.push(visual.data.label);
-      }
-      if (visual.data?.features?.length) {
-        sb.push(' ');
-        sb.push(
-          visual.data.features
-            .map((f: Feature) => `${f.name}=${f.value}`)
-            .join('\n')
-        );
-      }
-      // (@x,y width×height)
-      sb.push(
-        ` (@${visual.x.toFixed(1)},${visual.y.toFixed(1)} ` +
-          `◻${visual.width.toFixed(1)}×${visual.height.toFixed(1)})`
-      );
-      this.visualInfo = sb.join('');
-      this._lastOverId = visual.id;
-    }
-
-    this._handlingOver = false;
-  }
-
-  /**
-   * Handle the change of line heights by updating the form control.
-   *
-   * @param heights The line heights.
-   */
-  public onHeightsChange(heights: Record<number, number> | undefined): void {
-    this.lnHeights.setValue(heights || null);
-    this.lnHeights.markAsDirty();
-    this.lnHeights.updateValueAndValidity();
-  }
-
-  /**
-   * Handle the change of timelines by updating the form control.
-   *
-   * @param timelines The timelines.
-   */
-  public onTimelinesChange(timelines?: GveAnimationTimeline[] | null): void {
-    if (!timelines) {
-      return;
-    }
-    this.timelines.setValue(timelines);
-    this.timelines.markAsDirty();
-    this.timelines.updateValueAndValidity();
   }
 
   /**
@@ -1100,152 +784,17 @@ export class SnapshotEditorComponent {
   }
 
   /**
-   * Handle the render event from the snapshot view to get a reference
-   * to the renderer.
-   *
-   * @param event The rendition event.
-   */
-  public onSnapshotRender(event: CustomEvent<SnapshotViewRenderEvent>): void {
-    this._renderer = (event.detail as SnapshotViewRenderEvent).renderer;
-  }
-
-  public onImageLoad(imageElement: HTMLImageElement) {
-    const size = {
-      width: imageElement.naturalWidth,
-      height: imageElement.naturalHeight,
-    };
-    if (!this.imageWidth.value) {
-      this.imageWidth.setValue(size.width);
-      this.imageWidth.updateValueAndValidity();
-      this.imageWidth.markAsDirty();
-    }
-    if (!this.imageHeight.value) {
-      this.imageHeight.setValue(size.height);
-      this.imageHeight.updateValueAndValidity();
-      this.imageHeight.markAsDirty();
-    }
-  }
-
-  public onImageOpacityChange(value: number): void {
-    this.imageOpacity.setValue(value);
-    this.imageOpacity.updateValueAndValidity();
-    this.imageOpacity.markAsDirty();
-    if (this._renderer) {
-      this._renderer.setImageOpacity(value);
-    }
-  }
-
-  public resetImgMetadata(): void {
-    this.imageX.reset();
-    this.imageY.reset();
-    this.imageWidth.reset();
-    this.imageHeight.reset();
-  }
-
-  /**
-   * Toggle rulers in the snapshot view.
-   */
-  public toggleRulers(): void {
-    if (!this._renderer) {
-      return;
-    }
-    this.rulers = this._renderer.toggleRulers();
-  }
-
-  private defaultCharDecorator(
-    char: CharNode,
-    lineNumber: number,
-    x: number,
-    y: number
-  ): CharDecoration | null {
-    const features = char.features;
-    const segOut = features?.find((f) => f.name === '$seg-out');
-    const seg2Out = features?.find((f) => f.name === '$seg2-out');
-    const segIn = features?.find((f) => f.name === '$seg-in');
-    const seg2In = features?.find((f) => f.name === '$seg2-in');
-
-    if (!segOut && !seg2Out && !segIn && !seg2In) {
-      return null;
-    }
-
-    const decoration: CharDecoration = {};
-    if (segOut || seg2Out) {
-      decoration.fill = segOut ? '#9B2915' : '#9B6F91';
-    }
-    // if (segIn || seg2In) {
-    //   decoration.stroke = segIn ? '#E9B44C' : '#DF928E';
-    //   decoration.strokeWidth = 3;
-    // }
-
-    return decoration;
-  }
-
-  /**
    * Get a snapshot from the form data.
    *
    * @returns New snapshot object.
    */
   private getSnapshot(): Snapshot {
     const snapshot: Snapshot = {
-      size: {
-        width: this.width.value,
-        height: this.height.value,
-      },
-      style: this.style.value || undefined,
-      defs: this.defs.value || undefined,
       // snapshot nodes might be changed, so we copy them
       // to avoid changing the original snapshot
-      text: deepCopy(this.baseText.value),
-      textStyle: this.textStyle.value || undefined,
-      textOptions: {
-        lineHeightOffset: this.lineHeightOffset.value,
-        minLineHeights: this.lnHeights.value || undefined,
-        charSpacingOffset: this.charSpacingOffset.value,
-        spcWidthOffset: this.spcWidthOffset.value,
-        offset: {
-          x: this.offsetX.value,
-          y: this.offsetY.value,
-        },
-      },
-      operations: [...this.operations.value],
-      opStyle: this.opStyle.value || undefined,
+      text: structuredClone(this.baseText.value),
+      operations: structuredClone(this.operations.value),
     };
-
-    // add char decoration unless opted out
-    if (!this.noDecoration()) {
-      snapshot.textOptions.charDecorator = this.defaultCharDecorator;
-    }
-
-    // image
-    if (this.imageUrl.value) {
-      snapshot.image = {
-        url: this.imageUrl.value,
-        opacity: this.imageOpacity.value || undefined,
-      };
-      if (
-        this.imageX.value ||
-        this.imageY.value ||
-        this.imageWidth.value ||
-        this.imageHeight.value
-      ) {
-        snapshot.image.canvas = {
-          x: this.imageX.value,
-          y: this.imageY.value,
-          width: this.imageWidth.value,
-          height: this.imageHeight.value,
-        };
-      }
-    }
-
-    // timelines
-    if (this.timelines.value.length) {
-      snapshot.timelines = {};
-      this.timelines.value.forEach((t) => {
-        snapshot.timelines![t.tag] = t;
-      });
-    } else {
-      snapshot.timelines = undefined;
-    }
 
     return snapshot;
   }

@@ -7,13 +7,12 @@ import {
   signal,
 } from '@angular/core';
 
-import { CharNode } from '@myrmidon/gve-snapshot-view';
-
 import {
   BaseTextChar,
   BaseTextCharComponent,
   BaseTextCharEvent,
 } from '../base-text-char/base-text-char.component';
+import { CharNode } from '../../models';
 
 /**
  * A range in the base text.

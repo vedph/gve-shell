@@ -36,7 +36,6 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
-import { deepCopy, SafeHtmlPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   CharChainOperation,
@@ -44,9 +43,9 @@ import {
   OperationFeature,
   OperationType,
   OperationSource,
-  SnapshotBase,
+  Snapshot,
   LabeledId,
-} from '@myrmidon/gve-snapshot-view';
+} from '../../models';
 
 // local
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
@@ -80,7 +79,7 @@ export interface FeatureDefinitions {
  * A component for editing a variant generation operation.
  * Used by the `gve-snapshot-editor` component.
  * - ▶️ `operation` (`CharChainOperation`): the operation to edit.
- * - ▶️ `snapshot` (`SnapshotBase`): the snapshot the operation refers to.
+ * - ▶️ `snapshot` (`Snapshot`): the snapshot the operation refers to.
  * - ▶️ `hidePreview` (`boolean`): whether to hide the preview request button.
  * - 🔥 `operationChange` (`CharChainOperation`): emitted when the operation
  * is changed.
@@ -140,7 +139,6 @@ export interface FeatureDefinitions {
     MatTabsModule,
     MatTooltipModule,
     NgeMonacoModule,
-    SafeHtmlPipe,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
   ],
@@ -163,7 +161,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   /**
    * The snapshot the operation refers to.
    */
-  public readonly snapshot = input<SnapshotBase | undefined>();
+  public readonly snapshot = input<Snapshot | undefined>();
 
   /**
    * Whether to hide the preview request button.
@@ -249,7 +247,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     formBuilder: FormBuilder,
     private _clipboard: Clipboard,
     private _settings: SettingsService,
-    private _dialogService: DialogService
+    private _dialogService: DialogService,
   ) {
     this._subs = [];
     // general
@@ -286,7 +284,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     });
     this.elementFeatures = formBuilder.control<Record<string, Feature[]>>(
       {},
-      { nonNullable: true }
+      { nonNullable: true },
     );
     this.newTextHidden = formBuilder.control<boolean>(false, {
       nonNullable: true,
@@ -358,16 +356,16 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       this.form.valueChanges
         .pipe(
           filter((changes) => 'svg' in changes || 'snapshot' in changes),
-          debounceTime(500)
+          debounceTime(500),
         )
         .subscribe(() => {
           this.requestPreview();
-        })
+        }),
     );
 
     // whenever type changes, update args UI
     this._subs.push(
-      this.type.valueChanges.subscribe(() => this.updateArgsUI())
+      this.type.valueChanges.subscribe(() => this.updateArgsUI()),
     );
   }
 
@@ -380,38 +378,17 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   private toggleLfEscape(
     text: string | null | undefined,
-    on: boolean
+    on: boolean,
   ): string | null | undefined {
     if (!text) return text;
     return on ? text.replace(/\\/g, '\n') : text.replace(/\n/g, '\\');
   }
 
-  private hasTextChanges(snapshot?: SnapshotBase): boolean {
+  private hasTextChanges(snapshot?: Snapshot): boolean {
     if ((!snapshot && this.snapshot()) || (snapshot && !this.snapshot())) {
       return true;
     }
-    if (
-      snapshot?.size?.width !== this.snapshot()?.size?.width ||
-      snapshot?.size?.height !== this.snapshot()?.size?.height
-    ) {
-      return true;
-    }
-    if (
-      snapshot?.style !== this.snapshot()?.style ||
-      snapshot?.text !== this.snapshot()?.text ||
-      snapshot?.textStyle !== this.snapshot()?.textStyle
-    ) {
-      return true;
-    }
-    // compare textOptions returning true if any different
-    const options = snapshot?.textOptions;
-    if (
-      options?.lineHeightOffset !==
-        this.snapshot()?.textOptions?.lineHeightOffset ||
-      options?.charSpacingOffset !==
-        this.snapshot()?.textOptions?.charSpacingOffset ||
-      options?.spcWidthOffset !== this.snapshot()?.textOptions?.spcWidthOffset
-    ) {
+    if (snapshot?.text !== this.snapshot()?.text) {
       return true;
     }
     return false;
@@ -441,7 +418,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
           this.svg.markAsDirty();
           this.svg.updateValueAndValidity();
         }
-      })
+      }),
     );
   }
 
@@ -463,7 +440,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   public editSource(index: number): void {
     this.editedSourceIndex.set(index);
-    this.editedSource.set(deepCopy(this.sources.value[index]));
+    this.editedSource.set(structuredClone(this.sources.value[index]));
   }
 
   public closeSource(): void {
@@ -504,7 +481,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public openSvgEditor(): void {
     const url = this._settings.get<string>(
       'svg-editor',
-      'https://editor.method.ac/'
+      'https://editor.method.ac/',
       // 'https://boxy-svg.com/app'
     );
     if (url) {
@@ -682,10 +659,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     this.groupId.setValue(operation.groupId || null);
     this.features.setValue(operation.features || []);
     this.sources.setValue(operation.sources || []);
-    this.newTextHidden.setValue(
-      operation.diplomatics?.isNewTextHidden || false
-    );
-    this.dpFeatures.setValue(operation.diplomatics?.features || []);
 
     this.type.setValue(operation.type);
     this.at.setValue(operation.at);
@@ -699,13 +672,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     // escape line feeds in value for editing
     this.value.setValue(this.toggleLfEscape(operation.value, true) || null);
 
-    this.svg.setValue(operation.diplomatics?.g || '');
     this._editorModel?.setValue(this.svg.value || '');
-    this.elementFeatures.setValue(operation.diplomatics?.elementFeatures || {});
 
     this.form.markAsPristine();
-
-    this.elements.set(this.parseSvg(operation.diplomatics?.g));
 
     this.updateArgsUI();
   }
@@ -720,12 +689,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       groupId: this.groupId.value || undefined,
       features: this.features.value?.length ? this.features.value : undefined,
       sources: this.sources.value?.length ? this.sources.value : undefined,
-      diplomatics: {
-        g: this.svg.value,
-        isNewTextHidden: this.newTextHidden.value,
-        features: this.dpFeatures.value,
-        elementFeatures: this.elementFeatures.value,
-      },
       id: this.id()!,
       type: this.type.value,
       at: this.at.value,

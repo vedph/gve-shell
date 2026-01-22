@@ -10,9 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { GveVisualEvent, Snapshot } from '@myrmidon/gve-snapshot-view';
-
-import { SnapshotEditorComponent } from '@myrmidon/gve-core';
+import { Snapshot, SnapshotEditorComponent } from '@myrmidon/gve-core';
 
 import { AssetService } from '../../services/asset.service';
 
@@ -58,9 +56,5 @@ export class SnapshotEditorDemoComponent implements OnInit {
   public onSnapshotChange(snapshot: Snapshot): void {
     this.snapshot.set(snapshot);
     console.log('Snapshot change:', snapshot);
-  }
-
-  public onVisualEvent(event: GveVisualEvent): void {
-    console.log('Visual event:', event);
   }
 }

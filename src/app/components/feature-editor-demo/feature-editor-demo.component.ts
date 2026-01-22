@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
-import { Feature, LabeledId } from '@myrmidon/gve-snapshot-view';
+import { Feature, LabeledId } from '@myrmidon/gve-core';
 
 import {
   FeatureEditorComponent,

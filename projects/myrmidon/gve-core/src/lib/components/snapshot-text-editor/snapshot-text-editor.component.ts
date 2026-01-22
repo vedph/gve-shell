@@ -20,9 +20,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 
-import { CharNode, SnapshotViewService } from '@myrmidon/gve-snapshot-view';
-
-import { PayloadMatDialogConfig } from '../../models';
+import { CharNode, PayloadMatDialogConfig } from '../../models';
+import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 /**
  * 🔑 `gve-snapshot-text-editor`
@@ -98,7 +97,7 @@ export class SnapshotTextEditorComponent implements OnInit {
     if (!this.userText.value) {
       return;
     }
-    this.text.set(SnapshotViewService.stringToBaseChars(this.userText.value));
+    this.text.set(GveBaseTextService.stringToBaseChars(this.userText.value));
     this.dialogRef?.close(this.text());
   }
 }

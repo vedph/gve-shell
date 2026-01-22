@@ -20,7 +20,7 @@ import {
   CharNode,
   Feature,
   OperationFeature,
-} from '@myrmidon/gve-snapshot-view';
+} from '../../models';
 
 import { FeatureSetViewComponent } from '../feature-set-view/feature-set-view.component';
 import { StepsMapComponent } from '../steps-map/steps-map.component';

@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-01-22: ⚠️ REFACTORED MODELS to remove visuals from operations.
+
 ### 5.0.3
 
 - 2025-11-06:

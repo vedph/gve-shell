@@ -5,13 +5,7 @@ import { Observable, catchError } from 'rxjs';
 
 import { ErrorService, EnvService } from '@myrmidon/ngx-tools';
 
-import {
-  CharChainOperation,
-  CharNode,
-  OperationFeature,
-} from '@myrmidon/gve-snapshot-view';
-
-import { ResultWrapper } from '../models';
+import { CharChainOperation, CharNode, OperationFeature, ResultWrapper } from '../models';
 
 /**
  * Execution step of a char-based chain operation.
@@ -126,7 +120,7 @@ export class GveApiService {
   constructor(
     private _http: HttpClient,
     private _error: ErrorService,
-    private _env: EnvService
+    private _env: EnvService,
   ) {}
 
   /**
@@ -136,14 +130,14 @@ export class GveApiService {
    * @returns The operations.
    */
   public parseOperations(
-    text: string
+    text: string,
   ): Observable<ResultWrapper<CharChainOperation[]>> {
     return this._http
       .post<ResultWrapper<CharChainOperation[]>>(
         `${this._env.get('apiUrl')}text/operations/parse`,
         {
           text,
-        }
+        },
       )
       .pipe(catchError(this._error.handleError));
   }
@@ -157,7 +151,7 @@ export class GveApiService {
    */
   public runOperations(
     text: CharNode[],
-    operations: CharChainOperation[]
+    operations: CharChainOperation[],
   ): Observable<ResultWrapper<CharChainResult>> {
     return this._http
       .post<ResultWrapper<CharChainResult>>(
@@ -165,7 +159,7 @@ export class GveApiService {
         {
           text,
           operations,
-        }
+        },
       )
       .pipe(catchError(this._error.handleError));
   }
@@ -177,14 +171,14 @@ export class GveApiService {
    * @returns Result wrapper.
    */
   public getTags(
-    operations: CharChainOperation[]
+    operations: CharChainOperation[],
   ): Observable<ResultWrapper<string[]>> {
     return this._http
       .post<ResultWrapper<string[]>>(
         `${this._env.get('apiUrl')}text/operations/tags`,
         {
           operations,
-        }
+        },
       )
       .pipe(catchError(this._error.handleError));
   }
@@ -200,7 +194,7 @@ export class GveApiService {
    */
   public getChain(
     text: CharNode[],
-    operations: CharChainOperation[]
+    operations: CharChainOperation[],
   ): Observable<ResultWrapper<CharChain>> {
     return this._http
       .post<ResultWrapper<CharChain>>(
@@ -208,7 +202,7 @@ export class GveApiService {
         {
           text,
           operations,
-        }
+        },
       )
       .pipe(catchError(this._error.handleError));
   }

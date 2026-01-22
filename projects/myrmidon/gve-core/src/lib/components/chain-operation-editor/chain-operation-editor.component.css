@@ -22,7 +22,7 @@
   flex-wrap: wrap;
 }
 .nr {
-  width: 5em;
+  width: 6em;
 }
 .long-text {
   width: 100%;
@@ -81,15 +81,6 @@ tr.selected {
 }
 #monaco {
   height: 100%;
-}
-.svg-cell {
-  /* width: 200px; */
-  padding: 0 8px;
-}
-.svg-cell svg {
-  border: 1px solid silver;
-  width: 100%; /* Scale the SVG to fit the width of the table cell */
-  height: auto; /* This will maintain the aspect ratio of the SVG */
 }
 #preview {
   box-sizing: border-box;

@@ -13,7 +13,7 @@ import {
   Feature,
   LabeledId,
   OperationFeature,
-} from '@myrmidon/gve-snapshot-view';
+} from '../../models';
 
 import { FeatureMap } from '../feature-editor/feature-editor.component';
 

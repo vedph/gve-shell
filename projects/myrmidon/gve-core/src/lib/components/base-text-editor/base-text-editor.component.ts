@@ -12,11 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {
-  CharNode,
-  Feature,
-  SnapshotViewService,
-} from '@myrmidon/gve-snapshot-view';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
@@ -25,6 +20,8 @@ import {
   VarBaseTextRange,
 } from '../base-text-view/base-text-view.component';
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
+import { CharNode, Feature } from '../../models';
+import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 /**
  * 🔑 `gve-base-text-editor`
@@ -65,7 +62,7 @@ export class BaseTextEditorComponent {
         return value;
       }
       if (typeof value === 'string') {
-        return SnapshotViewService.stringToBaseChars(value);
+        return GveBaseTextService.stringToBaseChars(value);
       }
       return undefined;
     },
@@ -83,7 +80,10 @@ export class BaseTextEditorComponent {
   public userText: FormControl<string>;
   public form: FormGroup;
 
-  constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
+  constructor(
+    formBuilder: FormBuilder,
+    private _dialogService: DialogService,
+  ) {
     this.userText = formBuilder.control('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(10000)],
@@ -100,7 +100,7 @@ export class BaseTextEditorComponent {
         this.userText.setValue(
           this.text()!
             .map((c) => c.data)
-            .join('')
+            .join(''),
         );
         this.userText.markAsPristine();
         this.userText.updateValueAndValidity();
@@ -124,7 +124,7 @@ export class BaseTextEditorComponent {
       return;
     }
     const chars = this.text()!.map((c) =>
-      c.id === char.id ? { ...c, features } : c
+      c.id === char.id ? { ...c, features } : c,
     );
     this.selectedChar.set({ ...char, features });
     this.textChange.emit(chars);
@@ -144,7 +144,7 @@ export class BaseTextEditorComponent {
       .subscribe((yes: boolean) => {
         if (yes) {
           this.textChange.emit(
-            SnapshotViewService.stringToBaseChars(this.userText.value)
+            GveBaseTextService.stringToBaseChars(this.userText.value),
           );
         }
       });

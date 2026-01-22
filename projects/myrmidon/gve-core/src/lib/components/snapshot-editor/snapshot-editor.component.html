@@ -23,89 +23,12 @@
           </button>
 
           @if (textRange()) {
-          <span id="text-range"
-            >{{ textRange()!.at }}×{{ textRange()!.run }}</span
-          >
+            <span id="text-range"
+              >{{ textRange()!.at }}×{{ textRange()!.run }}</span
+            >
           }
         </div>
-        <!-- base text metadata -->
-        <fieldset>
-          <div class="form-row">
-            <!-- offsetX -->
-            <mat-form-field class="input-nr">
-              <mat-label>X offset</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="offsetX"
-                placeholder="X offset"
-              />
-            </mat-form-field>
 
-            <!-- offsetY -->
-            <mat-form-field class="input-nr">
-              <mat-label>Y offset</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="offsetY"
-                placeholder="Y offset"
-              />
-            </mat-form-field>
-
-            <!-- lineHeightOffset -->
-            <mat-form-field class="input-nr">
-              <mat-label>ln h-offset</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="lineHeightOffset"
-                placeholder="ln h-offset"
-              />
-            </mat-form-field>
-
-            <!-- charSpacingOffset -->
-            <mat-form-field class="input-nr">
-              <mat-label>char spacing</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="charSpacingOffset"
-                placeholder="char spacing"
-              />
-            </mat-form-field>
-
-            <!-- spcWidthOffset -->
-            <mat-form-field class="input-nr">
-              <mat-label>spc w-offset</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="spcWidthOffset"
-                placeholder="spc w-offset"
-              />
-            </mat-form-field>
-            <!-- minLineHeights -->
-            <div class="boxed">
-              <gve-ln-heights-editor
-                [lineCount]="lineCount()"
-                [heights]="lnHeights.value || undefined"
-                (heightsChange)="onHeightsChange($event)"
-              />
-            </div>
-          </div>
-          <!-- textStyle -->
-          <div>
-            <mat-form-field class="long-text" appearance="outline">
-              <mat-label>text style</mat-label>
-              <textarea
-                matInput
-                [formControl]="textStyle"
-                placeholder="text style"
-              ></textarea>
-            </mat-form-field>
-          </div>
-        </fieldset>
         <!-- text characters -->
         <gve-base-text-view
           [text]="baseText.value"
@@ -124,35 +47,6 @@
       <div id="snapshot-container">
         <div id="general">
           <div class="form-row">
-            <!-- width -->
-            <mat-form-field class="input-nr">
-              <mat-label>width</mat-label>
-              <input
-                matInput
-                type="number"
-                min="0"
-                [formControl]="width"
-                placeholder="width"
-              />
-            </mat-form-field>
-
-            <!-- height -->
-            <mat-form-field class="input-nr">
-              <mat-label>height</mat-label>
-              <input
-                matInput
-                type="number"
-                min="0"
-                [formControl]="height"
-                placeholder="height"
-              />
-            </mat-form-field>
-
-            <!-- chain -->
-            <mat-slide-toggle [formControl]="showChain"
-              >show chain</mat-slide-toggle
-            >
-
             <!-- feat details -->
             <mat-slide-toggle [formControl]="featDetails"
               >feat. details</mat-slide-toggle
@@ -201,324 +95,169 @@
         <div id="ops">
           <!-- operations list -->
           @if (operations.value.length) {
-          <table id="list">
-            <thead>
-              <tr>
-                <th>nr.</th>
-                <th></th>
-                <th>ID</th>
-                <th>type</th>
-                <th>at</th>
-                <th>run</th>
-                <th>value</th>
-                <th>itag</th>
-                <th>otag</th>
-                <th>gid</th>
-                <th>feats</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (operation of operations.value; track operation.id; let
-              index=$index) {
-              <tr
-                [class.selected]="operation.id === resultOperationId"
-                [class.edited]="operation.id === editedOp()?.id"
-              >
-                <td class="fit-width">{{ index + 1 }}.</td>
-                <td class="fit-width">
-                  <!-- edit -->
-                  <button
-                    type="button"
-                    mat-icon-button
-                    class="mat-primary"
-                    (click)="editOperation(index)"
-                    matTooltip="Edit operation"
+            <table id="list">
+              <thead>
+                <tr>
+                  <th>nr.</th>
+                  <th></th>
+                  <th>ID</th>
+                  <th>type</th>
+                  <th>at</th>
+                  <th>run</th>
+                  <th>value</th>
+                  <th>itag</th>
+                  <th>otag</th>
+                  <th>gid</th>
+                  <th>feats</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  operation of operations.value;
+                  track operation.id;
+                  let index = $index
+                ) {
+                  <tr
+                    [class.selected]="operation.id === resultOperationId"
+                    [class.edited]="operation.id === editedOp()?.id"
                   >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <!-- delete -->
-                  <button
-                    type="button"
-                    mat-icon-button
-                    class="mat-warn"
-                    (click)="deleteOperation(index)"
-                    matTooltip="Delete operation"
-                  >
-                    <mat-icon class="mat-warn">delete</mat-icon>
-                  </button>
-                  <!-- run to -->
-                  <button
-                    type="button"
-                    mat-icon-button
-                    class="mat-accent"
-                    (click)="runTo(index)"
-                    matTooltip="Run to this operation"
-                  >
-                    <mat-icon class="mat-accent">subscriptions</mat-icon>
-                  </button>
-                </td>
-                <td>{{ operation.id }}</td>
-                <td>{{ operation.type | flatLookup : opTypeMap }}</td>
-                <td>{{ operation.at }}</td>
-                <td>{{ operation.run }}</td>
-                <td>{{ operation.value }}</td>
-                <td>{{ operation.inputTag }}</td>
-                <td>{{ operation.outputTag }}</td>
-                <td>{{ operation.groupId }}</td>
-                <td>
-                  @if (operation.features?.length) { @if (featDetails.value) {
-                  <div class="form-row">
-                    @for (feat of operation.features; track $index; let
-                    i=$index) {
-                    <div class="feature">
-                      <span class="fname">{{
-                        feat.name
-                          | flatLookup : featureDefs()?.names : "id" : "label"
-                      }}</span
-                      >=<span
-                        class="fvalue"
-                        >{{ feat.value | flatLookup:(featureDefs()?.values?.[feat.name]): "id" : "label" }}</span
+                    <td class="fit-width">{{ index + 1 }}.</td>
+                    <td class="fit-width">
+                      <!-- edit -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        class="mat-primary"
+                        (click)="editOperation(index)"
+                        matTooltip="Edit operation"
                       >
-                    </div>
-                    }
-                  </div>
-                  } @else {
-                  {{ operation.features?.length }}
-                  } }
-                </td>
-              </tr>
-              }
-            </tbody>
-          </table>
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <!-- delete -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        class="mat-warn"
+                        (click)="deleteOperation(index)"
+                        matTooltip="Delete operation"
+                      >
+                        <mat-icon class="mat-warn">delete</mat-icon>
+                      </button>
+                      <!-- run to -->
+                      <button
+                        type="button"
+                        mat-icon-button
+                        class="mat-accent"
+                        (click)="runTo(index)"
+                        matTooltip="Run to this operation"
+                      >
+                        <mat-icon class="mat-accent">subscriptions</mat-icon>
+                      </button>
+                    </td>
+                    <td>{{ operation.id }}</td>
+                    <td>{{ operation.type | flatLookup: opTypeMap }}</td>
+                    <td>{{ operation.at }}</td>
+                    <td>{{ operation.run }}</td>
+                    <td>{{ operation.value }}</td>
+                    <td>{{ operation.inputTag }}</td>
+                    <td>{{ operation.outputTag }}</td>
+                    <td>{{ operation.groupId }}</td>
+                    <td>
+                      @if (operation.features?.length) {
+                        @if (featDetails.value) {
+                          <div class="form-row">
+                            @for (
+                              feat of operation.features;
+                              track $index;
+                              let i = $index
+                            ) {
+                              <div class="feature">
+                                <span class="fname">{{
+                                  feat.name
+                                    | flatLookup
+                                      : featureDefs()?.names
+                                      : "id"
+                                      : "label"
+                                }}</span
+                                >=<span class="fvalue">{{
+                                  feat.value
+                                    | flatLookup
+                                      : featureDefs()?.values?.[feat.name]
+                                      : "id"
+                                      : "label"
+                                }}</span>
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          {{ operation.features?.length }}
+                        }
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           }
 
           <!-- operation editor -->
           @if (editedOp()) {
-          <mat-expansion-panel [expanded]="editedOp()" [disabled]="!editedOp()">
-            <mat-expansion-panel-header>
-              <mat-panel-title>operation {{ editedOp()?.id }}</mat-panel-title>
-            </mat-expansion-panel-header>
-            <fieldset>
-              <gve-chain-operation-editor
-                [featureDefs]="featureDefs()"
-                [elementFeatureDefs]="elementFeatureDefs()"
-                [diplomaticFeatureDefs]="diplomaticFeatureDefs()"
-                [hidePreview]="editedOpIndex() === -1"
-                [operation]="editedOp()"
-                [rangePatch]="editedOpRangePatch()"
-                (operationCancel)="onOperationCancel()"
-                (operationChange)="onOperationChange($event)"
-                (operationPreview)="onOperationPreview($event)"
-              />
-            </fieldset>
-          </mat-expansion-panel>
-          }
-
-          <!-- opStyle -->
-          <div id="opStyle">
-            <mat-form-field class="long-text" appearance="outline">
-              <mat-label>operations style</mat-label>
-              <textarea
-                matInput
-                [formControl]="opStyle"
-                placeholder="operations style"
-              ></textarea>
-            </mat-form-field>
-          </div>
-        </div>
-      </div>
-    </mat-tab>
-
-    <!-- image -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>image</mat-icon> <span class="label">image</span>
-      </ng-template>
-
-      <div id="image">
-        <div id="image-ctl">
-          <!-- url -->
-          <mat-form-field class="long-text">
-            <mat-label>URL</mat-label>
-            <input matInput [formControl]="imageUrl" />
-          </mat-form-field>
-          <div class="form-row">
-            <!-- x -->
-            <mat-form-field class="input-nr">
-              <mat-label>X</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="imageX"
-                placeholder="X"
-              />
-            </mat-form-field>
-            <!-- y -->
-            <mat-form-field class="input-nr">
-              <mat-label>Y</mat-label>
-              <input
-                matInput
-                type="number"
-                [formControl]="imageY"
-                placeholder="Y"
-              />
-            </mat-form-field>
-            <!-- width -->
-            <mat-form-field class="input-nr">
-              <mat-label>width</mat-label>
-              <input
-                matInput
-                type="number"
-                min="0"
-                [formControl]="imageWidth"
-              />
-            </mat-form-field>
-            <!-- height -->
-            <mat-form-field class="input-nr">
-              <mat-label>height</mat-label>
-              <input
-                matInput
-                type="number"
-                min="0"
-                [formControl]="imageHeight"
-              />
-            </mat-form-field>
-            <!-- reset -->
-            <button
-              type="button"
-              mat-icon-button
-              matTooltip="Reset image metadata"
-              (click)="resetImgMetadata()"
+            <mat-expansion-panel
+              [expanded]="editedOp()"
+              [disabled]="!editedOp()"
             >
-              <mat-icon class="mat-warn">clear</mat-icon>
-            </button>
-          </div>
-          <div>
-            <!-- image opacity -->
-            <mat-slider
-              min="0"
-              max="1"
-              step="0.01"
-              thumbLabel
-              color="primary"
-              class="mat-primary"
-              matTooltip="Image opacity"
-            >
-              <input
-                matSliderThumb
-                [value]="imageOpacity.value"
-                (valueChange)="onImageOpacityChange($event)"
-              />
-            </mat-slider>
-            <span id="opacity-value">{{
-              imageOpacity.value | number : "1.2-2"
-            }}</span>
-          </div>
-          <!-- defs -->
-          <div>
-            <mat-form-field class="long-text">
-              <mat-label>defs</mat-label>
-              <textarea matInput [formControl]="defs" rows="3"></textarea>
-            </mat-form-field>
-          </div>
-        </div>
-        <div id="image-view">
-          @if (imageUrl.value) {
-          <img
-            #imgElement
-            alt="background"
-            [src]="imageUrl.value"
-            width="600"
-            (load)="onImageLoad(imgElement)"
-          />
+              <mat-expansion-panel-header>
+                <mat-panel-title
+                  >operation {{ editedOp()?.id }}</mat-panel-title
+                >
+              </mat-expansion-panel-header>
+              <fieldset>
+                <gve-chain-operation-editor
+                  [featureDefs]="featureDefs()"
+                  [elementFeatureDefs]="elementFeatureDefs()"
+                  [diplomaticFeatureDefs]="diplomaticFeatureDefs()"
+                  [hidePreview]="editedOpIndex() === -1"
+                  [operation]="editedOp()"
+                  [rangePatch]="editedOpRangePatch()"
+                  (operationCancel)="onOperationCancel()"
+                  (operationChange)="onOperationChange($event)"
+                  (operationPreview)="onOperationPreview($event)"
+                />
+              </fieldset>
+            </mat-expansion-panel>
           }
         </div>
       </div>
-    </mat-tab>
-
-    <!-- timelines -->
-    <mat-tab>
-      <ng-template mat-tab-label>
-        <mat-icon>animation</mat-icon> <span class="label">animation</span>
-      </ng-template>
-
-      <gve-animation-timeline-set
-        [tags]="opTags()"
-        [elementIds]="opElementIds()"
-        [timelines]="timelines.value"
-        (timelinesChange)="onTimelinesChange($event)"
-      />
     </mat-tab>
   </mat-tab-group>
 
   <!-- progress -->
   <div>
     @if (busy()) {
-    <mat-progress-bar mode="indeterminate" />
+      <mat-progress-bar mode="indeterminate" />
     }
   </div>
 
   <!-- result -->
   @if (result) {
-  <fieldset id="result">
-    <legend>result</legend>
-    <gve-chain-result-view
-      [result]="result"
-      [initialStepIndex]="initialStepIndex"
-      [disabledRangePick]="editedOp() ? false : true"
-      (stepPick)="onStepPick($event)"
-      (rangePick)="onRangePick($event, true)"
-    />
-  </fieldset>
+    <fieldset id="result">
+      <legend>result</legend>
+      <gve-chain-result-view
+        [result]="result"
+        [initialStepIndex]="initialStepIndex"
+        [disabledRangePick]="editedOp() ? false : true"
+        (stepPick)="onStepPick($event)"
+        (rangePick)="onRangePick($event, true)"
+      />
+    </fieldset>
   }
 
   <!-- snapshot view -->
-  <fieldset id="preview">
+  <div id="preview">
     <legend class="button-row">
-      <span>{{ viewTitle }}</span>
+      TODO: snapshot preview
     </legend>
-    <!-- snapshot view -->
-    <gve-snapshot-view
-      #snapshotView
-      [debug]="debug()"
-      [data]="viewData"
-      (snapshotRender)="onSnapshotRender($any($event))"
-      (visualEvent)="onVisualEvent($any($event))"
-    />
-    <div class="button-row">
-      <!-- toggle ruler -->
-      <mat-button-toggle
-        type="button"
-        mat-icon-button
-        color="primary"
-        matTooltip="Toggle rulers"
-        [checked]="rulers"
-        (change)="toggleRulers()"
-      >
-        <mat-icon class="mat-primary">straighten</mat-icon>
-      </mat-button-toggle>
-      <!-- run to last -->
-      <button
-        type="button"
-        mat-icon-button
-        class="primary"
-        matTooltip="Refresh preview"
-        (click)="runToLast()"
-      >
-        <mat-icon>refresh</mat-icon>
-      </button>
-    </div>
-    @if (visualInfo) {
-    <div id="visual-info">{{ visualInfo }}</div>
-    }
-  </fieldset>
-
-  <!-- chain view -->
-  @if (chain()) {
-  <div id="chain-view">
-    <gve-chain-view [chain]="chain()" />
   </div>
-  }
 
   <!--buttons -->
   <div class="form-row-center">
@@ -533,16 +272,16 @@
       close
     </button>
     @if (!noSave()) {
-    <button
-      type="submit"
-      class="mat-primary"
-      mat-flat-button
-      matTooltip="Save changes"
-      [disabled]="form.invalid"
-    >
-      <mat-icon>check_circle</mat-icon>
-      save
-    </button>
+      <button
+        type="submit"
+        class="mat-primary"
+        mat-flat-button
+        matTooltip="Save changes"
+        [disabled]="form.invalid"
+      >
+        <mat-icon>check_circle</mat-icon>
+        save
+      </button>
     }
   </div>
 </form>

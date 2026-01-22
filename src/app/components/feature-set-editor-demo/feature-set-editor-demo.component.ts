@@ -8,7 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
-import { Feature, LabeledId } from '@myrmidon/gve-snapshot-view';
+import { Feature, LabeledId } from '@myrmidon/gve-core';
 import {
   FeatureMap,
   FeatureSetEditorComponent,

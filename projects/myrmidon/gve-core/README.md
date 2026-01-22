@@ -118,7 +118,6 @@ Operations and timelines are handled by other children components. The snapshot 
 ## Dependencies
 
 - [@myrmidon/ngx-tools, @myrmidon/ngx-mat-tools](https://github.com/vedph/ngx-tools)
-- [@myrmidon/gve-snapshot-view](https://github.com/vedph/gve-snapshot-view): the snapshot view. This is a pure TS library, no JS framework required. The component is a standard web component.
 - [cisstech/nge](https://github.com/cisstech/nge) for a light Monaco editor wrapper.
 - [@svgdotjs/svg.js](https://github.com/svgdotjs/svg.js/) for SVG manipulation.
 - [gsap](https://gsap.com/) for animations.

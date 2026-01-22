@@ -34,7 +34,7 @@ import {
   FeatureSetPolicy,
   LabeledId,
   OperationFeature,
-} from '@myrmidon/gve-snapshot-view';
+} from '../../models';
 
 /**
  * Features map. This is used for features from closed sets,

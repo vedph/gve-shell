@@ -15,7 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LabeledId, OperationSource } from '@myrmidon/gve-snapshot-view';
+import { LabeledId, OperationSource } from '../../models';
 
 /**
  * 🔑 `gve-operation-source-editor`

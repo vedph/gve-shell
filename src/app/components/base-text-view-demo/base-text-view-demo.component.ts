@@ -11,12 +11,13 @@ import { Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { CharNode, SnapshotViewService } from '@myrmidon/gve-snapshot-view';
 
 import {
   BaseTextCharEvent,
   BaseTextViewComponent,
+  CharNode,
   VarBaseTextRange,
+  GveBaseTextService,
 } from '@myrmidon/gve-core';
 
 @Component({
@@ -46,14 +47,14 @@ export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this._sub = this.text.valueChanges.subscribe((value) => {
-      this.nodes.set(value ? SnapshotViewService.stringToBaseChars(value) : []);
+      this.nodes.set(value ? GveBaseTextService.stringToBaseChars(value) : []);
     });
     this.text.setValue(
       'there was an old man with a beard\n' +
         'who cried: "It is just as I feared!\n' +
         'four larks and a wren,\n' +
         'two swans and a hen,\n' +
-        'all built their nests in my beard!'
+        'all built their nests in my beard!',
     );
   }
 

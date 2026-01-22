@@ -22,9 +22,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 
-import { CharChainOperation } from '@myrmidon/gve-snapshot-view';
-
-import { PayloadMatDialogConfig } from '../../models';
+import { CharChainOperation, PayloadMatDialogConfig } from '../../models';
 import { GveApiService } from '../../services/gve-api.service';
 
 /**
@@ -74,7 +72,7 @@ export class BatchOperationEditorComponent implements OnInit {
     public dialogRef?: MatDialogRef<BatchOperationEditorComponent>,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
-    public data?: PayloadMatDialogConfig<{ preset?: string }>
+    public data?: PayloadMatDialogConfig<{ preset?: string }>,
   ) {
     this.text = formBuilder.control<string | null>(null, [
       Validators.required,

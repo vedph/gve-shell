@@ -10,25 +10,7 @@
       <button type="button" mat-button [matMenuTriggerFor]="demoMenu">
         Demo
       </button>
-      <mat-menu #animationMenu>
-        <a mat-menu-item routerLink="/demo/animation-tween">
-          <mat-icon color="primary" class="mat-primary">login</mat-icon>
-          Animation tween</a
-        >
-        <a mat-menu-item routerLink="/demo/animation-timeline">
-          <mat-icon color="primary" class="mat-primary">update</mat-icon>
-          Animation timeline</a
-        >
-        <a mat-menu-item routerLink="/demo/animation-timeline-set">
-          <mat-icon color="primary" class="mat-primary">subscriptions</mat-icon>
-          Animation timelines set</a
-        >
-      </mat-menu>
       <mat-menu #demoMenu>
-        <a mat-menu-item [matMenuTriggerFor]="animationMenu">
-          <mat-icon color="primary" class="mat-primary">update</mat-icon>
-          Animation
-        </a>
         <a mat-menu-item routerLink="/demo/feature">
           <mat-icon color="primary" class="mat-primary">list</mat-icon>
           Feature editor</a
