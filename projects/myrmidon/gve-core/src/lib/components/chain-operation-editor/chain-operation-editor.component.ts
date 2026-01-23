@@ -172,21 +172,16 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly featureDefs = input<FeatureDefinitions | undefined>();
 
   /**
-   * Definitions for element features, including names and values.
-   */
-  public readonly elementFeatureDefs = input<FeatureDefinitions | undefined>();
-
-  /**
-   * Definitions for diplomatic features, including names and values.
-   */
-  public readonly diplomaticFeatureDefs = input<
-    FeatureDefinitions | undefined
-  >();
-
-  /**
    * Set when the edited operation's text range is to be patched.
    */
   public readonly rangePatch = input<BaseTextRange | undefined>();
+
+  /**
+   * The IDs of the features that are multi-valued. If a feature being
+   * edited is in this list, the feature editor will allow adding multiple
+   * values to it. Passed down to feature editors.
+   */
+  public readonly multiValuedFeatureIds = input<string[] | undefined>();
 
   /**
    * Emitted when the operation is changed.

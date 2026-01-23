@@ -8,6 +8,8 @@
       [debug]="debug.value"
       [renditionSettings]="settings()"
       [snapshot]="snapshot()"
+      [featureDefs]="featureDefs()"
+      [multiValuedFeatureIds]="['r_hints']"
       (snapshotChange)="onSnapshotChange($event!)"
     />
     <mat-expansion-panel [disabled]="!snapshot()" [expanded]="false">

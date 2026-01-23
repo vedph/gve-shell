@@ -69,6 +69,13 @@ export class BaseTextEditorComponent {
   });
 
   /**
+   * The IDs of the features that are multi-valued. If a feature being
+   * edited is in this list, the feature editor will allow adding multiple
+   * values to it. Passed down to feature editors.
+   */
+  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+
+  /**
    * Emitted for the edited text as an array of `CharNode`'s whenever it changes.
    */
   public readonly textChange = output<CharNode[]>();

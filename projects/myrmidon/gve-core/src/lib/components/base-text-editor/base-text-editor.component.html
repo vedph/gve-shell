@@ -48,6 +48,7 @@
     <legend>features</legend>
     <gve-feature-set-editor
       [features]="selectedChar()!.features || []"
+      [multiValuedFeatureIds]="multiValuedFeatureIds()"
       (featuresChange)="onFeaturesChange($event)"
     />
   </fieldset>

@@ -141,6 +141,7 @@
             [featNames]="featureDefs()?.names"
             [featValues]="featureDefs()?.values"
             [features]="features.value"
+            [multiValuedFeatureIds]="multiValuedFeatureIds()"
             (featuresChange)="onFeaturesChange($event)"
           />
         </fieldset>

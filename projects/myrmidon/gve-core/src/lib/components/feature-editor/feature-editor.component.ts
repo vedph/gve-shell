@@ -63,6 +63,11 @@ export interface FeatureMap {
  * - ▶️ `featValues` (`FeatureMap`): the feature values map. When
  * specified and the user selects a feature name present in the map keys,
  * the corresponding values will be used to populate the value selection.
+ * - ▶️ `multiValuedFeatureIds` (`string[]`): the IDs of the features that are
+ * multi-valued. Used to determine if the current feature being edited should
+ * display multi-value controls.
+ * - ▶️ `isVar`: true if the feature is a variant operation feature, which
+ * has additional properties like negation, global, and short-lived.
  * - 🔥 `featureChange` (`Feature`): emitted when feature has changed.
  * - 🔥 `featureCancel`: emitted when the user cancels the feature editing.
  */

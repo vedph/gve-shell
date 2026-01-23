@@ -51,6 +51,9 @@ import {
  * it is always invisible; otherwise, it gets visible when the number of features
  * is equal to or greater than the threshold. Default is 5.
  * - ▶️ `features` (`Feature[]`): the features to edit.
+ * - ▶️ `multiValuedFeatureIds` (`string[]`): the IDs of the features that are
+ * multi-valued. If a feature being edited is in this list, the feature editor
+ * will allow adding multiple values to it.
  * - ▶️ `isVar`: true if the feature is a variant operation feature, which
  * has additional properties like negation, global, and short-lived.
  * - 🔥 `featuresChange` (`Feature[]`): emitted when features have changed.
@@ -137,12 +140,12 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
 
   private applyFeatureFilter(
     features: Feature[] | OperationFeature[],
-    name?: string | null
+    name?: string | null,
   ): void {
     this.filteredFeatures.set(
       features.filter((feature) => {
         return !name || feature.name.toLowerCase().includes(name.toLowerCase());
-      }) || []
+      }) || [],
     );
   }
 

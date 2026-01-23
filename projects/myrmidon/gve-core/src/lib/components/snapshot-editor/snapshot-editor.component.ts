@@ -155,16 +155,11 @@ export class SnapshotEditorComponent {
   public readonly featureDefs = input<FeatureDefinitions | undefined>();
 
   /**
-   * Definitions for element features, including names and values.
+   * The IDs of the features that are multi-valued. If a feature being
+   * edited is in this list, the feature editor will allow adding multiple
+   * values to it. Passed down to feature editors.
    */
-  public readonly elementFeatureDefs = input<FeatureDefinitions | undefined>();
-
-  /**
-   * Definitions for diplomatic features, including names and values.
-   */
-  public readonly diplomaticFeatureDefs = input<
-    FeatureDefinitions | undefined
-  >();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>();
 
   /**
    * Settings for rendering the snapshot. These are passed to the snapshot rendition
