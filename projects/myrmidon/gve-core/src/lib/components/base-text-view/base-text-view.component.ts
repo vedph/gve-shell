@@ -79,6 +79,7 @@ export class BaseTextViewComponent implements OnInit {
   private readonly _snackBar = inject(MatSnackBar);
   private readonly _searchSubject = new Subject<string>();
   private _lastSelectedPosition?: number;
+  private _selectionAnchor?: number;
 
   /**
    * The default color for the text.
@@ -114,7 +115,7 @@ export class BaseTextViewComponent implements OnInit {
    * The positions of search matches (start and length pairs).
    */
   private readonly searchMatches = signal<{ start: number; length: number }[]>(
-    []
+    [],
   );
 
   /**
@@ -157,7 +158,7 @@ export class BaseTextViewComponent implements OnInit {
     return this.buildLines(
       this.text(),
       this.colorCallback(),
-      this.borderColorCallback()
+      this.borderColorCallback(),
     );
   });
 
@@ -185,7 +186,7 @@ export class BaseTextViewComponent implements OnInit {
         line.map((char) => {
           const currentPos = position++;
           const isMatch = matches.some(
-            (m) => currentPos >= m.start && currentPos < m.start + m.length
+            (m) => currentPos >= m.start && currentPos < m.start + m.length,
           );
           if (isMatch) {
             return {
@@ -197,7 +198,7 @@ export class BaseTextViewComponent implements OnInit {
             };
           }
           return char;
-        })
+        }),
       );
     }
 
@@ -222,7 +223,7 @@ export class BaseTextViewComponent implements OnInit {
           };
         }
         return char;
-      })
+      }),
     );
   });
 
@@ -231,6 +232,7 @@ export class BaseTextViewComponent implements OnInit {
     effect(() => {
       this.text();
       this._lastSelectedPosition = undefined;
+      this._selectionAnchor = undefined;
       this.selectedRange.set(null);
       this.clearSearch();
     });
@@ -242,7 +244,7 @@ export class BaseTextViewComponent implements OnInit {
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        takeUntilDestroyed(this._destroyRef)
+        takeUntilDestroyed(this._destroyRef),
       )
       .subscribe((query) => {
         this.performSearch(query);
@@ -252,7 +254,7 @@ export class BaseTextViewComponent implements OnInit {
   private buildLines(
     text: CharNode[],
     colorCallback?: (node: CharNode) => string | null,
-    borderColorCallback?: (node: CharNode) => string | null
+    borderColorCallback?: (node: CharNode) => string | null,
   ): BaseTextChar[][] {
     if (!text || text.length === 0) {
       return [];
@@ -324,8 +326,9 @@ export class BaseTextViewComponent implements OnInit {
       // single character selection
       this.selectedRange.set({ start: clickedPosition, end: clickedPosition });
 
-      // update last selected character and position
+      // update last selected character and position, and set anchor for keyboard navigation
       this._lastSelectedPosition = clickedPosition;
+      this._selectionAnchor = clickedPosition;
 
       rangeToEmit = { at: event.char.id, run: 1 };
     }
@@ -425,6 +428,147 @@ export class BaseTextViewComponent implements OnInit {
   public clearSearch(): void {
     this.searchQuery.set('');
     this.searchMatches.set([]);
+  }
+
+  /**
+   * Get the total number of characters in the text.
+   */
+  private getTotalCharCount(): number {
+    return this.text().length;
+  }
+
+  /**
+   * Get the character at a specific position.
+   */
+  private getCharAtPosition(position: number): BaseTextChar | null {
+    const baseLines = this.baseLines();
+    let currentPos = 0;
+
+    for (const line of baseLines) {
+      for (const char of line) {
+        if (currentPos === position) {
+          return char;
+        }
+        currentPos++;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Handle keyboard events for arrow key navigation.
+   * - Left/Right: Move single selection to previous/next character
+   * - Shift+Left/Right: Extend selection range
+   */
+  public onKeyDown(event: KeyboardEvent): void {
+    const range = this.selectedRange();
+    if (!range) {
+      return;
+    }
+
+    const totalChars = this.getTotalCharCount();
+    if (totalChars === 0) {
+      return;
+    }
+
+    let newStart: number = range.start;
+    let newEnd: number = range.end;
+    let handled = false;
+
+    if (event.key === 'ArrowLeft') {
+      if (event.shiftKey) {
+        // Shift+Left: extend selection to the left from anchor
+        if (this._selectionAnchor === undefined) {
+          this._selectionAnchor = range.start;
+        }
+        // Determine which end to move based on anchor position
+        if (range.end === this._selectionAnchor) {
+          // Moving start to the left
+          newStart = Math.max(0, range.start - 1);
+          newEnd = range.end;
+        } else {
+          // Shrinking from right toward anchor, or extending left past anchor
+          if (range.end > this._selectionAnchor) {
+            // Shrink from right
+            newStart = range.start;
+            newEnd = range.end - 1;
+          } else {
+            // Extend left
+            newStart = Math.max(0, range.start - 1);
+            newEnd = range.end;
+          }
+        }
+        handled = true;
+      } else {
+        // Left without shift: move to single selection one position left
+        const currentPos = range.start;
+        const newPos = Math.max(0, currentPos - 1);
+        newStart = newPos;
+        newEnd = newPos;
+        this._selectionAnchor = newPos;
+        this._lastSelectedPosition = newPos;
+        handled = true;
+      }
+    } else if (event.key === 'ArrowRight') {
+      if (event.shiftKey) {
+        // Shift+Right: extend selection to the right from anchor
+        if (this._selectionAnchor === undefined) {
+          this._selectionAnchor = range.start;
+        }
+        // Determine which end to move based on anchor position
+        if (range.start === this._selectionAnchor) {
+          // Moving end to the right
+          newStart = range.start;
+          newEnd = Math.min(totalChars - 1, range.end + 1);
+        } else {
+          // Shrinking from left toward anchor, or extending right past anchor
+          if (range.start < this._selectionAnchor) {
+            // Shrink from left
+            newStart = range.start + 1;
+            newEnd = range.end;
+          } else {
+            // Extend right
+            newStart = range.start;
+            newEnd = Math.min(totalChars - 1, range.end + 1);
+          }
+        }
+        handled = true;
+      } else {
+        // Right without shift: move to single selection one position right
+        const currentPos = range.end;
+        const newPos = Math.min(totalChars - 1, currentPos + 1);
+        newStart = newPos;
+        newEnd = newPos;
+        this._selectionAnchor = newPos;
+        this._lastSelectedPosition = newPos;
+        handled = true;
+      }
+    }
+
+    if (handled) {
+      event.preventDefault();
+      this.selectedRange.set({ start: newStart, end: newEnd });
+
+      // Emit rangePick event
+      const firstCharId = this.getCharIdAtPosition(newStart);
+      const rangeToEmit: BaseTextRange = {
+        at: firstCharId,
+        run: newEnd - newStart + 1,
+      };
+      this.rangePick.emit(rangeToEmit);
+
+      // Emit charPick for single selection
+      if (newStart === newEnd) {
+        const char = this.getCharAtPosition(newStart);
+        if (char) {
+          this.charPick.emit({
+            char,
+            event: null as unknown as MouseEvent,
+          });
+        }
+      }
+    }
   }
 
   /**

@@ -50,7 +50,7 @@
 </div>
 
 <!-- Text display -->
-<div id="text">
+<div id="text" tabindex="0" (keydown)="onKeyDown($event)">
   @for (line of lines(); track $index) {
     <div class="line">
       @if (hasLineNumber()) {
