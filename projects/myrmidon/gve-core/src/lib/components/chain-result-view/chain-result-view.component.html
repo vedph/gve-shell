@@ -50,6 +50,7 @@
       <gve-base-text-view
         [text]="result()!.taggedNodes[step()!.outputTag]"
         [colorCallback]="getCharColor"
+        [hasLineNumber]="true"
         (charPick)="onTextCharPick($event)"
         (rangePick)="onTextRangePick($event)"
       />

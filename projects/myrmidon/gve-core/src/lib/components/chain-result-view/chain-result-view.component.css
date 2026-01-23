@@ -36,15 +36,29 @@ div#container {
     "bar map"
     "step map";
   gap: 8px;
+  height: 100%;
 }
 div#bar {
   grid-area: bar;
 }
 div#map {
   grid-area: map;
+  min-height: 0;
+  overflow-y: auto;
 }
 div#step {
   grid-area: step;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 8px;
+}
+div#text {
+  min-height: 0;
+  overflow-y: auto;
+}
+div#feats {
+  width: 100%;
 }
 .feat-header {
   background-color: #3e92cc;
