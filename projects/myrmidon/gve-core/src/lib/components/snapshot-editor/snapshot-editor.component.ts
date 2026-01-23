@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
   effect,
@@ -8,7 +7,7 @@ import {
   model,
   output,
   signal,
-  ViewChild,
+  viewChild,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -43,7 +42,6 @@ import {
   DEFAULT_SETTINGS,
   GveRenditionSettings,
   GveSnapshotRendition,
-  OperationHint,
 } from '@myrmidon/gve-snapshot-rendition';
 
 import {
@@ -112,16 +110,18 @@ const SVG_TRANSP_SUFFIX = '_t';
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
 })
-export class SnapshotEditorComponent implements AfterViewInit {
+export class SnapshotEditorComponent {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
   private _previewing?: boolean;
   private _stepPickFrozen?: boolean;
 
   /**
    * Reference to the snapshot rendition web component.
+   * Using viewChild signal to handle conditionally rendered element -
+   * the element only exists when result() is truthy.
    */
-  @ViewChild('rendition', { static: false })
-  public renditionRef!: ElementRef<GveSnapshotRendition>;
+  public readonly renditionRef =
+    viewChild<ElementRef<GveSnapshotRendition>>('rendition');
 
   /**
    * The snapshot to edit.
@@ -167,10 +167,11 @@ export class SnapshotEditorComponent implements AfterViewInit {
   >();
 
   /**
-   * Hints for rendering the snapshot. These are passed to the snapshot rendition
+   * Settings for rendering the snapshot. These are passed to the snapshot rendition
    * component.
    */
-  public readonly hints = input<Record<string, OperationHint> | undefined>();
+  public readonly renditionSettings =
+    input<GveRenditionSettings>(DEFAULT_SETTINGS);
 
   /**
    * Emitted when the user cancels the snapshot editing.
@@ -254,15 +255,25 @@ export class SnapshotEditorComponent implements AfterViewInit {
         this.runToLast();
       }, 0);
     });
+
+    // when rendition element becomes available (conditionally rendered),
+    // initialize its settings and event listeners
+    effect(() => {
+      const rendition = this.renditionRef()?.nativeElement;
+      if (rendition) {
+        this.initRendition(rendition);
+      }
+    });
   }
 
-  public ngAfterViewInit(): void {
-    const rendition = this.renditionRef?.nativeElement;
-    if (!rendition) {
-      return;
-    }
+  /**
+   * Initialize rendition settings and event listeners when the element becomes available.
+   * Called via effect since the element is conditionally rendered.
+   */
+  private initRendition(rendition: GveSnapshotRendition): void {
+    console.log('GveSnapshotRendition.version:', GveSnapshotRendition.version);
 
-    // set initial settings with hints
+    // set initial settings
     this.applyRenditionSettings();
 
     // listen to version change events
@@ -273,20 +284,16 @@ export class SnapshotEditorComponent implements AfterViewInit {
   }
 
   /**
-   * Apply settings including hints to the rendition component.
+   * Apply settings to the rendition component.
    */
   private applyRenditionSettings(): void {
-    const rendition = this.renditionRef?.nativeElement;
+    const rendition = this.renditionRef()?.nativeElement;
     if (!rendition) {
       return;
     }
 
-    const hints = this.hints();
-    const settings: Partial<GveRenditionSettings> = {
-      ...DEFAULT_SETTINGS,
-      hints: hints || {},
-      debug: this.debug() || false,
-    };
+    const settings = this.renditionSettings();
+    settings.debug = this.debug() || false;
     rendition.settings = settings as GveRenditionSettings;
   }
 
@@ -294,10 +301,10 @@ export class SnapshotEditorComponent implements AfterViewInit {
    * Update the snapshot rendition component with the current result data.
    */
   private updateRendition(): void {
-    const rendition = this.renditionRef?.nativeElement;
+    const rendition = this.renditionRef()?.nativeElement;
     const result = this.result();
     if (rendition && result) {
-      // update settings with latest hints
+      // update settings with latest rendition settings
       this.applyRenditionSettings();
       // supply the base text (not returned by API, must be provided by caller)
       result.text = this.baseText.value;

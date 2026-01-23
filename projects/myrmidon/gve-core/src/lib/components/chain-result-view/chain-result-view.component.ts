@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -63,6 +64,7 @@ import { MatTooltip } from "@angular/material/tooltip";
 ],
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChainResultViewComponent
   implements OnInit, OnDestroy, AfterViewInit

@@ -11,7 +11,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Snapshot, SnapshotEditorComponent } from '@myrmidon/gve-core';
-import { OperationHint } from '@myrmidon/gve-snapshot-rendition';
+import {
+  DEFAULT_SETTINGS,
+  GveRenditionSettings,
+} from '@myrmidon/gve-snapshot-rendition';
 
 import { AssetService } from '../../services/asset.service';
 
@@ -35,22 +38,20 @@ import { AssetService } from '../../services/asset.service';
 })
 export class SnapshotEditorDemoComponent implements OnInit {
   public readonly snapshot = signal<Snapshot | undefined>(undefined);
-  public readonly hints = signal<Record<string, OperationHint> | undefined>(
-    undefined,
-  );
+  public readonly settings = signal<GveRenditionSettings>(DEFAULT_SETTINGS);
 
-  public debug: FormControl<boolean> = new FormControl(false, {
+  public debug: FormControl<boolean> = new FormControl(true, {
     nonNullable: true,
   });
 
   constructor(private _asset: AssetService) {}
 
   public ngOnInit(): void {
-    // load hints
+    // load settings
     this._asset
-      .loadObject<Record<string, OperationHint>>('hints')
-      .subscribe((hints) => {
-        this.hints.set(hints);
+      .loadObject<GveRenditionSettings>('rendition-settings')
+      .subscribe((settings) => {
+        this.settings.set(settings);
       });
     // load snapshot data
     this._asset.loadObject<Snapshot>('h5-48').subscribe((snapshot) => {

@@ -1,6 +1,6 @@
-
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   effect,
   input,
@@ -38,6 +38,7 @@ import { ChainOperationContextStep } from '../../services/gve-api.service';
   imports: [MatButtonModule, MatRippleModule, MatTooltipModule],
   templateUrl: './steps-map.component.html',
   styleUrl: './steps-map.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StepsMapComponent implements AfterViewInit {
   // track view initialization

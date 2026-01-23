@@ -45,8 +45,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0(@angular/cdk@21.0.0(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/material@21.0.0(239e29b74d9c69c8f989dfa3a5e69993))(monaco-editor@0.34.1)(rxjs@7.8.2)
       '@myrmidon/gve-snapshot-rendition':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: file:../gve-snapshot-rendition
+        version: file:../gve-snapshot-rendition
       '@myrmidon/ngx-mat-tools':
         specifier: ^1.0.1
         version: 1.0.1(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))
@@ -2208,8 +2208,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@myrmidon/gve-snapshot-rendition@0.0.4':
-    resolution: {integrity: sha512-KLzBXsn/B6uytiFoWXhbJvuv4WPWbrCbbsLv2oatiKGzqLxRcDioFRgtzyVW5jW3LiNxrtcUeOZ43jzCDX+wNw==}
+  '@myrmidon/gve-snapshot-rendition@file:../gve-snapshot-rendition':
+    resolution: {directory: ../gve-snapshot-rendition, type: directory}
 
   '@myrmidon/ngx-mat-tools@1.0.1':
     resolution: {integrity: sha512-On1HAVCWrP+AzN4Pp0m6OWoH+RNIAtYZP9uPsGXgxjxJIDSDgk190+xK/CZYzrRg5/ro9BHY49y4Y4eD25NCLA==}
@@ -6579,6 +6579,9 @@ packages:
     resolution: {integrity: sha512-r46gZQZQV+Kl9oItvl1JZZqJKGr+oEkB08A6BzkiR7593/7IbtuncXHd2YoYeTsG4157ZssMu9KYvUHLcjcDoA==}
     engines: {node: '>=6.0.0'}
 
+  split.js@1.6.5:
+    resolution: {integrity: sha512-mPTnGCiS/RiuTNsVhCm9De9cCAUsrNFFviRbADdKiiV+Kk8HKp/0fWu7Kr8pi3/yBmsqLFHuXGT9UUZ+CNLwFw==}
+
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
@@ -9634,12 +9637,13 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
 
-  '@myrmidon/gve-snapshot-rendition@0.0.4':
+  '@myrmidon/gve-snapshot-rendition@file:../gve-snapshot-rendition':
     dependencies:
       fast-diff: 1.3.0
       feather-icons: 4.29.2
       gsap: 3.14.2
       highlight.js: 11.11.1
+      split.js: 1.6.5
       svg-pan-zoom: 3.6.2
       tslib: 2.8.1
       typescript: 5.9.3
@@ -14752,6 +14756,8 @@ snapshots:
       spdy-transport: 3.0.0
     transitivePeerDependencies:
       - supports-color
+
+  split.js@1.6.5: {}
 
   sprintf-js@1.0.3: {}
 

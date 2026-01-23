@@ -26,7 +26,7 @@
     "@angular/platform-browser-dynamic": "^21.0.0",
     "@angular/router": "^21.0.0",
     "@cisstech/nge": "^18.3.0",
-    "@myrmidon/gve-snapshot-rendition": "^0.0.4",
+    "@myrmidon/gve-snapshot-rendition": "file:../gve-snapshot-rendition",
     "@myrmidon/ngx-mat-tools": "^1.0.1",
     "@myrmidon/ngx-tools": "^2.0.2",
     "@myrmidon/ngx-viz": "^1.0.0",
