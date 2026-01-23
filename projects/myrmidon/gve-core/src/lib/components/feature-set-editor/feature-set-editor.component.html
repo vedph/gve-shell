@@ -49,8 +49,8 @@
         </tr>
       </thead>
       <tbody>
-        @for (feature of filteredFeatures(); track feature; let i = $index) {
-          <tr [class.selected]="i === editedFeatureIndex()">
+        @for (feature of filteredFeatures(); track $index) {
+          <tr [class.selected]="$index === editedFeatureIndex()">
             <td class="fit-width">
               <!-- edit -->
               <button
@@ -76,7 +76,7 @@
             <td>
               @if (featNames()?.length) {
                 <span>{{
-                  feature.name | flatLookup: featNames : "id" : "label"
+                  feature.name | flatLookup: featNames() : "id" : "label"
                 }}</span>
               } @else {
                 <span>{{ feature.name }}</span>
