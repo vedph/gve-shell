@@ -45,7 +45,7 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0(@angular/cdk@21.0.0(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/material@21.0.0(239e29b74d9c69c8f989dfa3a5e69993))(monaco-editor@0.34.1)(rxjs@7.8.2)
       '@myrmidon/gve-snapshot-rendition':
-        specifier: file:../gve-snapshot-rendition
+        specifier: file:..\gve-snapshot-rendition
         version: file:../gve-snapshot-rendition
       '@myrmidon/ngx-mat-tools':
         specifier: ^1.0.1
