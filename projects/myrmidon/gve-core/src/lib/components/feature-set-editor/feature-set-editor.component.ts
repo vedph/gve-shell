@@ -20,7 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { deepCopy, FlatLookupPipe } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import {
   FeatureSetPolicy,
   LabeledId,
@@ -106,6 +106,13 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   public readonly filterThreshold = input(5);
 
   /**
+   * The IDs of the features that are multi-valued. If a feature being
+   * edited is in this list, the feature editor will allow adding multiple
+   * values to it.
+   */
+  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+
+  /**
    * The features to edit.
    */
   public readonly features = model<Feature[] | OperationFeature[]>([]);
@@ -162,7 +169,7 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   }
 
   public editFeature(feature: Feature | OperationFeature): void {
-    this.editedFeature.set(deepCopy(feature));
+    this.editedFeature.set(structuredClone(feature));
     this.editedFeatureIndex.set(this.features().indexOf(feature));
   }
 
@@ -174,6 +181,13 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     const features = [...this.features()];
     features.splice(index, 1);
     this.features.set(features);
+  }
+
+  public isFeatureMultiValued(feature?: Feature | OperationFeature): boolean {
+    if (!feature || !this.multiValuedFeatureIds()) {
+      return false;
+    }
+    return this.multiValuedFeatureIds()!.includes(feature.name);
   }
 
   public onFeatureChange(feature?: Feature | OperationFeature): void {

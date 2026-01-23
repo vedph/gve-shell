@@ -40,7 +40,7 @@ import {
 /**
  * Features map. This is used for features from closed sets,
  * and lists the possible values for each feature.
- * The key is the feature name, and the value is an array of
+ * The key is the feature name's ID, and the value is an array of
  * labeled IDs representing the allowed values for that feature.
  */
 export interface FeatureMap {
@@ -113,14 +113,22 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   public readonly isVar = input(false);
 
   /**
+   * The IDs of the features that are multi-valued. Used to determine
+   * if the current feature being edited should display multi-value controls.
+   */
+  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+
+  /**
    * Event emitted when the user cancels the feature editing.
    */
   public readonly featureCancel = output();
 
   public readonly nameIds = signal<LabeledId[] | undefined>(undefined);
+  public readonly isMultiValued = signal<boolean>(false);
 
   public name: FormControl<string>;
   public value: FormControl<string>;
+  public selectedValue: FormControl<string>;
   public setPolicy: FormControl<FeatureSetPolicy>;
   // var feature controls
   public isNegated: FormControl<boolean>;
@@ -137,6 +145,9 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       validators: [Validators.maxLength(5000)],
       nonNullable: true,
     });
+    this.selectedValue = formBuilder.control('', {
+      nonNullable: true,
+    });
     this.setPolicy = formBuilder.control(FeatureSetPolicy.multiple, {
       nonNullable: true,
     });
@@ -146,6 +157,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     this.form = formBuilder.group({
       name: this.name,
       value: this.value,
+      selectedValue: this.selectedValue,
       setPolicy: this.setPolicy,
       isNegated: this.isNegated,
       isGlobal: this.isGlobal,
@@ -158,14 +170,14 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.nameControl?.nativeElement?.focus();
         this.nameIds.set(
-          this.getLabeledIdsFor(this.name.value, this.featValues())
+          this.getLabeledIdsFor(this.name.value, this.featValues()),
         );
       }, 500);
     });
   }
 
   public ngOnInit(): void {
-    // whenever the name changes, update the value selection
+    // whenever the name changes, update the value selection and multi-valued status
     this._sub = this.name.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((name) => {
@@ -173,6 +185,9 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
           this.value.reset();
           this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
         }
+        // Update multi-valued status
+        const ids = this.multiValuedFeatureIds();
+        this.isMultiValued.set(!!ids && ids.includes(name));
       });
   }
 
@@ -182,7 +197,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
 
   private getLabeledIdsFor(
     id?: string,
-    featValues?: FeatureMap
+    featValues?: FeatureMap,
   ): LabeledId[] | undefined {
     if (!id) {
       return undefined;
@@ -194,6 +209,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   private updateForm(feature?: OperationFeature): void {
     if (!feature) {
       this.form.reset();
+      this.isMultiValued.set(false);
     } else {
       this._frozen = true;
       this.name.setValue(feature.name);
@@ -202,8 +218,26 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       this.isNegated.setValue(feature.isNegated || false);
       this.isGlobal.setValue(feature.isGlobal || false);
       this.isShortLived.setValue(feature.isShortLived || false);
+      // Set multi-valued status based on feature name
+      const ids = this.multiValuedFeatureIds();
+      this.isMultiValued.set(!!ids && ids.includes(feature.name));
       this._frozen = false;
     }
+  }
+
+  public addValueToComposite(): void {
+    if (!this.selectedValue.value) {
+      return;
+    }
+    const currentValue = this.value.value.trim();
+    const newValue = this.selectedValue.value.trim();
+    if (currentValue) {
+      this.value.setValue(currentValue + ' ' + newValue);
+    } else {
+      this.value.setValue(newValue);
+    }
+    this.selectedValue.reset();
+    this.value.markAsDirty();
   }
 
   public cancel(): void {
@@ -228,7 +262,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
             name: this.name.value.trim(),
             value: this.value.value.trim(),
             setPolicy: this.setPolicy.value,
-          }
+          },
     );
   }
 }

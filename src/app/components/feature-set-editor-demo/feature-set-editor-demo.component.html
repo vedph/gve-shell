@@ -5,9 +5,7 @@
   <mat-card-content>
     <fieldset>
       <legend>presets</legend>
-      <mat-checkbox [formControl]="hasFeatNames">feature names</mat-checkbox>
-      <mat-checkbox [formControl]="hasFeatValues">feature values</mat-checkbox>
-      <mat-form-field style="width: 7em; margin-left: 8px">
+      <mat-form-field class="nr">
         <mat-label>filter tr.</mat-label>
         <input
           matInput
@@ -22,16 +20,17 @@
       [featNames]="featNames()"
       [featValues]="featValues()"
       [filterThreshold]="filterThreshold.value"
+      [multiValuedFeatureIds]="multiValuedFeatureIds()"
       [features]="features()"
       (featuresChange)="onFeaturesChange($event)"
     />
     <hr />
     @if (features().length) {
-    <div>
-      <code>
-        <pre>{{ features() | json }}</pre>
-      </code>
-    </div>
+      <div>
+        <code>
+          <pre>{{ features() | json }}</pre>
+        </code>
+      </div>
     }
   </mat-card-content>
 </mat-card>
