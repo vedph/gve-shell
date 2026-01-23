@@ -187,6 +187,10 @@ export class SnapshotEditorComponent {
     false,
     { nonNullable: true },
   );
+  public readonly autoRun: FormControl<boolean> = new FormControl<boolean>(
+    true,
+    { nonNullable: true },
+  );
 
   public readonly chain = signal<CharChain | undefined>(undefined);
 
@@ -468,8 +472,10 @@ export class SnapshotEditorComponent {
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
 
-    // run to the edited operation
-    this.runTo(i);
+    // run to the edited operation if auto-run is enabled
+    if (this.autoRun.value) {
+      this.runTo(i);
+    }
 
     // close the edited operation
     this.closeEditedOperation();
@@ -862,8 +868,8 @@ export class SnapshotEditorComponent {
    * @param operation The operation being previewed.
    */
   public onOperationPreview(operation: CharChainOperation): void {
-    // no multiple previews or previewing a new operation
-    if (this._previewing || this.editedOpIndex() < 0) {
+    // no multiple previews or previewing a new operation or auto-run disabled
+    if (this._previewing || this.editedOpIndex() < 0 || !this.autoRun.value) {
       return;
     }
     this._previewing = true;
