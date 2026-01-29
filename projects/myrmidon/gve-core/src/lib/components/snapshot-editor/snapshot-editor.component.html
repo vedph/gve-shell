@@ -48,11 +48,15 @@
         <div id="general">
           <div class="form-row">
             <!-- feat details -->
-            <mat-slide-toggle [formControl]="featDetails"
+            <mat-slide-toggle
+              [formControl]="featDetails"
+              matTooltip="Toggle feature details"
               >feat. details</mat-slide-toggle
             >
             <!-- auto run on edit -->
-            <mat-slide-toggle [formControl]="autoRun"
+            <mat-slide-toggle
+              [formControl]="autoRun"
+              matTooltip="Auto-run operations on edit"
               >auto-run</mat-slide-toggle
             >
 
@@ -99,6 +103,7 @@
                 class="mat-primary"
                 [disabled]="!baseText.value"
                 (click)="editNewOperation()"
+                matTooltip="Add a new operation"
               >
                 <mat-icon>add_circle</mat-icon> operation
               </button>

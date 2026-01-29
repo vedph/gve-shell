@@ -32,7 +32,7 @@ import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 
 import { customAlphabet } from 'nanoid';
 
@@ -105,7 +105,8 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainResultViewComponent,
     BaseTextViewComponent,
     FlatLookupPipe,
-  ],
+    MatDialogClose
+],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
@@ -179,16 +180,12 @@ export class SnapshotEditorComponent {
   public operations: FormControl<CharChainOperation[]>;
   public form: FormGroup;
 
-  public readonly showChain: FormControl<boolean> = new FormControl<boolean>(
-    false,
-    { nonNullable: true },
-  );
   public readonly featDetails: FormControl<boolean> = new FormControl<boolean>(
     false,
     { nonNullable: true },
   );
   public readonly autoRun: FormControl<boolean> = new FormControl<boolean>(
-    true,
+    false,
     { nonNullable: true },
   );
 
@@ -792,11 +789,6 @@ export class SnapshotEditorComponent {
 
           // update the view data
           this.setViewData(snapshot, lastOperation!.outputTag);
-
-          // get the chain model if requested
-          if (this.showChain.value) {
-            this.getChainAt(index);
-          }
         },
         error: (error) => {
           console.error(error);
@@ -820,45 +812,6 @@ export class SnapshotEditorComponent {
       this.setViewData();
       this.result.set(undefined);
     }
-  }
-
-  public getChainAt(index: number, lastOperation?: CharChainOperation): void {
-    // get the snapshot to run operations on
-    const snapshot = this.getSnapshot();
-    if (!snapshot.text) {
-      return;
-    }
-
-    // remove from the snapshot the operations past the specified index,
-    // also replacing the last operation when this was received as a parameter
-    if (lastOperation) {
-      snapshot.operations = snapshot.operations.slice(0, index);
-      snapshot.operations.push(lastOperation);
-    } else {
-      lastOperation = snapshot.operations[index];
-      snapshot.operations = snapshot.operations.slice(0, index + 1);
-    }
-    this.busy.set(true);
-    this._api
-      .getChain(snapshot.text as CharNode[], snapshot.operations)
-      .subscribe({
-        next: (wrapper) => {
-          // handle operation (non-fatal) error or result
-          if (wrapper.error) {
-            this._snackbar.open(wrapper.error, 'OK');
-            this.chain.set(undefined);
-          } else {
-            this.chain.set(wrapper.result);
-          }
-        },
-        error: (error) => {
-          console.error(error);
-          this._snackbar.open('Error running operations', 'OK');
-        },
-        complete: () => {
-          this.busy.set(false);
-        },
-      });
   }
 
   /**

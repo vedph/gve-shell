@@ -45,8 +45,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0(@angular/cdk@21.0.0(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/material@21.0.0(239e29b74d9c69c8f989dfa3a5e69993))(monaco-editor@0.34.1)(rxjs@7.8.2)
       '@myrmidon/gve-snapshot-rendition':
-        specifier: file:..\gve-snapshot-rendition
-        version: file:../gve-snapshot-rendition
+        specifier: ^0.0.6
+        version: 0.0.6
       '@myrmidon/ngx-mat-tools':
         specifier: ^1.0.1
         version: 1.0.1(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))
@@ -116,8 +116,8 @@ importers:
         version: 5.9.3
     optionalDependencies:
       '@rollup/rollup-win32-arm64-msvc':
-        specifier: ^4.56.0
-        version: 4.56.0
+        specifier: ^4.57.0
+        version: 4.57.0
 
 packages:
 
@@ -2208,8 +2208,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@myrmidon/gve-snapshot-rendition@file:../gve-snapshot-rendition':
-    resolution: {directory: ../gve-snapshot-rendition, type: directory}
+  '@myrmidon/gve-snapshot-rendition@0.0.6':
+    resolution: {integrity: sha512-AihoZmzE0se+NsZnxhMP2QWHV6kr9c0jNgoFShzQoxkMIy5ioI3l0NipgxOWH3DzHUaBAUhvB4TK2gZqdbasUA==}
 
   '@myrmidon/ngx-mat-tools@1.0.1':
     resolution: {integrity: sha512-On1HAVCWrP+AzN4Pp0m6OWoH+RNIAtYZP9uPsGXgxjxJIDSDgk190+xK/CZYzrRg5/ro9BHY49y4Y4eD25NCLA==}
@@ -2599,8 +2599,8 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.56.0':
-    resolution: {integrity: sha512-kbFsOObXp3LBULg1d3JIUQMa9Kv4UitDmpS+k0tinPBz3watcUiV2/LUDMMucA6pZO3WGE27P7DsfaN54l9ing==}
+  '@rollup/rollup-win32-arm64-msvc@4.57.0':
+    resolution: {integrity: sha512-XnaaaSMGSI6Wk8F4KK3QP7GfuuhjGchElsVerCplUuxRIzdvZ7hRBpLR0omCmw+kI2RFJB80nenhOoGXlJ5TfQ==}
     cpu: [arm64]
     os: [win32]
 
@@ -2609,8 +2609,8 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  '@rollup/wasm-node@4.56.0':
-    resolution: {integrity: sha512-ecaoyItGmpj4hnabpa2D+oI6ME7t7hrqosQ2SA+qBGihoL0DuuoaXIfY8Oa1o7lWGtPpRZmt9EYe7oyivypsJg==}
+  '@rollup/wasm-node@4.57.0':
+    resolution: {integrity: sha512-EmuVEJWCxlkA/HIe9IJUSSXUXj3mw3w/4NDHhdu2KLCfBUOsjHMOWWrVzTGySmdaua0E120LSQ5ojDGfi+tA/Q==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -7729,7 +7729,7 @@ snapshots:
       parse5-html-rewriting-stream: 8.0.0
       picomatch: 4.0.3
       piscina: 5.1.3
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
       sass: 1.90.0
       semver: 7.7.2
       source-map-support: 0.5.21
@@ -9637,7 +9637,7 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
 
-  '@myrmidon/gve-snapshot-rendition@file:../gve-snapshot-rendition':
+  '@myrmidon/gve-snapshot-rendition@0.0.6':
     dependencies:
       fast-diff: 1.3.0
       feather-icons: 4.29.2
@@ -9648,7 +9648,7 @@ snapshots:
       tslib: 2.8.1
       typescript: 5.9.3
     optionalDependencies:
-      '@rollup/rollup-win32-arm64-msvc': 4.56.0
+      '@rollup/rollup-win32-arm64-msvc': 4.57.0
 
   '@myrmidon/ngx-mat-tools@1.0.1(@angular/common@21.0.0(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.0.0(@angular/compiler@21.0.0)(rxjs@7.8.2)(zone.js@0.16.0))':
     dependencies:
@@ -9949,21 +9949,21 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-beta.47': {}
 
-  '@rollup/plugin-json@6.1.0(@rollup/wasm-node@4.56.0)':
+  '@rollup/plugin-json@6.1.0(@rollup/wasm-node@4.57.0)':
     dependencies:
-      '@rollup/pluginutils': 5.3.0(@rollup/wasm-node@4.56.0)
+      '@rollup/pluginutils': 5.3.0(@rollup/wasm-node@4.57.0)
     optionalDependencies:
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
 
-  '@rollup/pluginutils@5.3.0(@rollup/wasm-node@4.56.0)':
+  '@rollup/pluginutils@5.3.0(@rollup/wasm-node@4.57.0)':
     dependencies:
       '@types/estree': 1.0.8
       estree-walker: 2.0.2
       picomatch: 4.0.3
     optionalDependencies:
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
 
-  '@rollup/rollup-win32-arm64-msvc@4.56.0':
+  '@rollup/rollup-win32-arm64-msvc@4.57.0':
     optional: true
 
   '@rollup/wasm-node@4.53.3':
@@ -9972,7 +9972,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  '@rollup/wasm-node@4.56.0':
+  '@rollup/wasm-node@4.57.0':
     dependencies:
       '@types/estree': 1.0.8
     optionalDependencies:
@@ -13632,7 +13632,7 @@ snapshots:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular/compiler-cli': 21.0.0(@angular/compiler@21.0.0)(typescript@5.9.3)
-      '@rollup/plugin-json': 6.1.0(@rollup/wasm-node@4.56.0)
+      '@rollup/plugin-json': 6.1.0(@rollup/wasm-node@4.57.0)
       '@rollup/wasm-node': 4.53.3
       ajv: 8.17.1
       ansi-colors: 4.1.3
@@ -13648,14 +13648,14 @@ snapshots:
       ora: 9.0.0
       piscina: 5.1.4
       postcss: 8.5.6
-      rollup-plugin-dts: 6.2.3(@rollup/wasm-node@4.56.0)(typescript@5.9.3)
+      rollup-plugin-dts: 6.2.3(@rollup/wasm-node@4.57.0)(typescript@5.9.3)
       rxjs: 7.8.2
       sass: 1.94.2
       tinyglobby: 0.2.15
       tslib: 2.8.1
       typescript: 5.9.3
     optionalDependencies:
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
 
   nice-try@1.0.5:
     optional: true
@@ -14391,10 +14391,10 @@ snapshots:
       '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.47
       '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.47
 
-  rollup-plugin-dts@6.2.3(@rollup/wasm-node@4.56.0)(typescript@5.9.3):
+  rollup-plugin-dts@6.2.3(@rollup/wasm-node@4.57.0)(typescript@5.9.3):
     dependencies:
       magic-string: 0.30.21
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
       typescript: 5.9.3
     optionalDependencies:
       '@babel/code-frame': 7.27.1
@@ -15363,7 +15363,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.1
@@ -15379,7 +15379,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6
-      rollup: '@rollup/wasm-node@4.56.0'
+      rollup: '@rollup/wasm-node@4.57.0'
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 24.10.1
