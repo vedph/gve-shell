@@ -171,6 +171,13 @@ export class SnapshotEditorComponent {
     input<GveRenditionSettings>(DEFAULT_SETTINGS);
 
   /**
+   * Optional maximum height for the operations list. When set, the operations
+   * list will have a vertical scrollbar if its content exceeds this height.
+   * The value should be a valid CSS height value (e.g., '300px', '50vh').
+   */
+  public readonly opListMaxHeight = input<string | undefined>(undefined);
+
+  /**
    * Emitted when the user cancels the snapshot editing.
    */
   public readonly snapshotCancel = output();

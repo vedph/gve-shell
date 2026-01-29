@@ -10,6 +10,7 @@
       [snapshot]="snapshot()"
       [featureDefs]="featureDefs()"
       [multiValuedFeatureIds]="['r_hints']"
+      [opListMaxHeight]="'800px'"
       (snapshotChange)="onSnapshotChange($event!)"
     />
     <mat-expansion-panel [disabled]="!snapshot()" [expanded]="false">

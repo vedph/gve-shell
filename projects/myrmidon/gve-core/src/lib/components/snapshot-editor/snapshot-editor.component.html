@@ -112,7 +112,11 @@
         </div>
 
         <!-- ops -->
-        <div id="ops">
+        <div
+          id="ops"
+          [style.max-height]="opListMaxHeight()"
+          [style.overflow-y]="opListMaxHeight() ? 'auto' : null"
+        >
           <!-- operations list -->
           @if (operations.value.length) {
             <table id="list">
