@@ -181,7 +181,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
    * edited is in this list, the feature editor will allow adding multiple
    * values to it. Passed down to feature editors.
    */
-  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>([
+    'r_hints',
+  ]);
 
   /**
    * Emitted when the operation is changed.
@@ -308,6 +310,14 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     // when operation changes, update form
     effect(() => {
       this.updateForm(this.operation());
+    });
+
+    // diagnostic logging for multiValuedFeatureIds
+    effect(() => {
+      console.log(
+        '[ChainOperationEditor] multiValuedFeatureIds:',
+        this.multiValuedFeatureIds(),
+      );
     });
 
     // when rangePatch changes, patch operation range (at and run,

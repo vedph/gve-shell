@@ -113,7 +113,9 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
    * edited is in this list, the feature editor will allow adding multiple
    * values to it.
    */
-  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>([
+    'r_hints',
+  ]);
 
   /**
    * The features to edit.
@@ -135,6 +137,14 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     // when features change, apply the filter
     effect(() => {
       this.applyFeatureFilter(this.features(), this.filter.value);
+    });
+
+    // diagnostic logging for multiValuedFeatureIds
+    effect(() => {
+      console.log(
+        '[FeatureSetEditor] multiValuedFeatureIds:',
+        this.multiValuedFeatureIds(),
+      );
     });
   }
 

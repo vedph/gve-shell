@@ -32,7 +32,7 @@ import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogClose } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 
 import { customAlphabet } from 'nanoid';
 
@@ -105,8 +105,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainResultViewComponent,
     BaseTextViewComponent,
     FlatLookupPipe,
-    MatDialogClose
-],
+  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
@@ -160,7 +159,9 @@ export class SnapshotEditorComponent {
    * edited is in this list, the feature editor will allow adding multiple
    * values to it. Passed down to feature editors.
    */
-  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>([
+    'r_hints',
+  ]);
 
   /**
    * Settings for rendering the snapshot. These are passed to the snapshot rendition
@@ -250,6 +251,14 @@ export class SnapshotEditorComponent {
       setTimeout(() => {
         this.runToLast();
       }, 0);
+    });
+
+    // diagnostic logging for multiValuedFeatureIds
+    effect(() => {
+      console.log(
+        '[SnapshotEditor] multiValuedFeatureIds:',
+        this.multiValuedFeatureIds(),
+      );
     });
 
     // when rendition element becomes available (conditionally rendered),

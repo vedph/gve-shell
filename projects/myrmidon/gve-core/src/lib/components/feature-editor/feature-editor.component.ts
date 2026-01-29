@@ -121,7 +121,9 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
    * The IDs of the features that are multi-valued. Used to determine
    * if the current feature being edited should display multi-value controls.
    */
-  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>([
+    'r_hints',
+  ]);
 
   /**
    * Event emitted when the user cancels the feature editing.
@@ -178,6 +180,16 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
           this.getLabeledIdsFor(this.name.value, this.featValues()),
         );
       }, 500);
+    });
+
+    // diagnostic logging for multiValuedFeatureIds
+    effect(() => {
+      console.log(
+        '[FeatureEditor] multiValuedFeatureIds:',
+        this.multiValuedFeatureIds(),
+        'isMultiValued:',
+        this.isMultiValued(),
+      );
     });
   }
 
