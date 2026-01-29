@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   ElementRef,
   input,
@@ -18,8 +19,14 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import {
+  Subscription,
+  debounceTime,
+  distinctUntilChanged,
+  startWith,
+} from 'rxjs';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -131,7 +138,6 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   public readonly featureCancel = output();
 
   public readonly nameIds = signal<LabeledId[] | undefined>(undefined);
-  public readonly isMultiValued = signal<boolean>(false);
 
   public name: FormControl<string>;
   public value: FormControl<string>;
@@ -142,6 +148,19 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   public isGlobal: FormControl<boolean>;
   public isShortLived: FormControl<boolean>;
   public form: FormGroup;
+
+  /**
+   * Signal that tracks the current name form control value.
+   * Uses toSignal to convert the form control's valueChanges observable
+   * to a signal for reactive change detection.
+   */
+  private readonly nameSignal;
+
+  /**
+   * Computed signal that determines if the current feature is multi-valued.
+   * Automatically updates when either the name or multiValuedFeatureIds changes.
+   */
+  public readonly isMultiValued;
 
   constructor(formBuilder: FormBuilder) {
     this.name = formBuilder.control<string>('', {
@@ -171,6 +190,19 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       isShortLived: this.isShortLived,
     });
 
+    // Convert name form control valueChanges to a signal for reactive updates
+    this.nameSignal = toSignal(this.name.valueChanges.pipe(startWith('')), {
+      initialValue: '',
+    });
+
+    // Computed signal that automatically tracks dependencies and triggers
+    // change detection when either name or multiValuedFeatureIds changes
+    this.isMultiValued = computed(() => {
+      const ids = this.multiValuedFeatureIds();
+      const name = this.nameSignal();
+      return !!ids && !!name && ids.includes(name);
+    });
+
     // when feature changes, update the form
     effect(() => {
       this.updateForm(this.feature());
@@ -194,7 +226,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    // whenever the name changes, update the value selection and multi-valued status
+    // whenever the name changes, update the value selection
     this._sub = this.name.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((name) => {
@@ -202,9 +234,8 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
           this.value.reset();
           this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
         }
-        // Update multi-valued status
-        const ids = this.multiValuedFeatureIds();
-        this.isMultiValued.set(!!ids && ids.includes(name));
+        // Note: isMultiValued is now a computed signal that automatically
+        // updates when nameSignal or multiValuedFeatureIds changes
       });
   }
 
@@ -226,7 +257,8 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   private updateForm(feature?: OperationFeature): void {
     if (!feature) {
       this.form.reset();
-      this.isMultiValued.set(false);
+      // Note: isMultiValued is a computed signal - it will automatically
+      // update to false when name is reset to empty string
     } else {
       this._frozen = true;
       this.name.setValue(feature.name);
@@ -235,9 +267,8 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       this.isNegated.setValue(feature.isNegated || false);
       this.isGlobal.setValue(feature.isGlobal || false);
       this.isShortLived.setValue(feature.isShortLived || false);
-      // Set multi-valued status based on feature name
-      const ids = this.multiValuedFeatureIds();
-      this.isMultiValued.set(!!ids && ids.includes(feature.name));
+      // Note: isMultiValued is a computed signal - it will automatically
+      // update based on the new name value and multiValuedFeatureIds
       this._frozen = false;
     }
   }
