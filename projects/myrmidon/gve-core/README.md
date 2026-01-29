@@ -119,5 +119,4 @@ Operations and timelines are handled by other children components. The snapshot 
 
 - [@myrmidon/ngx-tools, @myrmidon/ngx-mat-tools](https://github.com/vedph/ngx-tools)
 - [cisstech/nge](https://github.com/cisstech/nge) for a light Monaco editor wrapper.
-- [@svgdotjs/svg.js](https://github.com/svgdotjs/svg.js/) for SVG manipulation.
 - [gsap](https://gsap.com/) for animations.

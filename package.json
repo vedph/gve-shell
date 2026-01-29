@@ -30,7 +30,6 @@
     "@myrmidon/ngx-mat-tools": "^1.0.1",
     "@myrmidon/ngx-tools": "^2.0.2",
     "@myrmidon/ngx-viz": "^1.0.0",
-    "@svgdotjs/svg.js": "^3.2.5",
     "gsap": "^3.14.2",
     "monaco-editor": "^0.34.1",
     "nanoid": "^5.1.6",
