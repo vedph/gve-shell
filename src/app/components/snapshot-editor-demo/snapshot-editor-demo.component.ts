@@ -187,7 +187,7 @@ export class SnapshotEditorDemoComponent implements OnInit {
       },
       {
         id: 'comment',
-        label: 'comment',
+        label: 'editorial comment',
       },
       {
         id: 'log',

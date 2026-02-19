@@ -5,7 +5,12 @@ import { Observable, catchError } from 'rxjs';
 
 import { ErrorService, EnvService } from '@myrmidon/ngx-tools';
 
-import { CharChainOperation, CharNode, OperationFeature, ResultWrapper } from '../models';
+import {
+  CharChainOperation,
+  CharNode,
+  OperationFeature,
+  ResultWrapper,
+} from '../models';
 
 /**
  * Execution step of a char-based chain operation.
@@ -182,6 +187,24 @@ export class GveApiService {
     return this._http
       .post<ResultWrapper<string[]>>(
         `${this._env.get('apiUrl')}text/operations/tags`,
+        {
+          operations,
+        },
+      )
+      .pipe(catchError(this._error.handleError));
+  }
+
+  /**
+   * Get the DSL representation of the given operations.
+   * @param operations The operations.
+   * @returns Result wrapper.
+   */
+  public getDsl(
+    operations: CharChainOperation[],
+  ): Observable<ResultWrapper<string[]>> {
+    return this._http
+      .post<ResultWrapper<string[]>>(
+        `${this._env.get('apiUrl')}text/operations/dsl`,
         {
           operations,
         },

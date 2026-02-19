@@ -61,7 +61,12 @@ import {
 import { ChainResultViewComponent } from '../chain-result-view/chain-result-view.component';
 import { BatchOperationEditorComponent } from '../batch-operation-editor/batch-operation-editor.component';
 import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-text-editor.component';
-import { CharChainOperation, CharNode, Snapshot } from '../../models';
+import {
+  CharChainOperation,
+  CharNode,
+  ResultWrapper,
+  Snapshot,
+} from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 // default snapshot view title
@@ -577,11 +582,35 @@ export class SnapshotEditorComponent {
   }
 
   public copyOperationsJson() {
+    if (!this.operations.value.length || this.busy()) {
+      return;
+    }
     const json = JSON.stringify(this.operations.value, null, 2);
     navigator.clipboard.writeText(json).then(() => {
       this._snackbar.open('Operations JSON copied to clipboard', 'OK', {
         duration: 3000,
       });
+    });
+  }
+
+  public copyOperationsDsl() {
+    if (!this.operations.value.length || this.busy()) {
+      return;
+    }
+    this._api.getDsl(this.operations.value).subscribe({
+      next: (dsl: ResultWrapper<string[]>) => {
+        if (dsl.result) {
+          navigator.clipboard.writeText(dsl.result.join('\n')).then(() => {
+            this._snackbar.open('Operations DSL copied to clipboard', 'OK', {
+              duration: 3000,
+            });
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error getting DSL:', error);
+        this._snackbar.open('Error getting DSL', 'OK');
+      },
     });
   }
 

@@ -59,6 +59,12 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 6.0.4
+
+- 2026-02-19:
+  - 🆕 added button to copy GVE operations DSL in snapshot editor.
+  - updated Angular and packages.
+
 ### 6.0.3
 
 - 2026-01-29:

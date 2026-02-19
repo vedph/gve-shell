@@ -73,7 +73,9 @@ export class BaseTextEditorComponent {
    * edited is in this list, the feature editor will allow adding multiple
    * values to it. Passed down to feature editors.
    */
-  public readonly multiValuedFeatureIds = input<string[] | undefined>();
+  public readonly multiValuedFeatureIds = input<string[] | undefined>([
+    'r_hints',
+  ]);
 
   /**
    * Emitted for the edited text as an array of `CharNode`'s whenever it changes.
@@ -97,6 +99,14 @@ export class BaseTextEditorComponent {
     });
     this.form = formBuilder.group({
       userText: this.userText,
+    });
+
+    // diagnostic logging for multiValuedFeatureIds
+    effect(() => {
+      console.log(
+        '[BaseTextEditor] multiValuedFeatureIds:',
+        this.multiValuedFeatureIds(),
+      );
     });
 
     effect(() => {

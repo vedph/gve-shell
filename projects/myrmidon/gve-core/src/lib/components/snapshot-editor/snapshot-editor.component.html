@@ -61,6 +61,17 @@
             >
 
             <div class="form-row right">
+              <!-- copy ops DSL -->
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Copy operations as DSL to clipboard"
+                [disabled]="!operations.value.length || busy()"
+                (click)="copyOperationsDsl()"
+              >
+                <mat-icon>content_copy</mat-icon>
+              </button>
+
               <!-- copy ops JSON -->
               <button
                 type="button"
@@ -69,7 +80,7 @@
                 [disabled]="!operations.value.length || busy()"
                 (click)="copyOperationsJson()"
               >
-                <mat-icon>content_copy</mat-icon>
+                <mat-icon>copy_all</mat-icon>
               </button>
 
               <!-- remove ops -->

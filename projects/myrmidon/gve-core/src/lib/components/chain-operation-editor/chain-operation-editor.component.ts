@@ -376,16 +376,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     return on ? text.replace(/\\/g, '\n') : text.replace(/\n/g, '\\');
   }
 
-  private hasTextChanges(snapshot?: Snapshot): boolean {
-    if ((!snapshot && this.snapshot()) || (snapshot && !this.snapshot())) {
-      return true;
-    }
-    if (snapshot?.text !== this.snapshot()?.text) {
-      return true;
-    }
-    return false;
-  }
-
   public onFeaturesChange(features: OperationFeature[]): void {
     this.features.setValue(features);
     this.features.markAsDirty();
