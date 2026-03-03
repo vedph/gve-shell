@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
@@ -24,6 +24,7 @@ import {
     MatExpansionModule,
     ChainOperationEditorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './chain-operation-editor-demo.component.html',
   styleUrl: './chain-operation-editor-demo.component.scss',
 })

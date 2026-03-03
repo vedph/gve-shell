@@ -1,4 +1,11 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -44,6 +51,7 @@ import { GveBaseTextService } from '../../services/gve-base-text.service';
     BaseTextViewComponent,
     FeatureSetEditorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './base-text-editor.component.html',
   styleUrl: './base-text-editor.component.css',
 })

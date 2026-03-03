@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   effect,
   Inject,
@@ -35,6 +36,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
  */
 @Component({
   selector: 'gve-snapshot-text-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
   effect,
@@ -7,6 +8,7 @@ import {
   model,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import {
@@ -112,6 +114,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     FlatLookupPipe,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
 })
@@ -257,12 +260,13 @@ export class SnapshotEditorComponent {
       operations: this.operations,
     });
 
-    // when snapshot changes, update the form
+    // when snapshot changes, update the form and run all operations.
+    // untracked prevents busy() (read inside runToLast → runTo) from being
+    // tracked as a dependency, which would cause re-runs each time the API
+    // call completes and resets busy to false.
     effect(() => {
       this.updateForm(this.snapshot());
-      setTimeout(() => {
-        this.runToLast();
-      }, 0);
+      untracked(() => this.runToLast());
     });
 
     // diagnostic logging for multiValuedFeatureIds

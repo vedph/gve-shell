@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 import { RouterModule, RouterOutlet } from '@angular/router';
 
@@ -24,6 +24,7 @@ import { SettingsService } from '@myrmidon/gve-core';
     MatToolbarModule,
     NgeMonacoModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

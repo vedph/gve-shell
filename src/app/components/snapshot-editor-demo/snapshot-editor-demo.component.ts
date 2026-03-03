@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +37,7 @@ import { AssetService } from '../../services/asset.service';
     MatTooltipModule,
     SnapshotEditorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './snapshot-editor-demo.component.html',
   styleUrl: './snapshot-editor-demo.component.scss',
 })

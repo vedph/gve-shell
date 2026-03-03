@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   effect,
   Inject,
@@ -7,6 +8,7 @@ import {
   Optional,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -36,6 +38,7 @@ import { GveApiService } from '../../services/gve-api.service';
  */
 @Component({
   selector: 'gve-batch-operation-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
@@ -82,8 +85,13 @@ export class BatchOperationEditorComponent implements OnInit {
       inputOps: this.text,
     });
 
+    // Track only the preset signal; use untracked for the call so that
+    // busy() read inside parseOperations() is not tracked as a dependency
+    // (otherwise the API completing and setting busy=false would re-trigger
+    // the effect, causing an infinite loop of API calls).
     effect(() => {
-      this.parseOperations(this.preset() || undefined);
+      const preset = this.preset();
+      untracked(() => this.parseOperations(preset || undefined));
     });
   }
 

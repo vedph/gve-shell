@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
@@ -21,6 +21,7 @@ import { FeatureMap, FeatureSetEditorComponent } from '@myrmidon/gve-core';
     MatInputModule,
     FeatureSetEditorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './feature-set-editor-demo.component.html',
   styleUrl: './feature-set-editor-demo.component.scss',
 })

@@ -1,4 +1,10 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 
 import {
   FormBuilder,
@@ -30,6 +36,7 @@ import {
     MatInputModule,
     BaseTextViewComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './base-text-view-demo.component.html',
   styleUrl: './base-text-view-demo.component.scss',
 })

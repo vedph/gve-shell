@@ -59,7 +59,11 @@ To publish the documentation via GitHub:
 
 ## History
 
-- 2026-03-03: updated Angular and packages.
+### 6.1.0
+
+- 2026-03-03:
+  - updated Angular and packages.
+  - ⚠️ migrated to `OnPush`.
 
 ### 6.0.4
 

@@ -10,7 +10,7 @@ import {
   OnInit,
   output,
   signal,
-  ViewChild,
+  viewChild,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -98,7 +98,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
   private _frozen?: boolean;
 
-  @ViewChild('nameCtl') nameControl?: ElementRef;
+  public readonly nameControl = viewChild<ElementRef>('nameCtl');
 
   /**
    * The list of feature names to display in the name selection.
@@ -207,7 +207,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     effect(() => {
       this.updateForm(this.feature());
       setTimeout(() => {
-        this.nameControl?.nativeElement?.focus();
+        this.nameControl()?.nativeElement?.focus();
         this.nameIds.set(
           this.getLabeledIdsFor(this.name.value, this.featValues()),
         );

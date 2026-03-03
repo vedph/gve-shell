@@ -1,4 +1,12 @@
-import { Component, effect, input, Input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -36,6 +44,7 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
  */
 @Component({
   selector: 'gve-feature-set-view',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
@@ -47,7 +56,7 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
   templateUrl: './feature-set-view.component.html',
   styleUrl: './feature-set-view.component.css',
 })
-export class FeatureSetViewComponent {
+export class FeatureSetViewComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
 
   /**

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
@@ -19,6 +19,7 @@ import {
     MatCheckboxModule,
     ChainResultViewComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './chain-result-view-demo.component.html',
   styleUrl: './chain-result-view-demo.component.scss',
 })

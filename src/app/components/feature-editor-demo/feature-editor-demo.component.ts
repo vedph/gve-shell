@@ -1,4 +1,10 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -23,6 +29,7 @@ import {
     MatCheckboxModule,
     FeatureEditorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './feature-editor-demo.component.html',
   styleUrl: './feature-editor-demo.component.scss',
 })
