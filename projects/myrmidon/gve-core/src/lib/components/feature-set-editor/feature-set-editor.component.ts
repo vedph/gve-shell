@@ -139,13 +139,6 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
       this.applyFeatureFilter(this.features(), this.filter.value);
     });
 
-    // diagnostic logging for multiValuedFeatureIds
-    effect(() => {
-      console.log(
-        '[FeatureSetEditor] multiValuedFeatureIds:',
-        this.multiValuedFeatureIds(),
-      );
-    });
   }
 
   private applyFeatureFilter(

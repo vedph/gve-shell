@@ -59,6 +59,10 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-03-04:
+  - updated packages (added `tw`/`th` to renderer offset features).
+  - fixes to feature set editor.
+
 ### 6.1.0
 
 - 2026-03-03:

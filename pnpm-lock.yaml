@@ -45,8 +45,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0(@angular/cdk@21.2.0(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/platform-browser@21.2.0(@angular/animations@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0)))(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0)))(rxjs@7.8.2))(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/material@21.2.0(318e58b6acf463ac1eae803878dae054))(monaco-editor@0.34.1)(rxjs@7.8.2)
       '@myrmidon/gve-snapshot-rendition':
-        specifier: ^0.0.6
-        version: 0.0.6
+        specifier: ^0.0.7
+        version: 0.0.7
       '@myrmidon/ngx-mat-tools':
         specifier: ^1.0.1
         version: 1.0.1(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))
@@ -2117,8 +2117,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@myrmidon/gve-snapshot-rendition@0.0.6':
-    resolution: {integrity: sha512-AihoZmzE0se+NsZnxhMP2QWHV6kr9c0jNgoFShzQoxkMIy5ioI3l0NipgxOWH3DzHUaBAUhvB4TK2gZqdbasUA==}
+  '@myrmidon/gve-snapshot-rendition@0.0.7':
+    resolution: {integrity: sha512-FdS1V0awCMvQzjtmfj0AffGSe+K5/Jol7dV550heHR6ViM/qjX/BMYpHHlBob5hP2OIdf75T0cMYTsp4WhjpSQ==}
 
   '@myrmidon/ngx-mat-tools@1.0.1':
     resolution: {integrity: sha512-On1HAVCWrP+AzN4Pp0m6OWoH+RNIAtYZP9uPsGXgxjxJIDSDgk190+xK/CZYzrRg5/ro9BHY49y4Y4eD25NCLA==}
@@ -9651,7 +9651,7 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
 
-  '@myrmidon/gve-snapshot-rendition@0.0.6':
+  '@myrmidon/gve-snapshot-rendition@0.0.7':
     dependencies:
       fast-diff: 1.3.0
       feather-icons: 4.29.2

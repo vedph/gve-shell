@@ -10,6 +10,7 @@ import {
   OnInit,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import {
@@ -19,14 +20,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
 
-import {
-  Subscription,
-  debounceTime,
-  distinctUntilChanged,
-  startWith,
-} from 'rxjs';
+import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -96,7 +91,6 @@ export interface FeatureMap {
 })
 export class FeatureEditorComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
-  private _frozen?: boolean;
 
   public readonly nameControl = viewChild<ElementRef>('nameCtl');
 
@@ -137,7 +131,19 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
    */
   public readonly featureCancel = output();
 
+  /**
+   * The allowed value IDs for the currently selected feature name.
+   * Set synchronously in updateForm (on feature load) and in the
+   * name.valueChanges subscription (on user interaction).
+   */
   public readonly nameIds = signal<LabeledId[] | undefined>(undefined);
+
+  /**
+   * Tracks the current feature name. Updated synchronously in updateForm
+   * and in the name.valueChanges subscription so that isMultiValued stays
+   * in sync regardless of whether the change was programmatic or user-driven.
+   */
+  private readonly _currentName = signal<string>('');
 
   public name: FormControl<string>;
   public value: FormControl<string>;
@@ -150,17 +156,15 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   public form: FormGroup;
 
   /**
-   * Signal that tracks the current name form control value.
-   * Uses toSignal to convert the form control's valueChanges observable
-   * to a signal for reactive change detection.
-   */
-  private readonly nameSignal;
-
-  /**
    * Computed signal that determines if the current feature is multi-valued.
-   * Automatically updates when either the name or multiValuedFeatureIds changes.
+   * Automatically updates when either _currentName or multiValuedFeatureIds
+   * changes.
    */
-  public readonly isMultiValued;
+  public readonly isMultiValued = computed(() => {
+    const ids = this.multiValuedFeatureIds();
+    const name = this._currentName();
+    return !!ids && !!name && ids.includes(name);
+  });
 
   constructor(formBuilder: FormBuilder) {
     this.name = formBuilder.control<string>('', {
@@ -190,52 +194,30 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       isShortLived: this.isShortLived,
     });
 
-    // Convert name form control valueChanges to a signal for reactive updates
-    this.nameSignal = toSignal(this.name.valueChanges.pipe(startWith('')), {
-      initialValue: '',
-    });
-
-    // Computed signal that automatically tracks dependencies and triggers
-    // change detection when either name or multiValuedFeatureIds changes
-    this.isMultiValued = computed(() => {
-      const ids = this.multiValuedFeatureIds();
-      const name = this.nameSignal();
-      return !!ids && !!name && ids.includes(name);
-    });
-
-    // when feature changes, update the form
+    // When the feature input changes, repopulate the form atomically.
+    // featValues is read via untracked() so changes to it do not retrigger
+    // this effect and accidentally overwrite in-progress user edits.
     effect(() => {
       this.updateForm(this.feature());
-      setTimeout(() => {
-        this.nameControl()?.nativeElement?.focus();
-        this.nameIds.set(
-          this.getLabeledIdsFor(this.name.value, this.featValues()),
-        );
-      }, 500);
-    });
-
-    // diagnostic logging for multiValuedFeatureIds
-    effect(() => {
-      console.log(
-        '[FeatureEditor] multiValuedFeatureIds:',
-        this.multiValuedFeatureIds(),
-        'isMultiValued:',
-        this.isMultiValued(),
-      );
+      setTimeout(() => this.nameControl()?.nativeElement?.focus(), 0);
     });
   }
 
   public ngOnInit(): void {
-    // whenever the name changes, update the value selection
+    // Respond to user-initiated name changes only.
+    // updateForm uses { emitEvent: false } so programmatic loads never
+    // reach this subscription, eliminating the race that caused value.reset()
+    // to fire after a 300 ms debounce and wipe the just-loaded value.
     this._sub = this.name.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((name) => {
-        if (!this._frozen && this.featNames()?.length) {
+        this._currentName.set(name);
+        this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
+        // Reset value only when preset names are in use; for free-text names
+        // the value is independent and must not be cleared.
+        if (this.featNames()?.length) {
           this.value.reset();
-          this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
         }
-        // Note: isMultiValued is now a computed signal that automatically
-        // updates when nameSignal or multiValuedFeatureIds changes
       });
   }
 
@@ -250,26 +232,34 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     if (!id) {
       return undefined;
     }
-    console.log('getLabeledIdsFor', id, featValues);
-    return featValues ? featValues![id] : undefined;
+    return featValues ? featValues[id] : undefined;
   }
 
   private updateForm(feature?: OperationFeature): void {
     if (!feature) {
+      this._currentName.set('');
+      this.nameIds.set(undefined);
       this.form.reset();
-      // Note: isMultiValued is a computed signal - it will automatically
-      // update to false when name is reset to empty string
     } else {
-      this._frozen = true;
-      this.name.setValue(feature.name);
-      this.value.setValue(feature.value);
+      // Read featValues outside the reactive context so that changes to
+      // featValues alone do not re-trigger the parent effect and overwrite
+      // any in-progress user edits.
+      const featValues = untracked(() => this.featValues());
+
+      // Update derived signals first so the template can resolve the correct
+      // control type (select vs text) before Angular renders.
+      this._currentName.set(feature.name);
+      this.nameIds.set(this.getLabeledIdsFor(feature.name, featValues));
+
+      // Use emitEvent: false to suppress valueChanges events.
+      // This prevents the name.valueChanges subscription (which resets the
+      // value control) from firing during a programmatic load.
+      this.name.setValue(feature.name, { emitEvent: false });
+      this.value.setValue(feature.value, { emitEvent: false });
       this.setPolicy.setValue(feature.setPolicy || FeatureSetPolicy.multiple);
       this.isNegated.setValue(feature.isNegated || false);
       this.isGlobal.setValue(feature.isGlobal || false);
       this.isShortLived.setValue(feature.isShortLived || false);
-      // Note: isMultiValued is a computed signal - it will automatically
-      // update based on the new name value and multiValuedFeatureIds
-      this._frozen = false;
     }
   }
 
