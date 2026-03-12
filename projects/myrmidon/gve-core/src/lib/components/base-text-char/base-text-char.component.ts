@@ -55,11 +55,20 @@ export class BaseTextCharComponent {
    */
   public readonly charPick = output<BaseTextCharEvent>();
 
+  /**
+   * Emitted when the character is double-clicked.
+   */
+  public readonly charDblPick = output<BaseTextCharEvent>();
+
   public readonly defaultColor = '#D8D8D8';
   public readonly defaultBorderColor = '#D8D8D8';
   public readonly defaultEmSize = 1.5;
 
   public onCharClick(event: MouseEvent): void {
     this.charPick.emit({ char: this.char()!, event });
+  }
+
+  public onCharDblClick(event: MouseEvent): void {
+    this.charDblPick.emit({ char: this.char()!, event });
   }
 }

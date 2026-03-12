@@ -642,4 +642,39 @@ export class BaseTextViewComponent implements OnInit {
   public readonly isSearchActive = computed(() => {
     return this.searchQuery().length > 0;
   });
+
+  /**
+   * Space-separated list of character IDs collected via double-click.
+   */
+  public readonly pickedIds = signal('');
+
+  /**
+   * Append a character's ID to the pickedIds string on double-click.
+   */
+  public onCharDblPick(event: BaseTextCharEvent): void {
+    if (!event?.char) {
+      return;
+    }
+    const current = this.pickedIds();
+    this.pickedIds.set(current ? `${current} ${event.char.id}` : `${event.char.id}`);
+  }
+
+  /**
+   * Clear the collected IDs string.
+   */
+  public clearPickedIds(): void {
+    this.pickedIds.set('');
+  }
+
+  /**
+   * Copy the collected IDs string to the clipboard.
+   */
+  public copyPickedIds(): void {
+    const ids = this.pickedIds();
+    if (!ids) {
+      return;
+    }
+    this._clipboard.copy(ids);
+    this._snackBar.open('IDs copied', 'OK', { duration: 2000 });
+  }
 }

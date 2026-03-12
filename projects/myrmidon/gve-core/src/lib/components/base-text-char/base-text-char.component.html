@@ -1,5 +1,5 @@
 @if (char()) {
-<div matRipple id="container" (click)="onCharClick($event)">
+<div matRipple id="container" (click)="onCharClick($event)" (dblclick)="onCharDblClick($event)">
   <div
     id="c-label"
     [style.fontSize]="char()!.emSize + 'em'"

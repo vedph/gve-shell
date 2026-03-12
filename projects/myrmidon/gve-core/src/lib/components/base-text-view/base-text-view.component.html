@@ -47,6 +47,26 @@
     <mat-icon>pin_drop</mat-icon>
     copy coords
   </button>
+
+  @if (pickedIds()) {
+    <span class="picked-ids" matTooltip="Double-clicked character IDs">{{ pickedIds() }}</span>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Clear collected IDs"
+      (click)="clearPickedIds()"
+    >
+      <mat-icon>clear</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Copy collected IDs to clipboard"
+      (click)="copyPickedIds()"
+    >
+      <mat-icon>content_copy</mat-icon>
+    </button>
+  }
 </div>
 
 <!-- Text display -->
@@ -59,7 +79,7 @@
         </div>
       }
       @for (c of line; track c.id) {
-        <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" />
+        <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" (charDblPick)="onCharDblPick($event)" />
       }
     </div>
   }

@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 6.1.2
+
+- 2026-03-12: 🆕 added ID collection in text view.
 - 2026-03-04:
   - updated packages (added `tw`/`th` to renderer offset features).
   - fixes to feature set editor.
