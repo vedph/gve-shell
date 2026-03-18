@@ -32,7 +32,7 @@
 }
 #text-range {
   margin: 8px;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 6px;
 }
@@ -42,12 +42,15 @@ mat-expansion-panel {
 
 div#visual-info {
   font-size: 95%;
-  color: #909090;
+  color: var(--mat-sys-on-surface-variant);
   margin: 8px;
 }
 #result {
   max-height: 800px;
   overflow: auto;
+}
+#snapshot-container {
+  margin-top: 6px;
 }
 
 #list {
@@ -60,41 +63,36 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
+tbody tr:nth-child(odd) {
+  background-color: var(--mat-sys-surface-container);
+}
 th {
-  color: #909090;
-  font-weight: normal;
   text-align: left;
-  background-color: rgb(225, 224, 224);
+  font-weight: normal;
+  color: var(--mat-sys-on-surface-variant);
 }
-th,
-td {
-  padding: 4px;
-  border-bottom: 1px solid silver;
-}
-tbody tr:nth-child(even) {
-  background-color: #e8e8e8;
+tbody tr:hover {
+  background-color: var(--mat-sys-surface-container-high);
 }
 td.fit-width {
   width: 1px;
   white-space: nowrap;
 }
-tr.selected {
-  background-color: #c8d9eb;
-}
-tr.edited {
-  background-color: #f6f6e4;
+tbody tr.selected {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }
 fieldset {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 8px;
   margin: 8px 0;
 }
 legend {
-  color: #909090;
+  color: var(--mat-sys-on-surface-variant);
 }
 .error {
-  color: red;
+  color: var(--mat-sys-error);
 }
 .input-nr {
   width: 6em;
@@ -106,7 +104,7 @@ legend {
   font-family: "Courier New", Courier, monospace;
 }
 .boxed {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 8px;
   margin: 8px 0;
@@ -115,14 +113,14 @@ span.label {
   margin-left: 8px;
 }
 .feature {
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
 }
 .fname {
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
 }
 .fvalue {
-  color: white;
-  background-color: #b5bdc9;
+  color: var(--mat-sys-on-surface-variant);
+  background-color: var(--mat-sys-surface-container);
   padding: 2px 4px;
   border-radius: 4px;
 }
@@ -155,7 +153,7 @@ div#chain-view {
   width: 100%;
   min-height: 600px;
   max-height: 80vh;
-  border: 1px solid #ccc;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   overflow: auto;
 }
 

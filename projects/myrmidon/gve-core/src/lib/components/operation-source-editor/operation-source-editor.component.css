@@ -18,21 +18,22 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
+tbody tr:nth-child(odd) {
+  background-color: var(--mat-sys-surface-container);
+}
 th {
-  color: #909090;
-  font-weight: normal;
   text-align: left;
-  background-color: rgb(225, 224, 224);
+  font-weight: normal;
+  color: var(--mat-sys-on-surface-variant);
 }
-th,
-td {
-  padding: 4px;
-  border-bottom: 1px solid silver;
-}
-tbody tr:nth-child(even) {
-  background-color: #e8e8e8;
+tbody tr:hover {
+  background-color: var(--mat-sys-surface-container-high);
 }
 td.fit-width {
   width: 1px;
   white-space: nowrap;
+}
+tbody tr.selected {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }

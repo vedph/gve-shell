@@ -14,7 +14,7 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 8px;
-  border-top: 1px solid silver;
+  border-top: 1px solid var(--mat-sys-on-surface-variant);
 }
 .toolbar-row {
   display: flex;
@@ -31,39 +31,43 @@
 #id {
   border-radius: 6px;
   padding: 4px;
-  background-color: #beb9b9;
-  color: white;
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
   margin-top: -16px;
 }
 fieldset {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 8px;
   margin: 8px 0;
 }
 legend {
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
 }
 table {
   width: 100%;
   border-collapse: collapse;
 }
 tbody tr:nth-child(odd) {
-  background-color: #e2e2e2;
+  background-color: var(--mat-sys-surface-container);
 }
 th {
   text-align: left;
   font-weight: normal;
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
+}
+tbody tr:hover {
+  background-color: var(--mat-sys-surface-container-high);
 }
 td.fit-width {
   width: 1px;
   white-space: nowrap;
 }
-tr.selected {
-  background-color: #d0d0d0 !important;
+tbody tr.selected {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }
-#btn-save {
+/* #btn-save {
   color: #072d3e;
 }
 #btn-load {
@@ -74,10 +78,10 @@ tr.selected {
 }
 #btn-preview {
   color: #095409;
-}
+} */
 #code {
   height: 500px;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
 }
 #monaco {
   height: 100%;
@@ -85,7 +89,7 @@ tr.selected {
 #preview {
   box-sizing: border-box;
   width: 100%;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 4px;
   padding: 8px;
 }
@@ -99,13 +103,14 @@ tr.selected {
   list-style-type: none;
 }
 .selected-node {
-  background-color: #e5e5e5;
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }
 .child-title {
   font-weight: bold;
   margin: 0;
-  background-color: #ccc;
-  color: white;
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
   padding: 8px;
 }
 
@@ -119,14 +124,14 @@ tr.selected {
 }
 #tree-nav {
   grid-area: nav;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   margin: 8px 0;
   padding-right: 8px;
 }
 #tree-ed {
   grid-area: ed;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   margin: 8px 0;
 }

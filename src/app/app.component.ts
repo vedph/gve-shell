@@ -10,6 +10,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { NgeMonacoModule } from '@cisstech/nge/monaco';
 
 import { EnvService } from '@myrmidon/ngx-tools';
+import { ThemeToggleComponent } from '@myrmidon/ngx-mat-tools';
 
 import { SettingsService } from '@myrmidon/gve-core';
 
@@ -23,6 +24,7 @@ import { SettingsService } from '@myrmidon/gve-core';
     MatMenuModule,
     MatToolbarModule,
     NgeMonacoModule,
+    ThemeToggleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',

@@ -17,14 +17,14 @@
 }
 .tag {
   background-color: rgb(68, 114, 253);
-  color: white;
+  color: var(--mat-sys-surface);
   border: 1px solid rgb(68, 114, 253);
   border-radius: 6px;
   padding: 4px;
   cursor: pointer;
 }
 .muted-tag {
-  color: #c0c0c0;
+  color: var(--mat-sys-on-surface-variant);
 }
 .text {
   font-size: 0.5em;

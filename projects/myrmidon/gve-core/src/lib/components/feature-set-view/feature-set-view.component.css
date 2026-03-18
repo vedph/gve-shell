@@ -18,27 +18,31 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 0;
+}
+tbody tr:nth-child(odd) {
+  background-color: var(--mat-sys-surface-container);
 }
 th {
   text-align: left;
-  background-color: #c8d9eb;
-  color: #333;
   font-weight: normal;
+  color: var(--mat-sys-on-surface-variant);
 }
-th,
-td {
-  border: 1px solid silver;
-  padding: 4px;
+tbody tr:hover {
+  background-color: var(--mat-sys-surface-container-high);
 }
-tr:nth-child(even) {
-  background-color: #dfdfdf;
+td.fit-width {
+  width: 1px;
+  white-space: nowrap;
+}
+tbody tr.selected {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }
 #filter {
   width: 7em;
 }
 #badge {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 4px;
   margin-top: -18px;

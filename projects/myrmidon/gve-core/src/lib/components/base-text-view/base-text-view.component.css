@@ -14,12 +14,11 @@
   font-weight: bold;
   padding: 4px 8px;
   border-radius: 4px;
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  color: var(--mat-sys-success);
 }
 .match-count.no-matches {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
 }
 .line {
   display: flex;
@@ -33,7 +32,7 @@
 .nr {
   font-size: 0.8em;
   font-weight: bold;
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
   margin: 0 4px;
 }
 .picked-ids {
@@ -41,9 +40,9 @@
   font-size: 0.85em;
   padding: 4px 8px;
   border-radius: 4px;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #90caf9;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  border: 1px solid var(--mat-sys-primary);
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;

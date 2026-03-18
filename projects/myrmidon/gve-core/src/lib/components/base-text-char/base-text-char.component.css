@@ -4,7 +4,7 @@ div#container {
   align-items: center;
 }
 div#c-label {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 6px;
   height: 1.5em;
@@ -15,7 +15,7 @@ div#c-label {
 div#c-id {
   margin-top: 4px;
   margin-bottom: 16px;
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 6px;
   align-items: center;

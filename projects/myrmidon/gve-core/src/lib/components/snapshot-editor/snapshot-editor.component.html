@@ -152,10 +152,7 @@
                   track operation.id;
                   let index = $index
                 ) {
-                  <tr
-                    [class.selected]="operation.id === resultOperationId()"
-                    [class.edited]="operation.id === editedOp()?.id"
-                  >
+                  <tr [class.selected]="operation.id === editedOp()?.id">
                     <td class="fit-width">{{ index + 1 }}.</td>
                     <td class="fit-width">
                       <!-- edit -->

@@ -2,7 +2,7 @@
   width: 100%;
 }
 .error {
-  color: red;
+  color: var(--mat-sys-error);
 }
 .form-row {
   display: flex;
@@ -25,5 +25,5 @@ div#heading {
   text-align: center;
 }
 div#batch-help strong {
-  color: darkorange;
+  color: var(--mat-sys-primary);
 }

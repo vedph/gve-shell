@@ -59,6 +59,10 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-03-18:
+  - updated Angular and packages.
+  - 🆕 migrated shell app to M3 themes and added dark theme support to components.
+
 ### 6.1.2
 
 - 2026-03-12: 🆕 added ID collection in text view.

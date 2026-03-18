@@ -22,8 +22,8 @@
   min-width: 0;
 }
 .range {
-  color: silver;
-  border: 1px solid silver;
+  color: var(--mat-sys-on-surface-variant);
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 4px;
   padding: 4px;
 }
@@ -61,10 +61,10 @@ div#feats {
   width: 100%;
 }
 .feat-header {
-  background-color: #3e92cc;
-  color: white;
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
   text-align: center;
-  border: 1px solid #3e92cc;
+  border: 1px solid var(--mat-sys-primary);
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
