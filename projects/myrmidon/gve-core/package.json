@@ -1,6 +1,6 @@
 {
   "name": "@myrmidon/gve-core",
-  "version": "6.1.3",
+  "version": "6.1.4",
   "description": "Cadmus - GVE Angular frontend core components.",
   "keywords": [
     "GVE"
@@ -14,9 +14,9 @@
     "name": "Daniele Fusi"
   },
   "peerDependencies": {
-    "@angular/common": "^20.0.0 || ^21.0.0",
-    "@angular/core": "^20.0.0 || ^21.0.0",
-    "@angular/material": "^20.0.0 || ^21.0.0",
+    "@angular/common": "^21.2.6",
+    "@angular/core": "^21.2.6",
+    "@angular/material": "^21.2.4",
     "@cisstech/nge": "^18.3.0",
     "@myrmidon/ngx-mat-tools": "^1.0.2",
     "@myrmidon/ngx-tools": "^2.0.2",
