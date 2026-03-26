@@ -11,6 +11,9 @@
         <mat-form-field>
           <mat-label>type</mat-label>
           <mat-select [formControl]="type">
+            <mat-option [value]="7"
+              ><mat-icon>edit_note</mat-icon>annotate</mat-option
+            >
             <mat-option [value]="0"
               ><mat-icon>layers</mat-icon> replace</mat-option
             >
@@ -31,9 +34,6 @@
             >
             <mat-option [value]="6"
               ><mat-icon>compare_arrows</mat-icon>swap</mat-option
-            >
-            <mat-option [value]="7"
-              ><mat-icon>edit_note</mat-icon>annotate</mat-option
             >
           </mat-select>
           @if ($any(type).errors?.required && (type.dirty || type.touched)) {

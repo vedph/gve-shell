@@ -252,7 +252,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     this.sources = formBuilder.control<OperationSource[]>([], {
       nonNullable: true,
     });
-    this.type = formBuilder.control<OperationType>(OperationType.replace, {
+    this.type = formBuilder.control<OperationType>(OperationType.annotate, {
       validators: Validators.required,
       nonNullable: true,
     });

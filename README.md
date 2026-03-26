@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-03-26:
+  - move annotation operation to the top of the list and make it the default type in the editor.
+  - adjust tables default color.
 - 2026-03-18:
   - updated Angular and packages.
   - 🆕 migrated shell app to M3 themes and added dark theme support to components.
