@@ -20,4 +20,5 @@
 div#heading {
   margin: 8px;
   text-align: center;
+  font-weight: bold;
 }

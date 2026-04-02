@@ -4,17 +4,13 @@
   </mat-card-header>
 
   <div>
-    <mat-form-field style="width: 100%; max-width: 800px">
-      <textarea
-        matInput
-        placeholder="text"
-        [formControl]="text"
-        rows="5"
-      ></textarea>
+    <mat-form-field class="long-text">
+      <label>text</label>
+      <textarea matInput [formControl]="text" rows="5"></textarea>
     </mat-form-field>
   </div>
   @if (range()) {
-  <div id="range">{{ range()!.at }} x {{ range()!.run }}</div>
+    <div id="range">{{ range()!.at }} x {{ range()!.run }}</div>
   }
 
   <hr />

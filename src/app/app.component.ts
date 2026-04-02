@@ -37,10 +37,10 @@ export class AppComponent {
     this.version.set(env.get('version') || '');
     settings.keyPrefix = 'gve-shell-';
 
-    settings.set('svg-editor', 'https://editor.method.ac/');
-    settings.set(
-      'graphviz-editor',
-      'https://dreampuf.github.io/GraphvizOnline?engine=dot#CODE'
-    );
+    // settings.set('svg-editor', 'https://editor.method.ac/');
+    // settings.set(
+    //   'graphviz-editor',
+    //   'https://dreampuf.github.io/GraphvizOnline?engine=dot#CODE'
+    // );
   }
 }

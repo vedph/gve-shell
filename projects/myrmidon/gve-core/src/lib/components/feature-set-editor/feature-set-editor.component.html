@@ -3,7 +3,8 @@
     <!-- filter -->
     @if (filterThreshold() === 0 || features().length >= filterThreshold()) {
       <mat-form-field>
-        <input matInput placeholder="filter" [formControl]="filter" />
+        <label>filter</label>
+        <input matInput [formControl]="filter" />
         <button
           type="button"
           mat-icon-button

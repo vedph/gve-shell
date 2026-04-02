@@ -7,18 +7,22 @@
 .form-row * {
   flex: 0 0 auto;
 }
+.form-row .text {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
 .selected {
-  background-color: rgb(255, 255, 204);
+  background-color: var(--mat-sys-surface-bright);
 }
 .step {
-  border: 1px solid rgb(68, 114, 253);
+  border: 1px solid var(--mat-sys-outline);
   border-radius: 6px;
   margin: 8px 0;
 }
 .tag {
-  background-color: rgb(68, 114, 253);
-  color: var(--mat-sys-surface);
-  border: 1px solid rgb(68, 114, 253);
+  background-color: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+  border: 1px solid var(--mat-sys-outline);
   border-radius: 6px;
   padding: 4px;
   cursor: pointer;
@@ -27,5 +31,17 @@
   color: var(--mat-sys-on-surface-variant);
 }
 .text {
+  padding: 0 4px;
   font-size: 0.5em;
+  white-space: normal;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  min-width: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.text p {
+  margin: 0;
+  white-space: normal;
 }

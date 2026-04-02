@@ -1,15 +1,13 @@
 <div [style.padding]="dialogRef ? '8px' : '0'">
   @if (dialogRef) {
-    <div id="heading">
-      <h2>Set Base Text</h2>
-    </div>
+    <div id="heading">Set Base Text</div>
   }
   <form [formGroup]="form" (submit)="save()">
     <fieldset>
       <div id="batch-input">
         <div>
           <mat-form-field class="full-width">
-            <mat-label>base text</mat-label>
+            <label>base text</label>
             <textarea matInput [formControl]="userText" rows="8"></textarea>
             @if (
               $any(userText).errors?.required &&

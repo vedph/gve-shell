@@ -95,20 +95,25 @@
         <mat-option [value]="2">single first</mat-option>
       </mat-select>
     </mat-form-field>
-  </div>
 
-  @if (isVar()) {
-    <div class="form-row">
+    @if (isVar()) {
       <!-- isNegated -->
-      <mat-checkbox [formControl]="isNegated">negated</mat-checkbox>
+      <mat-checkbox [formControl]="isNegated"
+        ><mat-icon class="mat-warn">remove_circle</mat-icon>
+        negated</mat-checkbox
+      >
 
       <!-- isShortLived -->
-      <mat-checkbox [formControl]="isShortLived">short-lived</mat-checkbox>
+      <mat-checkbox [formControl]="isShortLived"
+        ><mat-icon class="mat-warn">timer</mat-icon> short-lived</mat-checkbox
+      >
 
       <!-- isGlobal -->
-      <mat-checkbox [formControl]="isGlobal">global</mat-checkbox>
-    </div>
-  }
+      <mat-checkbox [formControl]="isGlobal"
+        ><mat-icon class="mat-primary">public</mat-icon> global</mat-checkbox
+      >
+    }
+  </div>
 
   <!-- buttons -->
   <div class="form-row">

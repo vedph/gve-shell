@@ -98,14 +98,23 @@ export class SnapshotTextEditorComponent implements OnInit {
       GveBaseTextService.stringToBaseChars(this.userText.value),
     );
     navigator.clipboard.writeText(json);
-    this._snackbar.open('Copied JSON code to clipboard', undefined, { duration: 2000 });
+    this._snackbar.open('Copied JSON code to clipboard', undefined, {
+      duration: 2000,
+    });
+  }
+
+  private trimLines(text: string): string {
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .join('\n');
   }
 
   public save(): void {
     if (this.form.invalid) {
       return;
     }
-    this.userText.setValue(this.userText.value.trim());
+    this.userText.setValue(this.trimLines(this.userText.value));
     if (!this.userText.value) {
       return;
     }
