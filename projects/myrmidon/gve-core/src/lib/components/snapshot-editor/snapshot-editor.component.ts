@@ -132,6 +132,15 @@ export class SnapshotEditorComponent {
     viewChild<ElementRef<GveSnapshotRendition>>('rendition');
 
   /**
+   * Reference to the operation editor expansion panel.
+   * Using viewChild signal to handle conditionally rendered element -
+   * the element only exists when editedOp() is truthy.
+   */
+  public readonly operationEditorPanelRef = viewChild<ElementRef>(
+    'operationEditorPanel',
+  );
+
+  /**
    * The snapshot to edit.
    */
   public readonly snapshot = model<Snapshot | undefined>();
@@ -283,6 +292,21 @@ export class SnapshotEditorComponent {
       const rendition = this.renditionRef()?.nativeElement;
       if (rendition) {
         this.initRendition(rendition);
+      }
+    });
+
+    // when operation editor panel becomes available, scroll it into view
+    effect(() => {
+      const panel = this.operationEditorPanelRef()?.nativeElement;
+      if (panel && this.editedOp()) {
+        // use setTimeout to ensure the panel is fully rendered and the Material
+        // expansion animation completes (takes ~200-300ms) before scrolling
+        setTimeout(() => {
+          const panelElement = this.operationEditorPanelRef()?.nativeElement;
+          if (panelElement) {
+            panelElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 350);
       }
     });
   }

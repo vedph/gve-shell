@@ -20,7 +20,7 @@
     "@cisstech/nge": "^18.3.0",
     "@myrmidon/ngx-mat-tools": "^1.0.2",
     "@myrmidon/ngx-tools": "^2.0.2",
-    "@myrmidon/gve-snapshot-rendition": "^0.0.7",
+    "@myrmidon/gve-snapshot-rendition": "^0.0.8",
     "gsap": "^3.14.2",
     "monaco-editor": "^0.34.1",
     "nanoid": "^5.1.7"

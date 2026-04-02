@@ -30,6 +30,9 @@
   width: 100%;
   max-width: 800px;
 }
+.margin-bottom {
+  margin-bottom: 8px;
+}
 #text-range {
   margin: 8px;
   border: 1px solid var(--mat-sys-on-surface-variant);
@@ -117,9 +120,11 @@ span.label {
   color: var(--mat-sys-on-surface-variant);
 }
 .fname {
+  font-size: 0.9em;
   color: var(--mat-sys-on-surface-variant);
 }
 .fvalue {
+  font-size: 0.9em;
   color: var(--mat-sys-on-surface-variant);
   background-color: var(--mat-sys-surface-container);
   padding: 2px 4px;

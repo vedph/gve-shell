@@ -122,6 +122,31 @@
           </div>
         </div>
 
+        <!-- operation editor -->
+        @if (editedOp()) {
+          <mat-expansion-panel
+            #operationEditorPanel
+            [expanded]="editedOp()"
+            [disabled]="!editedOp()"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>operation {{ editedOp()?.id }}</mat-panel-title>
+            </mat-expansion-panel-header>
+            <fieldset>
+              <gve-chain-operation-editor
+                [featureDefs]="featureDefs()"
+                [multiValuedFeatureIds]="multiValuedFeatureIds()"
+                [hidePreview]="editedOpIndex() === -1"
+                [operation]="editedOp()"
+                [rangePatch]="editedOpRangePatch()"
+                (operationCancel)="onOperationCancel()"
+                (operationChange)="onOperationChange($event)"
+                (operationPreview)="onOperationPreview($event)"
+              />
+            </fieldset>
+          </mat-expansion-panel>
+        }
+
         <!-- ops -->
         <div
           id="ops"
@@ -260,39 +285,13 @@
               </tbody>
             </table>
           }
-
-          <!-- operation editor -->
-          @if (editedOp()) {
-            <mat-expansion-panel
-              [expanded]="editedOp()"
-              [disabled]="!editedOp()"
-            >
-              <mat-expansion-panel-header>
-                <mat-panel-title
-                  >operation {{ editedOp()?.id }}</mat-panel-title
-                >
-              </mat-expansion-panel-header>
-              <fieldset>
-                <gve-chain-operation-editor
-                  [featureDefs]="featureDefs()"
-                  [multiValuedFeatureIds]="multiValuedFeatureIds()"
-                  [hidePreview]="editedOpIndex() === -1"
-                  [operation]="editedOp()"
-                  [rangePatch]="editedOpRangePatch()"
-                  (operationCancel)="onOperationCancel()"
-                  (operationChange)="onOperationChange($event)"
-                  (operationPreview)="onOperationPreview($event)"
-                />
-              </fieldset>
-            </mat-expansion-panel>
-          }
         </div>
       </div>
     </mat-tab>
   </mat-tab-group>
 
   <!-- progress -->
-  <div>
+  <div class="margin-bottom">
     @if (busy()) {
       <mat-progress-bar mode="indeterminate" />
     }

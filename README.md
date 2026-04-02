@@ -59,12 +59,15 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 6.1.5
+
 - 2026-04-02:
   - ⚠️ shell gone zoneless.
   - improved layout of feature editor to be more compact.
   - improved layout of text visualization in steps map. Now the text is fully visible (wraps and has vertical scrollbar if needed).
   - improved layout of base text dialog and add operations dialog.
   - added automatic line trimming to input base text.
+  - updated renderer library for font size fix.
 - 2026-03-26:
   - move annotation operation to the top of the list and make it the default type in the editor.
   - adjust tables default color.
