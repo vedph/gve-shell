@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  signal,
+} from '@angular/core';
 
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   FeatureDefinitions,
+  LabeledId,
   Snapshot,
   SnapshotEditorComponent,
 } from '@myrmidon/gve-core';
@@ -44,6 +50,13 @@ import { AssetService } from '../../services/asset.service';
 export class SnapshotEditorDemoComponent implements OnInit {
   public readonly snapshot = signal<Snapshot | undefined>(undefined);
   public readonly settings = signal<GveRenditionSettings>(DEFAULT_SETTINGS);
+  public readonly sourceIds = signal<LabeledId[] | undefined>([
+    { id: 'goethe', label: 'Goethe' },
+    { id: 'schiller', label: 'Schiller' },
+  ]);
+  public readonly sourceTypes = signal<LabeledId[] | undefined>([
+    { id: 'hand', label: 'hand' },
+  ]);
   public readonly featureDefs = signal<FeatureDefinitions>({
     names: [
       {

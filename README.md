@@ -59,7 +59,11 @@ To publish the documentation via GitHub:
 
 ## History
 
-- 2026-04-16: updated Angular and packages.
+### 6.1.6
+
+- 2026-04-16:
+  - updated Angular and packages.
+  - 🆕 added `sourceIds` and `sourceTypes` presets to snapshot editor.
 
 ### 6.1.5
 

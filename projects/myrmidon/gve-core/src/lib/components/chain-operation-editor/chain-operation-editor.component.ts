@@ -37,6 +37,7 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
+import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   CharChainOperation,
@@ -82,6 +83,12 @@ export interface FeatureDefinitions {
  * - ▶️ `operation` (`CharChainOperation`): the operation to edit.
  * - ▶️ `snapshot` (`Snapshot`): the snapshot the operation refers to.
  * - ▶️ `hidePreview` (`boolean`): whether to hide the preview request button.
+ * - ▶️ `sourceIds` (`LabeledId[]`): the list of source IDs, when using a closed list.
+ * - ▶️ `sourceTypes` (`LabeledId[]`): the list of source types, when using a closed list.
+ * - ▶️ `featureDefs` (`FeatureDefinitions`): definitions for features, including
+ * names and values.
+ * - ▶️ `rangePatch` (`BaseTextRange`): when set, the edited operation's text
+ * range (at and run) will be patched with the provided one.
  * - 🔥 `operationChange` (`CharChainOperation`): emitted when the operation
  * is changed.
  * - 🔥 `operationPreview` (`CharChainOperation`): emitted when the operation
@@ -143,6 +150,7 @@ export interface FeatureDefinitions {
     NgeMonacoModule,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
+    FlatLookupPipe,
   ],
   templateUrl: './chain-operation-editor.component.html',
   styleUrl: './chain-operation-editor.component.css',
@@ -184,6 +192,16 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly multiValuedFeatureIds = input<string[] | undefined>([
     'r_hints',
   ]);
+
+  /**
+   * The list of source IDs when it's a closed set.
+   */
+  public readonly sourceIds = input<LabeledId[] | undefined>();
+
+  /**
+   * The list of source types when it's a closed set.
+   */
+  public readonly sourceTypes = input<LabeledId[] | undefined>();
 
   /**
    * Emitted when the operation is changed.
@@ -388,7 +406,10 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   // #region sources
   public addSource(): void {
-    this.editedSource.set({ id: '', type: '' });
+    this.editedSource.set({
+      id: this.sourceIds()?.length ? this.sourceIds()![0].id : '',
+      type: this.sourceTypes()?.length ? this.sourceTypes()![0].id : '',
+    });
     this.editedSourceIndex.set(-1);
   }
 
@@ -410,6 +431,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       sources[this.editedSourceIndex()] = source;
     }
     this.sources.setValue(sources);
+    this.sources.updateValueAndValidity();
+    this.sources.markAsDirty();
     this.closeSource();
   }
   // #endregion

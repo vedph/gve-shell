@@ -187,8 +187,8 @@
                   <mat-icon class="mat-warn">delete</mat-icon>
                 </button>
               </td>
-              <td>{{ s.type }}</td>
-              <td>{{ s.id }}</td>
+              <td>{{ s.type | flatLookup: sourceTypes() : "id" : "label" }}</td>
+              <td>{{ s.id | flatLookup: sourceIds() : "id" : "label" }}</td>
               <td>{{ s.rank }}</td>
             </tr>
           }
@@ -205,6 +205,8 @@
           </mat-expansion-panel-header>
           <gve-operation-source-editor
             [source]="editedSource()"
+            [ids]="sourceIds()"
+            [types]="sourceTypes()"
             (sourceChange)="onSourceChange($event!)"
             (sourceCancel)="closeSource()"
           />

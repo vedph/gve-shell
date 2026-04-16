@@ -139,6 +139,8 @@
                 [hidePreview]="editedOpIndex() === -1"
                 [operation]="editedOp()"
                 [rangePatch]="editedOpRangePatch()"
+                [sourceIds]="sourceIds()"
+                [sourceTypes]="sourceTypes()"
                 (operationCancel)="onOperationCancel()"
                 (operationChange)="onOperationChange($event)"
                 (operationPreview)="onOperationPreview($event)"

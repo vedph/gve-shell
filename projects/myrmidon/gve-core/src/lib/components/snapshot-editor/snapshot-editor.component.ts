@@ -66,6 +66,7 @@ import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-te
 import {
   CharChainOperation,
   CharNode,
+  LabeledId,
   ResultWrapper,
   Snapshot,
 } from '../../models';
@@ -179,6 +180,20 @@ export class SnapshotEditorComponent {
   public readonly multiValuedFeatureIds = input<string[] | undefined>([
     'r_hints',
   ]);
+
+  /**
+   * The list of source IDs when it's a closed set. Passed down to the operation
+   * source editor, which will show a dropdown to select from these IDs. When not
+   * specified, the source ID can be freely typed in the source editor.
+   */
+  public readonly sourceIds = input<LabeledId[] | undefined>();
+
+  /**
+   * The list of source types when it's a closed set. Passed down to the operation
+   * source editor, which will show a dropdown to select from these types. When not
+   * specified, the source type can be freely typed in the source editor.
+   */
+  public readonly sourceTypes = input<LabeledId[] | undefined>();
 
   /**
    * Settings for rendering the snapshot. These are passed to the snapshot rendition
