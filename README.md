@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-04-16: updated Angular and packages.
+
 ### 6.1.5
 
 - 2026-04-02:
