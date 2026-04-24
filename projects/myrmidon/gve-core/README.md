@@ -56,16 +56,7 @@ This is the core UI library for [GVE](https://vedph.github.io/gve-doc).
 
 ## Snapshot Editor
 
-The snapshot editor is the top-level component in the library and orchestrates the behavior of all the components included in it. Its API is very simple, as it just deals with a full snapshot:
-
-- ▶️ `snapshot` (`Snapshot`): the snapshot to edit.
-- ▶️ `batchOps` (`string`): the batch operations text to set for the editor.
-- ▶️ `noSave` (`boolean`): true to disable saving.
-- ▶️ `featureDefs` (`FeatureDefinitions`): preset feature definitions, if any.
-- ▶️ `elementFeatureDefs` (`FeatureDefinitions`): preset feature definitions for graphical elements, if any.
-- ▶️ `diplomaticFeatureDefs` (`FeatureDefinitions`): preset diplomatic feature definitions, if any.
-- 🔥 `snapshotChange` (`Snapshot`): emitted when the user saves the edited snapshot.
-- 🔥 `snapshotCancel` (`void`): emitted when the user cancels the snapshot editing.
+The snapshot editor is the top-level component in the library and orchestrates the behavior of all the components included in it.
 
 As for **feature definitions**, the `FeatureDefinitions` interface can be provided with this model:
 

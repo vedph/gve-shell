@@ -87,6 +87,14 @@ const SVG_TRANSP_SUFFIX = '_t';
  * - ▶️ `snapshot` (`Snapshot`): the snapshot to edit.
  * - ▶️ `batchOps` (`string`): the batch operations text to set for the editor.
  * - ▶️ `noSave` (`boolean`): true to disable saving.
+ * - ▶️ `debug` (`boolean`): true to enable debug mode for view rendition.
+ * - ▶️ `noDecoration` (`boolean`): true to not show character decoration according to the trace features in nodes.
+ * - ▶️ `featureDefs` (`FeatureDefinitions`): definitions for features, including names and values.
+ * - ▶️ `multiValuedFeatureIds` (`string[]`): the IDs of the features that are multi-valued. If a feature being edited is in this list, the feature editor will allow adding multiple values to it. Passed down to feature editors.
+ * - ▶️ `sourceIds` (`LabeledId[]`): the list of source IDs when it's a closed set. Passed down to the operation source editor, which will show a dropdown to select from these IDs. When not specified, the source ID can be freely typed in the source editor.
+ * - ▶️ `sourceTypes` (`LabeledId[]`): the list of source types when it's a closed set. Passed down to the operation source editor, which will show a dropdown to select from these types. When not specified, the source type can be freely typed in the source editor.
+ * - ▶️ `renditionSettings` (`GveRenditionSettings`): settings for rendering the snapshot. These are passed to the snapshot rendition component.
+ * - ▶️ `opListMaxHeight` (`string`): optional maximum height for the operations list. When set, the operations list will have a vertical scrollbar if its content exceeds this height.
  * - 🔥 `snapshotChange` (`Snapshot`): emitted when the user saves the edited snapshot.
  * - 🔥 `snapshotCancel` (`void`): emitted when the user cancels the snapshot editing.
  */

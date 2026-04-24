@@ -59,6 +59,8 @@ To publish the documentation via GitHub:
 
 ## History
 
+- 2026-04-24: more comments.
+
 ### 6.1.6
 
 - 2026-04-16:
