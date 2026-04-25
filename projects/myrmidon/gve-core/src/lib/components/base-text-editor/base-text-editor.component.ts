@@ -148,10 +148,14 @@ export class BaseTextEditorComponent {
     if (!char) {
       return;
     }
+    // base text node features are stored under the 'v0' version tag
+    const updatedFeatures: { [tag: string]: Feature[] } | null = features.length
+      ? { v0: features }
+      : null;
     const chars = this.text()!.map((c) =>
-      c.id === char.id ? { ...c, features } : c,
+      c.id === char.id ? { ...c, features: updatedFeatures } : c,
     );
-    this.selectedChar.set({ ...char, features });
+    this.selectedChar.set({ ...char, features: updatedFeatures });
     this.textChange.emit(chars);
   }
 

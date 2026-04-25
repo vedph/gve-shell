@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   OnDestroy,
@@ -101,6 +102,33 @@ export class ChainResultViewComponent
   public readonly selectionRange = signal<BaseTextRange | undefined>(
     undefined
   );
+
+  /**
+   * Ordered nodes for the current step's version, resolved from
+   * `result.versionNodeIds` and `result.nodes`.
+   */
+  public readonly stepNodes = computed<CharNode[]>(() => {
+    const result = this.result();
+    const step = this.step();
+    if (!result || !step) {
+      return [];
+    }
+    const ids = result.versionNodeIds[step.outputTag] ?? [];
+    const nodeMap = new Map(result.nodes.map((n) => [n.id, n]));
+    return ids.map((id) => nodeMap.get(id)!).filter(Boolean);
+  });
+
+  /**
+   * Global features for the current step's output version.
+   */
+  public readonly stepGlobalFeatures = computed<OperationFeature[]>(() => {
+    const result = this.result();
+    const step = this.step();
+    if (!result || !step) {
+      return [];
+    }
+    return result.globalFeatures[step.outputTag] ?? [];
+  });
 
   /**
    * True to disable range picking. For instance the snapshot editor,
@@ -234,10 +262,10 @@ export class ChainResultViewComponent
       return;
     }
 
-    // extract version tags from result steps features named 'version'
+    // extract version labels from global features named 'version'
     const tags = new Set<string>();
-    for (const step of this.result()!.steps) {
-      for (const feature of step.featureSet.features) {
+    for (const features of Object.values(this.result()!.globalFeatures)) {
+      for (const feature of features) {
         if (feature.name === 'version') {
           tags.add(feature.value);
         }
@@ -250,11 +278,11 @@ export class ChainResultViewComponent
     if (!this.result() || !version) {
       return undefined;
     }
-    for (const step of this.result()!.steps) {
-      for (const feature of step.featureSet.features) {
-        if (feature.name === 'version' && feature.value === version) {
-          return step.outputTag;
-        }
+    for (const [tag, features] of Object.entries(
+      this.result()!.globalFeatures
+    )) {
+      if (features.some((f) => f.name === 'version' && f.value === version)) {
+        return tag;
       }
     }
     return undefined;
@@ -278,26 +306,17 @@ export class ChainResultViewComponent
   }
 
   private getNodeFeatures(id: number): Feature[] {
-    if (!this.step()) {
+    const result = this.result();
+    const step = this.step();
+    if (!result || !step) {
       return [];
     }
-    return (
-      this.step()!.featureSet.nodeFeatures[this.step()!.outputTag + '_' + id] ||
-      []
-    );
+    const node = result.nodes.find((n) => n.id === id);
+    return node?.features?.[step.outputTag] ?? [];
   }
 
   private findNode(id: number): CharNode | null {
-    if (!this.step()) {
-      return null;
-    }
-    for (let key of Object.keys(this.result()!.taggedNodes)) {
-      const node = this.result()!.taggedNodes[key].find((n) => n.id === id);
-      if (node) {
-        return node;
-      }
-    }
-    return null;
+    return this.result()?.nodes.find((n) => n.id === id) ?? null;
   }
 
   public onTextCharPick(event: BaseTextCharEvent): void {
@@ -311,7 +330,7 @@ export class ChainResultViewComponent
 
   public onTextRangePick(range: BaseTextRange): void {
     if (range.run === 1) {
-      // already handled by onStepCharPick
+      // already handled by onTextCharPick
       return;
     }
     this.selection.set(range.at + '×' + range.run);
@@ -319,19 +338,23 @@ export class ChainResultViewComponent
     const end = range.at + range.run;
 
     const features: Feature[] = [];
-    const tagNodes = this.result()!.taggedNodes[this.tag.value!];
+    const result = this.result()!;
+    const tag = this.tag.value!;
+    const nodeIds = result.versionNodeIds[tag] ?? [];
+    const nodeMap = new Map(result.nodes.map((n) => [n.id, n]));
 
-    for (let node of tagNodes) {
-      // if in range, intersect features
+    for (const nodeId of nodeIds) {
+      const node = nodeMap.get(nodeId);
+      if (!node) continue;
       if (node.id >= range.at && node.id < end) {
         const nodeFeatures = this.getNodeFeatures(node.id);
 
         if (node.id === range.at) {
-          for (let f of nodeFeatures) {
+          for (const f of nodeFeatures) {
             features.push(f);
           }
         } else {
-          // features = intersection of features and charFeatures
+          // features = intersection of features and nodeFeatures
           features.splice(
             0,
             features.length,

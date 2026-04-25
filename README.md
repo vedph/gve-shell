@@ -59,6 +59,9 @@ To publish the documentation via GitHub:
 
 ## History
 
+### 7.0.0
+
+- 2026-04-25: ⚠️ refactored for new API response models.
 - 2026-04-24: more comments.
 
 ### 6.1.6

@@ -376,8 +376,10 @@ export class SnapshotEditorComponent {
       this.applyRenditionSettings();
       // supply the base text (not returned by API, must be provided by caller)
       result.text = this.baseText.value;
-      // set data
-      rendition.data = result;
+      // gve-snapshot-rendition@0.0.8 still types data with the old
+      // CharChainResult (taggedNodes). Cast until the package is updated.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rendition.data = result as any;
     }
   }
 
@@ -775,28 +777,33 @@ export class SnapshotEditorComponent {
     const nodes = snapshot.text as CharNode[];
 
     // find the max ID in the original nodes, so that any ID greater than it
-    // belongs to new nodes
+    // belongs to new nodes added by operations
     const maxOriginalId = nodes.reduce((max, n) => Math.max(max, n.id), 0);
     const stepIndex = result.steps.findIndex((s) => s.outputTag === tag);
+
+    // build a map from node ID to the result node for O(1) lookup
+    const nodeMap = new Map<number, CharNode>(
+      result.nodes.map((n) => [n.id, n]),
+    );
 
     // for each step up to the specified one, add the nodes introduced by the step
     // and update the features from each step node that is already present
     for (let i = 0; i <= stepIndex; i++) {
-      // get the nodes of the step
-      const stepNodes = result.taggedNodes[result.steps[i].outputTag];
+      const versionTag = result.steps[i].outputTag;
+      const versionNodeIds = result.versionNodeIds[versionTag] ?? [];
 
-      for (const stepNode of stepNodes) {
-        // if the node was added, add it
-        if (
-          stepNode.id > maxOriginalId &&
-          !nodes.find((n) => n.id === stepNode.id)
-        ) {
-          nodes.push(stepNode);
+      for (const nodeId of versionNodeIds) {
+        const resultNode = nodeMap.get(nodeId);
+        if (!resultNode) continue;
+
+        if (nodeId > maxOriginalId && !nodes.find((n) => n.id === nodeId)) {
+          // node was added by an operation — append it
+          nodes.push(resultNode);
         } else {
-          // if the node was already in the original nodes, update its features
-          const existing = nodes.findIndex((n) => n.id === stepNode.id);
+          // node already exists — update its features
+          const existing = nodes.findIndex((n) => n.id === nodeId);
           if (existing > -1) {
-            nodes[existing].features = stepNode.features;
+            nodes[existing].features = resultNode.features;
           }
         }
       }

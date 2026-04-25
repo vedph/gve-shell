@@ -48,7 +48,7 @@
     <!-- text -->
     <div id="text">
       <gve-base-text-view
-        [text]="result()!.taggedNodes[step()!.outputTag]"
+        [text]="stepNodes()"
         [colorCallback]="getCharColor"
         [hasLineNumber]="true"
         (charPick)="onTextCharPick($event)"
@@ -59,7 +59,7 @@
     <div id="feats" class="form-row-top">
       <div id="g-feats">
         <div class="feat-header">{{ step()!.outputTag }}</div>
-        <gve-feature-set-view [features]="step()!.featureSet.features" />
+        <gve-feature-set-view [features]="stepGlobalFeatures()" />
       </div>
       <div id="n-feats">
         @if (selectionFeatures().length) {

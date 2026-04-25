@@ -110,11 +110,11 @@ export interface CharChainOperation extends OperationMetadata {
  */
 export interface CharNode {
   id: number;
-  index: number;
+  index?: number;
   label: string;
   data: string;
   sourceTag?: string;
-  features?: Feature[];
+  features?: { [tag: string]: Feature[] } | null;
 }
 
 /**

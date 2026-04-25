@@ -34,17 +34,6 @@ export interface ChainOperationContextStep {
    */
   result?: string;
   /**
-   * The features emitted up to the executed operation.
-   * These are the features of the text as a whole, and
-   * those belonging to specific nodes, each keyed under
-   * a string built with `v` + output version tag + `_`
-   * + node ID (e.g. `v1_2` for node with ID 2 at version 1).
-   */
-  featureSet: {
-    features: OperationFeature[];
-    nodeFeatures: Record<string, OperationFeature[]>;
-  };
-  /**
    * The reference node IDs of the operation which was
    * executed.
    */
@@ -74,13 +63,24 @@ export interface CharChainResult {
    */
   chainTags: string[];
   /**
-   * The sets of nodes in their order, for each version tag.
-   * These nodes are collected by following the path defined
-   * by the set of links of each version tag; so each of the
-   * sets contains only the nodes used at that step to build
-   * the text version, with their features up to that stage.
+   * All nodes in the chain regardless of version, including deleted
+   * nodes. Each node's `features` is keyed by version tag; the value
+   * is the list of features for that node at that version. `features`
+   * is `null` when the node has no features in any version.
    */
-  taggedNodes: { [key: string]: CharNode[] };
+  nodes: CharNode[];
+  /**
+   * For each version tag (including v0), the ordered sequence of node
+   * IDs that make up that version's text. Use together with `nodes`
+   * (looked up by `id`) to reconstruct any version.
+   */
+  versionNodeIds: { [tag: string]: number[] };
+  /**
+   * For each version tag (including v0), the accumulated global
+   * (chain-level) features at the end of that version.
+   * The v0 entry is always an empty array.
+   */
+  globalFeatures: { [tag: string]: OperationFeature[] };
 }
 
 /**
