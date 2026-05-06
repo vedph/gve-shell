@@ -57,6 +57,9 @@ import {
  * will allow adding multiple values to it.
  * - ▶️ `isVar`: true if the feature is a variant operation feature, which
  * has additional properties like negation, global, and short-lived.
+ * - ▶️ `hasCloseButton`: true if a close button should be shown to allow closing
+ * the editor.
+ * - 🔥 `close`: emitted when the user clicks the close button.
  * - 🔥 `featuresChange` (`Feature[]`): emitted when features have changed.
  */
 @Component({
