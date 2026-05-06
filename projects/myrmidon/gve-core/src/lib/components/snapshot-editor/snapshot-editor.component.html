@@ -114,10 +114,7 @@
               >
                 <mat-form-field>
                   <mat-label>operations (e.g. 2, 5-7, 9)</mat-label>
-                  <input
-                    matInput
-                    [formControl]="editFeatsRange"
-                  />
+                  <input matInput [formControl]="editFeatsRange" />
                   @if (
                     $any(editFeatsRange).errors?.required &&
                     (editFeatsRange.dirty || editFeatsRange.touched)
@@ -141,7 +138,9 @@
                 type="button"
                 mat-flat-button
                 class="mat-primary"
-                [disabled]="busy() || !operations.value.length || !baseText.value"
+                [disabled]="
+                  busy() || !operations.value.length || !baseText.value
+                "
                 (click)="editNewOperation()"
                 matTooltip="Add a new operation"
               >
@@ -226,6 +225,7 @@
                   <th>otag</th>
                   <th>gid</th>
                   <th>feats</th>
+                  <th>src</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,10 +336,19 @@
                             }
                           </div>
                         } @else {
-                          {{ operation.features?.length }}
+                          <!-- version badge -->
+                          @if (
+                            operation.features?.some(f => f.name === 'version')
+                          ) {
+                            <span
+                              matBadge="{{ operation.features?.find(f => f.name === 'version')?.value }}"
+                              matBadgeOverlap="false"
+                            >{{ operation.features?.length }}</span>
+                          }
                         }
                       }
                     </td>
+                    <td>{{ operation.sources?.length || "" }}</td>
                   </tr>
                 }
               </tbody>

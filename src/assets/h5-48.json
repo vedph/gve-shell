@@ -939,7 +939,7 @@
           "isShortLived": true,
           "setPolicy": 0,
           "name": "version",
-          "value": "alteration1"
+          "value": "AS1"
         },
         {
           "isNegated": false,
@@ -1573,7 +1573,7 @@
           "isShortLived": true,
           "setPolicy": 0,
           "name": "version",
-          "value": "alteration2"
+          "value": "AS2"
         },
         {
           "isNegated": false,

@@ -73,6 +73,7 @@ import {
   Snapshot,
 } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
+import { MatBadge } from '@angular/material/badge';
 
 // default snapshot view title
 const VIEW_TITLE = 'preview';
@@ -106,6 +107,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    MatBadge,
     MatButtonModule,
     MatButtonToggleModule,
     MatCheckboxModule,
