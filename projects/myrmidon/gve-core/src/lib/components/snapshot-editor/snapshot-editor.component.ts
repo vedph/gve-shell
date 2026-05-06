@@ -66,6 +66,7 @@ import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-te
 import {
   CharChainOperation,
   CharNode,
+  Feature,
   LabeledId,
   ResultWrapper,
   Snapshot,
@@ -269,6 +270,16 @@ export class SnapshotEditorComponent {
   public readonly resultOperationId = signal<string | undefined>(undefined);
   public readonly initialStepIndex = signal<number>(-1);
 
+  // operations batch editing for features
+  public readonly editFeatsRange: FormControl<string | null>;
+  public readonly editFeatsForm: FormGroup;
+  // the edited operations features (set when editing features of multiple
+  // operations at once)
+  public readonly operationFeats = signal<Feature[] | undefined>(undefined);
+  // the ordinal numbers of all the operations whose features are being
+  // edited at once
+  public readonly featsOpNumbers = signal<number[] | undefined>(undefined);
+
   constructor(
     formBuilder: FormBuilder,
     private _api: GveApiService,
@@ -290,6 +301,17 @@ export class SnapshotEditorComponent {
     this.form = formBuilder.group({
       baseText: this.baseText,
       operations: this.operations,
+    });
+
+    // feats form
+    this.editFeatsRange = formBuilder.control<string | null>(null, {
+      validators: [
+        Validators.required,
+        Validators.pattern(/^(\d+)(?:-(\d+))?$/),
+      ],
+    });
+    this.editFeatsForm = formBuilder.group({
+      editFeatsRange: this.editFeatsRange,
     });
 
     // when snapshot changes, update the form and run all operations.
@@ -498,6 +520,65 @@ export class SnapshotEditorComponent {
   public editOperation(index: number) {
     this.editedOpIndex.set(index);
     this.editedOp.set(structuredClone(this.operations.value[index]));
+  }
+
+  /**
+   * Open a feature set editor to edit all features of the operations
+   * specified by the editFeatsRange form control value.
+   */
+  public editOperationsFeats() {
+    // validate range: either a single N (=operation ordinal number) or
+    // N-M where N and M are valid operation ordinal numbers and N ≤ M
+    if (this.editFeatsForm.invalid) {
+      this.editFeatsRange.markAsTouched();
+      return;
+    }
+
+    // parse range N or N-M
+    const rangeValue = this.editFeatsRange.value!;
+    const m = rangeValue.match(/^(\d+)(?:-(\d+))?$/);
+    if (!m) {
+      return;
+    }
+    const nValue = parseInt(m[1], 10);
+    const mValue = m[2] ? parseInt(m[2], 10) : nValue;
+
+    // check that N and M are valid operation ordinal numbers and N ≤ M
+    if (
+      nValue < 1 ||
+      mValue > this.operations.value.length ||
+      nValue > mValue
+    ) {
+      return;
+    }
+    if (
+      nValue > this.operations.value.length ||
+      mValue > this.operations.value.length
+    ) {
+      return;
+    }
+
+    // set the initial features thus opening their editor
+    this.featsOpNumbers.set(
+      Array.from({ length: mValue - nValue + 1 }, (_, i) => nValue + i),
+    );
+    this.operationFeats.set([]);
+  }
+
+  public saveOperationsFeats(features: Feature[]): void {
+    const opNumbers = this.featsOpNumbers();
+    if (!opNumbers) {
+      return;
+    }
+    const operations = [...this.operations.value];
+    for (const opNumber of opNumbers) {
+      const op = operations[opNumber - 1];
+      // just add features to the existing ones, without touching existing features
+      op.features = [...(op.features || []), ...features];
+    }
+    this.operations.setValue(operations);
+    this.operations.markAsDirty();
+    this.operations.updateValueAndValidity();
   }
 
   /**

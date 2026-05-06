@@ -107,6 +107,33 @@
                 <mat-icon>post_add</mat-icon> batch
               </button>
 
+              <!-- edit operations feats -->
+              <form submit="editOperationsFeats()" [formGroup]="editFeatsForm">
+                <mat-form-field>
+                  <mat-label>operations (N or N-N)</mat-label>
+                  <input
+                    matInput
+                    [formControl]="editFeatsRange"
+                    [disabled]="busy() || !operations.value.length"
+                  />
+                  @if (
+                    $any(editFeatsRange).errors?.required &&
+                    (editFeatsRange.dirty || editFeatsRange.touched)
+                  ) {
+                    <mat-error>range required</mat-error>
+                  }
+                  @if (
+                    $any(editFeatsRange).errors?.pattern &&
+                    (editFeatsRange.dirty || editFeatsRange.touched)
+                  ) {
+                    <mat-error>invalid range</mat-error>
+                  }
+                  <button type="submit" matIconButton matSuffix>
+                    <mat-icon>edit_note</mat-icon>
+                  </button>
+                </mat-form-field>
+              </form>
+
               <!-- add op -->
               <button
                 type="button"
