@@ -48,6 +48,9 @@
           @if ($any(at).errors?.required && (at.dirty || at.touched)) {
             <mat-error>at required</mat-error>
           }
+          @if ($any(at).errors?.min && (at.dirty || at.touched)) {
+            <mat-error>at must be at least 0</mat-error>
+          }
         </mat-form-field>
 
         <!-- atAsIndex -->
@@ -94,6 +97,11 @@
           <mat-form-field>
             <mat-label>value</mat-label>
             <input matInput [formControl]="value" />
+            @if (
+              $any(value).errors?.required && (value.dirty || value.touched)
+            ) {
+              <mat-error>value required</mat-error>
+            }
           </mat-form-field>
         }
       </div>

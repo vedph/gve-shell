@@ -37,7 +37,7 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
-import { FlatLookupPipe } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   CharChainOperation,
@@ -275,11 +275,19 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       nonNullable: true,
     });
     this.at = formBuilder.control<number>(0, {
-      validators: Validators.required,
+      validators: [
+        Validators.required,
+        NgxToolsValidators.conditionalValidator(
+          () => !this.atAsIndex.value,
+          Validators.min(0),
+        ),
+      ],
       nonNullable: true,
     });
     this.atAsIndex = formBuilder.control<boolean>(false, { nonNullable: true });
-    this.to = formBuilder.control<number>(0, { nonNullable: true });
+    this.to = formBuilder.control<number>(0, {
+      nonNullable: true,
+    });
     this.toAsIndex = formBuilder.control<boolean>(false, { nonNullable: true });
     this.inputTag = formBuilder.control<string | null>(null);
     this.outputTag = formBuilder.control<string | null>(null);
@@ -288,7 +296,16 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       nonNullable: true,
     });
     this.toRun = formBuilder.control<number>(0, { nonNullable: true });
-    this.value = formBuilder.control<string | null>(null);
+    this.value = formBuilder.control<string | null>(null, {
+      validators: NgxToolsValidators.conditionalValidator(
+        () =>
+          this.type.value === OperationType.addBefore ||
+          this.type.value === OperationType.addAfter ||
+          this.type.value === OperationType.replace,
+        Validators.required,
+      ),
+      nonNullable: true,
+    });
 
     // svg
     this.svg = formBuilder.control<string>('', {
