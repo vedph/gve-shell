@@ -82,6 +82,10 @@ td.fit-width {
   width: 1px;
   white-space: nowrap;
 }
+tbody tr.feat-editing {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
 tbody tr.selected {
   background-color: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);

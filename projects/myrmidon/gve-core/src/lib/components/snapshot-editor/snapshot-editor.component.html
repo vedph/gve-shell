@@ -113,11 +113,10 @@
                 [formGroup]="editFeatsForm"
               >
                 <mat-form-field>
-                  <mat-label>operations (N or N-N)</mat-label>
+                  <mat-label>operations (e.g. 2, 5-7, 9)</mat-label>
                   <input
                     matInput
                     [formControl]="editFeatsRange"
-                    [disabled]="busy() || !operations.value.length"
                   />
                   @if (
                     $any(editFeatsRange).errors?.required &&
@@ -129,7 +128,7 @@
                     $any(editFeatsRange).errors?.pattern &&
                     (editFeatsRange.dirty || editFeatsRange.touched)
                   ) {
-                    <mat-error>invalid range</mat-error>
+                    <mat-error>invalid range (use e.g. 2, 5-7, 9)</mat-error>
                   }
                   <button type="submit" matIconButton matSuffix>
                     <mat-icon>edit_note</mat-icon>
@@ -142,7 +141,7 @@
                 type="button"
                 mat-flat-button
                 class="mat-primary"
-                [disabled]="!baseText.value"
+                [disabled]="busy() || !operations.value.length || !baseText.value"
                 (click)="editNewOperation()"
                 matTooltip="Add a new operation"
               >
@@ -160,12 +159,7 @@
           >
             <mat-expansion-panel-header>
               <mat-panel-title>
-                Features of
-                {{
-                  featsOpNumbers()!.length === 1
-                    ? featsOpNumbers()![0]
-                    : featsOpNumbers()![0] + "-" + featsOpNumbers()![1]
-                }}
+                Features of {{ featsRangeLabel() }}
               </mat-panel-title>
             </mat-expansion-panel-header>
             <fieldset>
@@ -176,7 +170,7 @@
                 [multiValuedFeatureIds]="multiValuedFeatureIds()"
                 [operations]="operations.value"
                 [opNumbers]="featsOpNumbers()!"
-                (cancelEdit)="closeOperationFeats()"
+                (close)="closeOperationFeats()"
                 (featuresChange)="saveOperationsFeats($event)"
               />
             </fieldset>
@@ -240,7 +234,10 @@
                   track operation.id;
                   let index = $index
                 ) {
-                  <tr [class.selected]="operation.id === editedOp()?.id">
+                  <tr
+                    [class.selected]="operation.id === editedOp()?.id"
+                    [class.feat-editing]="featsOpNumbers()?.includes(index + 1)"
+                  >
                     <td class="fit-width">{{ index + 1 }}.</td>
                     <td class="fit-width">
                       <!-- edit -->

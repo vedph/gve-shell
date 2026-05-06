@@ -281,6 +281,8 @@ export class SnapshotEditorComponent {
   // the ordinal numbers of all the operations whose features are being
   // edited at once
   public readonly featsOpNumbers = signal<number[] | undefined>(undefined);
+  // the display label for the current feats range (preserves original input)
+  public readonly featsRangeLabel = signal<string | undefined>(undefined);
 
   constructor(
     formBuilder: FormBuilder,
@@ -305,11 +307,11 @@ export class SnapshotEditorComponent {
       operations: this.operations,
     });
 
-    // feats form
+    // feats form — accepts comma-separated N or N-M segments, e.g. "2, 5-7, 9"
     this.editFeatsRange = formBuilder.control<string | null>(null, {
       validators: [
         Validators.required,
-        Validators.pattern(/^(\d+)(?:-(\d+))?$/),
+        Validators.pattern(/^(\d+(?:-\d+)?)(\s*,\s*\d+(?:-\d+)?)*$/),
       ],
     });
     this.editFeatsForm = formBuilder.group({
@@ -525,45 +527,45 @@ export class SnapshotEditorComponent {
   }
 
   /**
+   * Parse a range string into a sorted array of 1-based operation ordinal
+   * numbers. Accepts comma-separated segments where each segment is either
+   * a single number N or a range N-M (N ≤ M). Returns null when any segment
+   * is syntactically invalid or out of bounds.
+   */
+  private parseOpRange(rangeStr: string): number[] | null {
+    const total = this.operations.value.length;
+    const parts = rangeStr.split(',').map((p) => p.trim());
+    const numbers = new Set<number>();
+    for (const part of parts) {
+      const m = part.match(/^(\d+)(?:-(\d+))?$/);
+      if (!m) return null;
+      const from = parseInt(m[1], 10);
+      const to = m[2] ? parseInt(m[2], 10) : from;
+      if (from < 1 || to > total || from > to) return null;
+      for (let n = from; n <= to; n++) numbers.add(n);
+    }
+    return [...numbers].sort((a, b) => a - b);
+  }
+
+  /**
    * Open a feature set editor to edit all features of the operations
    * specified by the editFeatsRange form control value.
+   * Supports comma-separated segments like "2, 5-7, 9".
    */
   public editOperationsFeats() {
-    // validate range: either a single N (=operation ordinal number) or
-    // N-M where N and M are valid operation ordinal numbers and N ≤ M
     if (this.editFeatsForm.invalid) {
       this.editFeatsRange.markAsTouched();
       return;
     }
 
-    // parse range N or N-M
     const rangeValue = this.editFeatsRange.value!;
-    const m = rangeValue.match(/^(\d+)(?:-(\d+))?$/);
-    if (!m) {
-      return;
-    }
-    const nValue = parseInt(m[1], 10);
-    const mValue = m[2] ? parseInt(m[2], 10) : nValue;
-
-    // check that N and M are valid operation ordinal numbers and N ≤ M
-    if (
-      nValue < 1 ||
-      mValue > this.operations.value.length ||
-      nValue > mValue
-    ) {
-      return;
-    }
-    if (
-      nValue > this.operations.value.length ||
-      mValue > this.operations.value.length
-    ) {
+    const opNumbers = this.parseOpRange(rangeValue);
+    if (!opNumbers) {
       return;
     }
 
-    // set the edited operation numbers and their initial features
-    this.featsOpNumbers.set(
-      Array.from({ length: mValue - nValue + 1 }, (_, i) => nValue + i),
-    );
+    this.featsOpNumbers.set(opNumbers);
+    this.featsRangeLabel.set(rangeValue.replace(/\s+/g, ''));
     this.operationFeats.set([]);
   }
 
@@ -581,14 +583,12 @@ export class SnapshotEditorComponent {
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
-
-    // reset the feats editing state
-    this.closeOperationFeats();
   }
 
   public closeOperationFeats(): void {
     this.featsOpNumbers.set(undefined);
     this.operationFeats.set(undefined);
+    this.featsRangeLabel.set(undefined);
   }
 
   /**
