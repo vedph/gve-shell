@@ -18,21 +18,37 @@
       </mat-form-field>
     }
 
-    <!-- add feature button -->
-    <button
-      type="button"
-      color="primary"
-      class="mat-primary"
-      mat-flat-button
-      matTooltip="Add a new feature"
-      (click)="addFeature()"
-      [class.in-row-button]="
-        filterThreshold() === 0 || features()!.length >= filterThreshold()
-      "
-    >
-      <mat-icon>add</mat-icon>
-      feature
-    </button>
+    <div class="form-row">
+      @if (hasCloseButton()) {
+        <!-- close editor button -->
+        <button
+          type="button"
+          color="warn"
+          class="mat-warn"
+          mat-flat-button
+          matTooltip="Close features editor"
+          (click)="close.emit()"
+        >
+          <mat-icon>close</mat-icon>
+          close
+        </button>
+      }
+      <!-- add feature button -->
+      <button
+        type="button"
+        color="primary"
+        class="mat-primary"
+        mat-flat-button
+        matTooltip="Add a new feature"
+        (click)="addFeature()"
+        [class.in-row-button]="
+          filterThreshold() === 0 || features()!.length >= filterThreshold()
+        "
+      >
+        <mat-icon>add</mat-icon>
+        feature
+      </button>
+    </div>
   </div>
 
   <!-- list -->

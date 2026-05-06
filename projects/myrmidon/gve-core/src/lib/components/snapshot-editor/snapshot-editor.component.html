@@ -108,7 +108,10 @@
               </button>
 
               <!-- edit operations feats -->
-              <form submit="editOperationsFeats()" [formGroup]="editFeatsForm">
+              <form
+                (submit)="editOperationsFeats()"
+                [formGroup]="editFeatsForm"
+              >
                 <mat-form-field>
                   <mat-label>operations (N or N-N)</mat-label>
                   <input
@@ -148,6 +151,37 @@
             </div>
           </div>
         </div>
+
+        <!-- feature set editor -->
+        @if (featsOpNumbers()?.length) {
+          <mat-expansion-panel
+            #featsEditorPanel
+            [expanded]="featsOpNumbers()!.length > 0"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Features of
+                {{
+                  featsOpNumbers()!.length === 1
+                    ? featsOpNumbers()![0]
+                    : featsOpNumbers()![0] + "-" + featsOpNumbers()![1]
+                }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <fieldset>
+              <gve-feature-set-editor
+                [hasCloseButton]="true"
+                [features]="operationFeats() || []"
+                [featureDefs]="featureDefs()"
+                [multiValuedFeatureIds]="multiValuedFeatureIds()"
+                [operations]="operations.value"
+                [opNumbers]="featsOpNumbers()!"
+                (cancelEdit)="closeOperationFeats()"
+                (featuresChange)="saveOperationsFeats($event)"
+              />
+            </fieldset>
+          </mat-expansion-panel>
+        }
 
         <!-- operation editor -->
         @if (editedOp()) {

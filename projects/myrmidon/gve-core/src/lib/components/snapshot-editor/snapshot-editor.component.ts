@@ -63,6 +63,7 @@ import {
 import { ChainResultViewComponent } from '../chain-result-view/chain-result-view.component';
 import { BatchOperationEditorComponent } from '../batch-operation-editor/batch-operation-editor.component';
 import { SnapshotTextEditorComponent } from '../snapshot-text-editor/snapshot-text-editor.component';
+import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import {
   CharChainOperation,
   CharNode,
@@ -121,6 +122,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainOperationEditorComponent,
     ChainResultViewComponent,
     BaseTextViewComponent,
+    FeatureSetEditorComponent,
     FlatLookupPipe,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -558,7 +560,7 @@ export class SnapshotEditorComponent {
       return;
     }
 
-    // set the initial features thus opening their editor
+    // set the edited operation numbers and their initial features
     this.featsOpNumbers.set(
       Array.from({ length: mValue - nValue + 1 }, (_, i) => nValue + i),
     );
@@ -579,6 +581,14 @@ export class SnapshotEditorComponent {
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
+
+    // reset the feats editing state
+    this.closeOperationFeats();
+  }
+
+  public closeOperationFeats(): void {
+    this.featsOpNumbers.set(undefined);
+    this.operationFeats.set(undefined);
   }
 
   /**

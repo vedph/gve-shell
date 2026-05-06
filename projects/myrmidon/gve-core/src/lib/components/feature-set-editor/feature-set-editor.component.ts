@@ -6,6 +6,7 @@ import {
   model,
   OnDestroy,
   OnInit,
+  output,
   signal,
 } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -116,6 +117,17 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   public readonly multiValuedFeatureIds = input<string[] | undefined>([
     'r_hints',
   ]);
+
+  /**
+   * True if a close button should be shown to allow closing the editor
+   * without saving.
+   */
+  public readonly hasCloseButton = input(false);
+
+  /**
+   * Emitted when the user clicks the close button.
+   */
+  public readonly close = output();
 
   /**
    * The features to edit.
