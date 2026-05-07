@@ -152,9 +152,7 @@
                 type="button"
                 mat-flat-button
                 class="mat-primary"
-                [disabled]="
-                  busy() || !operations.value.length || !baseText.value
-                "
+                [disabled]="busy() || !baseText.value"
                 (click)="editNewOperation()"
                 matTooltip="Add a new operation"
               >
