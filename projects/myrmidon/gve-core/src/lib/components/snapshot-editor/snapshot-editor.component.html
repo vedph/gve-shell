@@ -107,7 +107,7 @@
                 <mat-icon>post_add</mat-icon> batch
               </button>
 
-              <!-- edit operations feats -->
+              <!-- edit operations feats/sources -->
               <form
                 (submit)="editOperationsFeats()"
                 [formGroup]="editFeatsForm"
@@ -127,7 +127,21 @@
                   ) {
                     <mat-error>invalid range (use e.g. 2, 5-7, 9)</mat-error>
                   }
-                  <button type="submit" matIconButton matSuffix>
+                  <button
+                    type="button"
+                    matIconButton
+                    matSuffix
+                    matTooltip="Edit sources for range"
+                    (click)="editOperationSources()"
+                  >
+                    <mat-icon>people</mat-icon>
+                  </button>
+                  <button
+                    type="submit"
+                    matIconButton
+                    matSuffix
+                    matTooltip="Edit features for range"
+                  >
                     <mat-icon>edit_note</mat-icon>
                   </button>
                 </mat-form-field>
@@ -151,14 +165,11 @@
         </div>
 
         <!-- feature set editor -->
-        @if (featsOpNumbers()?.length) {
-          <mat-expansion-panel
-            #featsEditorPanel
-            [expanded]="featsOpNumbers()!.length > 0"
-          >
+        @if (operationFeats() !== undefined) {
+          <mat-expansion-panel #featsEditorPanel [expanded]="true">
             <mat-expansion-panel-header>
               <mat-panel-title>
-                Features of {{ featsRangeLabel() }}
+                Features of {{ batchRangeLabel() }}
               </mat-panel-title>
             </mat-expansion-panel-header>
             <fieldset>
@@ -171,6 +182,25 @@
                 [multiValuedFeatureIds]="multiValuedFeatureIds()"
                 (close)="closeOperationFeats()"
                 (featuresChange)="saveOperationsFeats($event)"
+              />
+            </fieldset>
+          </mat-expansion-panel>
+        }
+
+        <!-- operation source editor -->
+        @if (batchForSource() && batchOpNumbers()?.length) {
+          <mat-expansion-panel #sourcesEditorPanel [expanded]="true">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Sources of {{ batchRangeLabel() }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <fieldset>
+              <gve-operation-source-editor
+                [ids]="sourceIds()"
+                [types]="sourceTypes()"
+                (sourceCancel)="closeOperationSources()"
+                (sourceChange)="saveOperationSources($event)"
               />
             </fieldset>
           </mat-expansion-panel>
@@ -236,7 +266,7 @@
                 ) {
                   <tr
                     [class.selected]="operation.id === editedOp()?.id"
-                    [class.feat-editing]="featsOpNumbers()?.includes(index + 1)"
+                    [class.feat-editing]="batchOpNumbers()?.includes(index + 1)"
                   >
                     <td class="fit-width">{{ index + 1 }}.</td>
                     <td class="fit-width">

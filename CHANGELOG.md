@@ -1,5 +1,11 @@
 # History
 
+## 7.0.3
+
+- 2026-05-07: added batch source editor.
+
+## 7.0.2
+
 - 2026-05-07: fixes to features set editor in batch mode.
 
 ## 7.0.1

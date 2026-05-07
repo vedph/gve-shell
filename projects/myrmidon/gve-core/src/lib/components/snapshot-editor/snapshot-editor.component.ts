@@ -69,11 +69,13 @@ import {
   CharNode,
   Feature,
   LabeledId,
+  OperationSource,
   ResultWrapper,
   Snapshot,
 } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 import { MatBadge } from '@angular/material/badge';
+import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
 
 // default snapshot view title
 const VIEW_TITLE = 'preview';
@@ -125,6 +127,7 @@ const SVG_TRANSP_SUFFIX = '_t';
     ChainResultViewComponent,
     BaseTextViewComponent,
     FeatureSetEditorComponent,
+    OperationSourceEditorComponent,
     FlatLookupPipe,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -280,11 +283,13 @@ export class SnapshotEditorComponent {
   // the edited operations features (set when editing features of multiple
   // operations at once)
   public readonly operationFeats = signal<Feature[] | undefined>(undefined);
-  // the ordinal numbers of all the operations whose features are being
-  // edited at once
-  public readonly featsOpNumbers = signal<number[] | undefined>(undefined);
-  // the display label for the current feats range (preserves original input)
-  public readonly featsRangeLabel = signal<string | undefined>(undefined);
+  // the ordinal numbers of all the operations whose features or sources
+  // are being edited at once
+  public readonly batchOpNumbers = signal<number[] | undefined>(undefined);
+  // the display label for the current batch range (preserves original input)
+  public readonly batchRangeLabel = signal<string | undefined>(undefined);
+  // true when the batch editing targets sources instead of features
+  public readonly batchForSource = signal<boolean>(false);
 
   constructor(
     formBuilder: FormBuilder,
@@ -566,13 +571,13 @@ export class SnapshotEditorComponent {
       return;
     }
 
-    this.featsOpNumbers.set(opNumbers);
-    this.featsRangeLabel.set(rangeValue.replace(/\s+/g, ''));
+    this.batchOpNumbers.set(opNumbers);
+    this.batchRangeLabel.set(rangeValue.replace(/\s+/g, ''));
     this.operationFeats.set([]);
   }
 
   public saveOperationsFeats(features: Feature[]): void {
-    const opNumbers = this.featsOpNumbers();
+    const opNumbers = this.batchOpNumbers();
     if (!opNumbers) {
       return;
     }
@@ -589,10 +594,54 @@ export class SnapshotEditorComponent {
     this.closeOperationFeats();
   }
 
+  public editOperationSources() {
+    if (this.editFeatsForm.invalid) {
+      this.editFeatsRange.markAsTouched();
+      return;
+    }
+
+    const rangeValue = this.editFeatsRange.value!;
+    const opNumbers = this.parseOpRange(rangeValue);
+    if (!opNumbers) {
+      return;
+    }
+
+    this.batchOpNumbers.set(opNumbers);
+    this.batchRangeLabel.set(rangeValue.replace(/\s+/g, ''));
+    this.batchForSource.set(true);
+  }
+
+  public saveOperationSources(source: OperationSource | undefined): void {
+    if (!source) {
+      return;
+    }
+    // add source to all operations in range
+    const opNumbers = this.batchOpNumbers();
+    if (!opNumbers) {
+      return;
+    }
+    const operations = [...this.operations.value];
+    for (const opNumber of opNumbers) {
+      const op = operations[opNumber - 1];
+      op.sources = [...(op.sources || []), source];
+    }
+    this.operations.setValue(operations);
+    this.operations.markAsDirty();
+    this.operations.updateValueAndValidity();
+
+    this.closeOperationSources();
+  }
+
   public closeOperationFeats(): void {
-    this.featsOpNumbers.set(undefined);
+    this.batchOpNumbers.set(undefined);
     this.operationFeats.set(undefined);
-    this.featsRangeLabel.set(undefined);
+    this.batchRangeLabel.set(undefined);
+  }
+
+  public closeOperationSources(): void {
+    this.batchOpNumbers.set(undefined);
+    this.batchForSource.set(false);
+    this.batchRangeLabel.set(undefined);
   }
 
   /**
