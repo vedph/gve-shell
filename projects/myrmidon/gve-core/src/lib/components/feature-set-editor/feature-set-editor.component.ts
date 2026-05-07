@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   model,
@@ -57,8 +58,9 @@ import {
  * will allow adding multiple values to it.
  * - ▶️ `isVar`: true if the feature is a variant operation feature, which
  * has additional properties like negation, global, and short-lived.
- * - ▶️ `hasCloseButton`: true if a close button should be shown to allow closing
- * the editor.
+ * - ▶️ `batchMode`: true to enable batch mode, where users edit features
+ * without the component firing change events until they click the "Save" button,
+ * and close the editor without saving by clicking the "Close" button.
  * - 🔥 `close`: emitted when the user clicks the close button.
  * - 🔥 `featuresChange` (`Feature[]`): emitted when features have changed.
  */
@@ -122,10 +124,11 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   ]);
 
   /**
-   * True if a close button should be shown to allow closing the editor
-   * without saving.
+   * True to enable batch mode, where users edit features
+   * without the component firing change events until they click the "Save" button,
+   * and close the editor without saving by clicking the "Close" button.
    */
-  public readonly hasCloseButton = input(false);
+  public readonly batchMode = input(false);
 
   /**
    * Emitted when the user clicks the close button.
@@ -143,17 +146,34 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   public readonly editedFeatureIndex = signal<number>(-1);
   public filteredFeatures = signal<Feature[] | OperationFeature[]>([]);
 
+  // In batch mode, mutations accumulate here until the user clicks OK.
+  public readonly draftFeatures = signal<Feature[] | OperationFeature[]>([]);
+
+  // Active source: draft in batch mode, model signal otherwise.
+  public readonly workingFeatures = computed<Feature[] | OperationFeature[]>(
+    () => (this.batchMode() ? this.draftFeatures() : this.features()),
+  );
+
+  // Show Close/OK buttons only in batch mode.
+  public readonly hasCloseButton = computed(() => this.batchMode());
+
   // filter
   public filter: FormControl<string | null>;
 
   constructor(formBuilder: FormBuilder) {
     this.filter = formBuilder.control<string | null>(null);
 
-    // when features change, apply the filter
+    // Sync draft from the model input whenever features or batchMode changes.
     effect(() => {
-      this.applyFeatureFilter(this.features(), this.filter.value);
+      if (this.batchMode()) {
+        this.draftFeatures.set([...this.features()]);
+      }
     });
 
+    // When the working list changes, re-apply the filter.
+    effect(() => {
+      this.applyFeatureFilter(this.workingFeatures(), this.filter.value);
+    });
   }
 
   private applyFeatureFilter(
@@ -172,7 +192,7 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     this._sub = this.filter.valueChanges
       .pipe(distinctUntilChanged(), debounceTime(300))
       .subscribe((value) => {
-        this.applyFeatureFilter(this.features(), value);
+        this.applyFeatureFilter(this.workingFeatures(), value);
       });
   }
 
@@ -191,17 +211,22 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
 
   public editFeature(feature: Feature | OperationFeature): void {
     this.editedFeature.set(structuredClone(feature));
-    this.editedFeatureIndex.set(this.features().indexOf(feature));
+    this.editedFeatureIndex.set(this.workingFeatures().indexOf(feature));
   }
 
   public deleteFeature(feature: Feature | OperationFeature): void {
-    const index = this.features().indexOf(feature);
+    const source = this.workingFeatures();
+    const index = source.indexOf(feature);
     if (index < 0) {
       return;
     }
-    const features = [...this.features()];
+    const features = [...source];
     features.splice(index, 1);
-    this.features.set(features);
+    if (this.batchMode()) {
+      this.draftFeatures.set(features);
+    } else {
+      this.features.set(features);
+    }
   }
 
   public isFeatureMultiValued(feature?: Feature | OperationFeature): boolean {
@@ -215,7 +240,7 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     if (!feature) {
       return;
     }
-    const features = [...this.features()];
+    const features = [...this.workingFeatures()];
 
     for (let i = features.length - 1; i >= 0; i--) {
       if (features[i].name === feature.name) {
@@ -235,11 +260,19 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     }
 
     this.onFeatureCancel();
-    this.features.set(features);
+    if (this.batchMode()) {
+      this.draftFeatures.set(features);
+    } else {
+      this.features.set(features);
+    }
   }
 
   public onFeatureCancel(): void {
     this.editedFeature.set(undefined);
     this.editedFeatureIndex.set(-1);
+  }
+
+  public onOk(): void {
+    this.features.set(this.draftFeatures());
   }
 }

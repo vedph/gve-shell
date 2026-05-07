@@ -1,7 +1,7 @@
 <div>
   <div class="form-row">
     <!-- filter -->
-    @if (filterThreshold() === 0 || features().length >= filterThreshold()) {
+    @if (filterThreshold() === 0 || workingFeatures().length >= filterThreshold()) {
       <mat-form-field>
         <label>filter</label>
         <input matInput [formControl]="filter" />
@@ -32,6 +32,18 @@
           <mat-icon>close</mat-icon>
           close
         </button>
+        <!-- ok button: commits draft in batch mode -->
+        <button
+          type="button"
+          color="primary"
+          class="mat-primary"
+          mat-flat-button
+          matTooltip="Save features"
+          (click)="onOk()"
+        >
+          <mat-icon>check</mat-icon>
+          OK
+        </button>
       }
       <!-- add feature button -->
       <button
@@ -42,7 +54,7 @@
         matTooltip="Add a new feature"
         (click)="addFeature()"
         [class.in-row-button]="
-          filterThreshold() === 0 || features()!.length >= filterThreshold()
+          filterThreshold() === 0 || workingFeatures()!.length >= filterThreshold()
         "
       >
         <mat-icon>add</mat-icon>
@@ -52,7 +64,7 @@
   </div>
 
   <!-- list -->
-  @if (features().length) {
+  @if (workingFeatures().length) {
     <table>
       <thead>
         <tr>

@@ -585,6 +585,8 @@ export class SnapshotEditorComponent {
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
+
+    this.closeOperationFeats();
   }
 
   public closeOperationFeats(): void {

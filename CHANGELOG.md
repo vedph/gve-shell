@@ -1,5 +1,7 @@
 # History
 
+- 2026-05-07: fixes to features set editor in batch mode.
+
 ## 7.0.1
 
 - 2026-05-06:

@@ -163,12 +163,12 @@
             </mat-expansion-panel-header>
             <fieldset>
               <gve-feature-set-editor
-                [hasCloseButton]="true"
+                [batchMode]="true"
                 [features]="operationFeats() || []"
-                [featureDefs]="featureDefs()"
+                [isVar]="true"
+                [featNames]="featureDefs()?.names"
+                [featValues]="featureDefs()?.values"
                 [multiValuedFeatureIds]="multiValuedFeatureIds()"
-                [operations]="operations.value"
-                [opNumbers]="featsOpNumbers()!"
                 (close)="closeOperationFeats()"
                 (featuresChange)="saveOperationsFeats($event)"
               />
@@ -343,7 +343,8 @@
                             <span
                               matBadge="{{ operation.features?.find(f => f.name === 'version')?.value }}"
                               matBadgeOverlap="false"
-                            >{{ operation.features?.length }}</span>
+                              >{{ operation.features?.length }}</span
+                            >
                           }
                         }
                       }
