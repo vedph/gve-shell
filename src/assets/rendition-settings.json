@@ -5,14 +5,13 @@
   "debug": true,
   "hints": {
     "diagonal-stroke-down": {
-      "svg": "<g>\n  <line x1=\"0\" y1=\"0\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"10\" />\n</g>",
+      "svg": "<g>\n  <line x1=\"0\" y1=\"0\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" />\n</g>",
       "position": "o",
       "offsetX": 0,
       "offsetY": 0,
       "scaleX": 1.1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     },
     "diagonal-stroke-up": {
@@ -20,10 +19,9 @@
       "position": "o",
       "offsetX": 0,
       "offsetY": 0,
-      "scaleX": 1,
+      "scaleX": 1.1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     },
     "cross-stroke": {
@@ -34,7 +32,6 @@
       "scaleX": 1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     },
     "horizontal-stroke": {
@@ -45,7 +42,6 @@
       "scaleX": 1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     },
     "vertical-stroke": {
@@ -56,8 +52,87 @@
       "scaleX": 1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-down"
+    },
+    "line-bottom": {
+      "svg": "<g><line x1=\"0\" y1=\"100\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "line-bottom-dotted": {
+      "svg": "<g><line x1=\"0\" y1=\"100\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-dasharray=\"0 16\"/></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "line-top": {
+      "svg": "<g><line x1=\"0\" y1=\"0\" x2=\"300\" y2=\"0\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "line-top-dotted": {
+      "svg": "<g><line x1=\"0\" y1=\"0\" x2=\"300\" y2=\"0\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-dasharray=\"0 16\"/></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "line-left": {
+      "svg": "<g><line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "line-right": {
+      "svg": "<g><line x1=\"300\" y1=\"0\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "hamburger": {
+      "svg": "<g><line x1=\"0\" y1=\"0\" x2=\"300\" y2=\"0\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /><line x1=\"0\" y1=\"50\" x2=\"300\" y2=\"50\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /><line x1=\"0\" y1=\"100\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
+    },
+    "hotdog": {
+      "svg": "<g><line x1=\"50\" y1=\"0\" x2=\"300\" y2=\"0\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /><line x1=\"0\" y1=\"50\" x2=\"250\" y2=\"50\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /><line x1=\"50\" y1=\"100\" x2=\"300\" y2=\"100\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" /></g>",
+      "position": "o",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "animation": "#wipe-right"
     },
     "box": {
       "svg": "<g>\n  <rect x=\"0\" y=\"0\" width=\"300\" height=\"100\" fill=\"none\" stroke=\"{{r_fore-color}}\" stroke-width=\"2\" />\n</g>",
@@ -67,8 +142,7 @@
       "scaleX": 1.1,
       "scaleY": 1.1,
       "rotation": 0,
-      "solid": false,
-      "animation": "#fade-in"
+      "animation": "#scale-in"
     },
     "note": {
       "svg": "<g>\n  <text id=\"placeholder\" x=\"150\" y=\"50\" text-anchor=\"middle\" dominant-baseline=\"middle\" fill=\"{{r_fore-color}}\" font-size=\"24\">{{note}}</text>\n</g>",
@@ -78,14 +152,13 @@
       "scaleX": 1,
       "scaleY": 1,
       "rotation": 0,
-      "solid": false,
       "animation": "#fade-in"
     },
     "note-interlinear-above": {
       "svg": "<g><text x=\"0\" y=\"0\" font-family=\"Arial\" font-size=\"14\" fill=\"{{r_fore-color}}\" id=\"placeholder\">{{note}}</text></g>",
       "position": "n",
       "offsetX": 0,
-      "offsetY": 14,
+      "offsetY": 4,
       "scaleX": 1,
       "scaleY": 1,
       "rotation": 0,
@@ -109,7 +182,6 @@
       "scaleX": 1,
       "scaleY": 1.5,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     },
     "i-dot": {
@@ -120,7 +192,6 @@
       "scaleX": 1,
       "scaleY": 0.3,
       "rotation": 0,
-      "solid": false,
       "animation": "#fade-in"
     },
     "umlaut": {
@@ -131,7 +202,6 @@
       "scaleX": 1,
       "scaleY": 0.3,
       "rotation": 0,
-      "solid": false,
       "animation": "#fade-in"
     },
     "snake": {
@@ -142,7 +212,16 @@
       "scaleX": 1.2,
       "scaleY": 2,
       "rotation": 0,
-      "solid": false,
+      "animation": "#wipe-right"
+    },
+    "snake-e": {
+      "svg": "<g><path style=\"fill:none;stroke:{{r_fore-color}};stroke-width:5\" d=\"M 197.68715,3.0148358 156.47518,14.039149 a 12.787826,12.680467 0 0 0 -9.33488,10.493488 l -6.78784,48.324095 a 14.545787,14.42367 0 0 1 -7.3582,10.627309 l -25.56877,14.045081 v 0\" /></g>",
+      "position": "e",
+      "offsetX": 0,
+      "offsetY": 0,
+      "scaleX": 1.2,
+      "scaleY": 2,
+      "rotation": 0,
       "animation": "#wipe-right"
     },
     "snake-callout": {
@@ -153,7 +232,6 @@
       "scaleX": 1.2,
       "scaleY": 2,
       "rotation": 0,
-      "solid": false,
       "animation": "#wipe-right"
     }
   },
