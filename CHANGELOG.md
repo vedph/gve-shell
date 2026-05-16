@@ -1,7 +1,9 @@
 # History
 
-- 2026-05-14: updated Angular and packages.
+## 7.0.6
 
+- 2026-05-16: updated Angular and packages.
+- 2026-05-14: updated Angular and packages.
 - 2026-05-07: added batch source editor.
 
 ## 7.0.2
