@@ -1,0 +1,12 @@
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  esbuild: true
+  gifsicle: true
+  lmdb: true
+  mozjpeg: true
+  msgpackr-extract: true
+  optipng-bin: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@myrmidon/gve-snapshot-rendition@2.0.3'
