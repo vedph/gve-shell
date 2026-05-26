@@ -1,97 +1,27 @@
 <div [style.padding]="dialogRef ? '8px' : '0'">
   @if (dialogRef) {
-  <div id="heading">Add Operations</div>
+    <div id="heading">Add Operations</div>
   }
-  <fieldset>
-    <div id="batch-input">
-      <div>
-        <mat-form-field class="full-width">
-          <mat-label>operations</mat-label>
-          <textarea
-            class="code"
-            matInput
-            [formControl]="text"
-            rows="8"
-            spellcheck="false"
-          ></textarea>
-        </mat-form-field>
-        @if (parseError()) {
+  <div id="batch-input">
+    <div>
+      <mat-form-field class="full-width">
+        <mat-label>operations</mat-label>
+        <textarea
+          class="code"
+          matInput
+          [formControl]="text"
+          rows="8"
+          spellcheck="false"
+        ></textarea>
+      </mat-form-field>
+      @if (parseError()) {
         <div class="error">{{ parseError() }}</div>
-        }
-      </div>
+      }
     </div>
-    <div id="batch-help">
-      <ul>
-        <li>
-          <strong>replace</strong>:
-          <code>ATxRUN<strong>=</strong>"VALUE"</code>
-        </li>
-        <li>
-          <strong>delete</strong>:
-          <code>ATxRUN<strong>-</strong></code>
-        </li>
-        <li>
-          <strong>add-before</strong>:
-          <code>ATxRUN<strong>+[</strong>"VALUE"</code>
-        </li>
-        <li>
-          <strong>add-after</strong>:
-          <code>ATxRUN<strong>+]</strong>"VALUE"</code>
-        </li>
-        <li>
-          <strong>move-before</strong>:
-          <code>ATxRUN<strong>&gt;[</strong>TO</code>
-        </li>
-        <li>
-          <strong>move-after</strong>:
-          <code>ATxRUN<strong>&gt;]</strong>TO</code>
-        </li>
-        <li>
-          <strong>swap</strong>:
-          <code>ATxRUN<strong>&lt;&gt;</strong>TOxRUN</code>
-        </li>
-        <li>
-          <strong>annotate</strong>:
-          <code>ATxRUN<strong>:</strong></code>
-        </li>
-      </ul>
-      <p>For all the operations:</p>
-      <ul>
-        <li>
-          prefix <code>(ITAG:OTAG)</code> to define input and/or output tags,
-          separated by colon.
-        </li>
-        <li>
-          prepend <code>&#x40;</code> to AT to use character indexes (0-N)
-          rather than IDs.
-        </li>
-        <li>RUN (where applicable) defaults to 1.</li>
-        <li>
-          append features like <code>[NAME OPERATOR VALUE]</code>, separated by
-          space, where:
-        </li>
-        <li>
-          <ol>
-            <li>
-              NAME is an arbitrary string. Prefixes:
-              <code>*</code>=global features, <code>!</code>=remove feature (no
-              value). Suffixes: <code>^</code>=short-lived (like
-              <code>*version^=alpha</code>).
-            </li>
-            <li>
-              OPERATOR is <code>=</code> (multiple), <code>:=</code> (single),
-              <code>==</code> (first-single).
-            </li>
-            <li>
-              VALUE is a string. If it includes spaces, wrap it in
-              <code>""</code>.
-            </li>
-          </ol>
-        </li>
-      </ul>
-    </div>
-    <div class="form-row-center">
-      @if (dialogRef) {
+  </div>
+
+  <div class="form-row-center">
+    @if (dialogRef) {
       <button
         type="button"
         class="mat-warn"
@@ -101,17 +31,16 @@
       >
         close
       </button>
-      }
-      <button
-        type="button"
-        class="mat-primary"
-        mat-flat-button
-        matTooltip="Parse text into operations"
-        [disabled]="!text.value || busy()"
-        (click)="parseOperations(text.value!)"
-      >
-        batch add
-      </button>
-    </div>
-  </fieldset>
+    }
+    <button
+      type="button"
+      class="mat-primary"
+      mat-flat-button
+      matTooltip="Parse text into operations"
+      [disabled]="!text.value || busy()"
+      (click)="parseOperations(text.value!)"
+    >
+      batch add
+    </button>
+  </div>
 </div>

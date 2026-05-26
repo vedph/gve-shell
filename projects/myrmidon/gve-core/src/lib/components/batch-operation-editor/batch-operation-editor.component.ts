@@ -45,7 +45,7 @@ import { GveApiService } from '../../services/gve-api.service';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-  ],
+],
   templateUrl: './batch-operation-editor.component.html',
   styleUrl: './batch-operation-editor.component.css',
 })

@@ -822,6 +822,7 @@ export class SnapshotEditorComponent {
 
     const dialogRef = this._dialog.open(BatchOperationEditorComponent, {
       data: { preset: this.batchOps },
+      minWidth: '600px',
     });
 
     dialogRef.afterClosed().subscribe((batchOps: CharChainOperation[]) => {
