@@ -20,12 +20,28 @@
   margin: 8px 0;
 }
 .tag {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   background-color: var(--mat-sys-surface-container);
   color: var(--mat-sys-on-surface-variant);
   border: 1px solid var(--mat-sys-outline);
   border-radius: 6px;
   padding: 4px;
   cursor: pointer;
+}
+.copy-btn {
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
+  margin-left: auto;
+}
+.copy-btn mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
 }
 .muted-tag {
   color: var(--mat-sys-on-surface-variant);

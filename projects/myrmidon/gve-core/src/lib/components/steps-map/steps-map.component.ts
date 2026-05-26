@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  inject,
   input,
   model,
   signal,
@@ -10,6 +11,8 @@ import {
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ChainOperationContextStep } from '../../services/gve-api.service';
@@ -35,12 +38,14 @@ import { ChainOperationContextStep } from '../../services/gve-api.service';
  */
 @Component({
   selector: 'gve-steps-map',
-  imports: [MatButtonModule, MatRippleModule, MatTooltipModule],
+  imports: [MatButtonModule, MatIconModule, MatRippleModule, MatTooltipModule],
   templateUrl: './steps-map.component.html',
   styleUrl: './steps-map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StepsMapComponent implements AfterViewInit {
+  private _snackBar = inject(MatSnackBar);
+
   // track view initialization
   private _viewInitialized = signal(false);
   // track whether we've processed the steps/selection
@@ -141,5 +146,15 @@ export class StepsMapComponent implements AfterViewInit {
 
   public onStepClick(step: ChainOperationContextStep) {
     this.selectedStep.set(step);
+  }
+
+  public copyText(step: ChainOperationContextStep, event: MouseEvent): void {
+    event.stopPropagation();
+    const text = (this.lines()[step.outputTag] ?? []).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      this._snackBar.open(`Copied ${step.outputTag}`, undefined, {
+        duration: 2000,
+      });
+    });
   }
 }

@@ -11,6 +11,15 @@
         <div class="tag">
           <span class="muted-tag">{{ step.inputTag }} &#x25b6; </span>
           {{ step.outputTag }}
+          <button
+            type="button"
+            mat-icon-button
+            class="copy-btn"
+            matTooltip="Copy text"
+            (click)="copyText(step, $event)"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
         </div>
         <!-- text lines -->
         <div class="text" [style.fontSize]="textFontSize()">

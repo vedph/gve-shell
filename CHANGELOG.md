@@ -4,7 +4,8 @@
 
 - 2026-05-26:
   - better UI for batch operations add dialog.
-  - improved copy JSON function to copy both base text and operations, so a run-operations request body can be got from it.
+  - 🆕 added copy text button to steps map.
+  - 🆕 improved copy JSON function to copy both base text and operations, so a run-operations request body can be got from it.
   - updated packages.
 - 2026-05-21: updated Angular and packages.
 
