@@ -72,12 +72,14 @@
                 <mat-icon>content_copy</mat-icon>
               </button>
 
-              <!-- copy ops JSON -->
+              <!-- copy base text and operations JSON -->
               <button
                 type="button"
                 mat-icon-button
-                matTooltip="Copy operations as JSON to clipboard"
-                [disabled]="!operations.value.length || busy()"
+                matTooltip="Copy text and operations as JSON to clipboard"
+                [disabled]="
+                  (!baseText.value && !operations.value.length) || busy()
+                "
                 (click)="copyOperationsJson()"
               >
                 <mat-icon>copy_all</mat-icon>

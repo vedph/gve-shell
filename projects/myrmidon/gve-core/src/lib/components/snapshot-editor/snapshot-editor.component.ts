@@ -782,9 +782,13 @@ export class SnapshotEditorComponent {
     if (!this.operations.value.length || this.busy()) {
       return;
     }
-    const json = JSON.stringify(this.operations.value, null, 2);
+    const json = JSON.stringify(
+      { text: this.baseText.value, operations: this.operations.value },
+      null,
+      2,
+    );
     navigator.clipboard.writeText(json).then(() => {
-      this._snackbar.open('Operations JSON copied to clipboard', 'OK', {
+      this._snackbar.open('JSON copied to clipboard', 'OK', {
         duration: 3000,
       });
     });
