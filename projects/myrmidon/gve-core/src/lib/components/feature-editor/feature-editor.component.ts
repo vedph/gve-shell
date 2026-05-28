@@ -147,6 +147,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
 
   public name: FormControl<string>;
   public value: FormControl<string>;
+  public valuePrefix: FormControl<string>;
   public selectedValue: FormControl<string>;
   public setPolicy: FormControl<FeatureSetPolicy>;
   // var feature controls
@@ -175,6 +176,10 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       validators: [Validators.maxLength(5000)],
       nonNullable: true,
     });
+    this.valuePrefix = formBuilder.control('', {
+      validators: [(c) => (c.value && !c.value.endsWith(':') ? { noColon: true } : null)],
+      nonNullable: true,
+    });
     this.selectedValue = formBuilder.control('', {
       nonNullable: true,
     });
@@ -187,6 +192,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     this.form = formBuilder.group({
       name: this.name,
       value: this.value,
+      valuePrefix: this.valuePrefix,
       selectedValue: this.selectedValue,
       setPolicy: this.setPolicy,
       isNegated: this.isNegated,
@@ -217,6 +223,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
         // the value is independent and must not be cleared.
         if (this.featNames()?.length) {
           this.value.reset();
+          this.valuePrefix.reset();
         }
       });
   }
@@ -255,7 +262,23 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       // This prevents the name.valueChanges subscription (which resets the
       // value control) from firing during a programmatic load.
       this.name.setValue(feature.name, { emitEvent: false });
-      this.value.setValue(feature.value, { emitEvent: false });
+
+      // For closed value sets, split the stored value into prefix (up to and
+      // including the first ':') and the base value after it.
+      const ids = this.getLabeledIdsFor(feature.name, featValues);
+      if (ids?.length) {
+        const colonIdx = feature.value.indexOf(':');
+        if (colonIdx >= 0) {
+          this.valuePrefix.setValue(feature.value.substring(0, colonIdx + 1), { emitEvent: false });
+          this.value.setValue(feature.value.substring(colonIdx + 1), { emitEvent: false });
+        } else {
+          this.valuePrefix.setValue('', { emitEvent: false });
+          this.value.setValue(feature.value, { emitEvent: false });
+        }
+      } else {
+        this.valuePrefix.setValue('', { emitEvent: false });
+        this.value.setValue(feature.value, { emitEvent: false });
+      }
       this.setPolicy.setValue(feature.setPolicy || FeatureSetPolicy.multiple);
       this.isNegated.setValue(feature.isNegated || false);
       this.isGlobal.setValue(feature.isGlobal || false);
@@ -286,11 +309,13 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     if (!this.form.valid) {
       return;
     }
+    const prefix = this.nameIds()?.length ? this.valuePrefix.value.trim() : '';
+    const value = prefix + this.value.value.trim();
     this.feature.set(
       this.isVar()
         ? {
             name: this.name.value.trim(),
-            value: this.value.value.trim(),
+            value,
             setPolicy: this.setPolicy.value,
             isNegated: this.isNegated.value,
             isGlobal: this.isGlobal.value,
@@ -298,7 +323,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
           }
         : {
             name: this.name.value.trim(),
-            value: this.value.value.trim(),
+            value,
             setPolicy: this.setPolicy.value,
           },
     );
