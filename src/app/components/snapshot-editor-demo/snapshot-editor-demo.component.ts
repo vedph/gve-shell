@@ -17,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   FeatureDefinitions,
+  FeatureSetPolicy,
   LabeledId,
   Snapshot,
   SnapshotEditorComponent,
@@ -220,6 +221,17 @@ export class SnapshotEditorDemoComponent implements OnInit {
         label: 'stage name',
       },
     ],
+    props: {
+      log: {
+        setPolicy: FeatureSetPolicy.single,
+        isGlobal: true,
+      },
+      version: {
+        setPolicy: FeatureSetPolicy.single,
+        isGlobal: true,
+        isShortLived: true,
+      },
+    },
     values: {
       'page-beg': [{ id: '1', label: '1' }],
       'r_fore-color': [

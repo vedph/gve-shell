@@ -50,6 +50,21 @@ export interface FeatureMap {
 }
 
 /**
+ * Feature properties map. This is used to preset properties like set policy,
+ * negation, global, and short-lived for specific features without hardcoding
+ * that logic in the component. The key is the feature name's ID, and the
+ * value is an object containing the properties to preset for that feature.
+ */
+export interface FeaturePropMap {
+  [key: string]: {
+    setPolicy: FeatureSetPolicy;
+    isNegated?: boolean;
+    isGlobal?: boolean;
+    isShortLived?: boolean;
+  };
+}
+
+/**
  * 🔑 `gve-feature-editor`
  *
  * Component for editing a single feature, whose model is a name=value
@@ -106,6 +121,15 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
    * to populate the value selection.
    */
   public readonly featValues = input<FeatureMap | undefined>();
+
+  /**
+   * The feature properties map. When specified and the user selects a
+   * feature name present in the map keys, the corresponding properties
+   * will be used to populate the form controls for set policy, negation,
+   * global, and short-lived. This allows presetting these properties
+   * for specific features without hardcoding that logic in the component.
+   */
+  public readonly featProps = input<FeaturePropMap | undefined>();
 
   /**
    * The feature to edit.
@@ -224,6 +248,21 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
         if (this.featNames()?.length) {
           this.value.reset();
           this.valuePrefix.reset();
+          // Apply featProps presets for the selected name if available.
+          const props = this.featProps();
+          if (props && name && props[name]) {
+            const preset = props[name];
+            this.setPolicy.setValue(preset.setPolicy);
+            if (preset.isNegated !== undefined) {
+              this.isNegated.setValue(preset.isNegated);
+            }
+            if (preset.isGlobal !== undefined) {
+              this.isGlobal.setValue(preset.isGlobal);
+            }
+            if (preset.isShortLived !== undefined) {
+              this.isShortLived.setValue(preset.isShortLived);
+            }
+          }
         }
       });
   }

@@ -1,5 +1,23 @@
 # History
 
+## 7.0.9
+
+- 2026-05-29: 🆕 added `featProps` to `FeatureEditorComponent` (and its ancestors) to preset features properties when the user picks a feature from the component. Example:
+
+```json
+{
+  "log": {
+    "setPolicy": FeatureSetPolicy.single,
+    "isGlobal": true
+ },
+  "version": {
+    "setPolicy": FeatureSetPolicy.single,
+    "isGlobal": true,
+    "isShortLived": true
+ }
+}
+```
+
 ## 7.0.8
 
 - 2026-05-28: added prefix for feature value in feature editor. Sometimes users need to add a custom prefix to the value (always ending with `:` by convention); in editing features, when the value is not closed, users they just type it. When instead the value is closed, they had no way to enter it. So for instance if color is a closed feature having a set of values like red, green, blue, users may want not only to pick "red" and get its value (e.g. "r"); but also to prefix it something, like "@2:", so that in the end the feature's value will be "@2:r" and not just "r". A new form control named `valuePrefix` has been added which contains the prefix to be added to the edited feature value. This control will be visible in the HTML template only if the selected feature name has a closed set of values.

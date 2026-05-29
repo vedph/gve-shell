@@ -20,7 +20,7 @@ import { Subscription } from 'rxjs';
 import { debounceTime, filter } from 'rxjs/operators';
 
 // material
-import { Clipboard, ClipboardModule } from '@angular/cdk/clipboard';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -38,7 +38,8 @@ import { customAlphabet } from 'nanoid';
 
 // myrmidon
 import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
-import { DialogService } from '@myrmidon/ngx-mat-tools';
+
+// local
 import {
   CharChainOperation,
   Feature,
@@ -48,13 +49,13 @@ import {
   Snapshot,
   LabeledId,
 } from '../../models';
-
-// local
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
-import { SettingsService } from '../../services/settings.service';
 import { SvgValidators } from '../../validators/svg-validators';
-import { FeatureMap } from '../feature-editor/feature-editor.component';
+import {
+  FeatureMap,
+  FeaturePropMap,
+} from '../feature-editor/feature-editor.component';
 import { BaseTextRange } from '../base-text-view/base-text-view.component';
 
 /**
@@ -73,6 +74,14 @@ export interface FeatureDefinitions {
    * to populate the value selection.
    */
   values?: FeatureMap;
+  /**
+   * The feature properties map. When specified and the user selects a
+   * feature name present in the map keys, the corresponding properties
+   * will be used to populate the form controls for set policy, negation,
+   * global, and short-lived. This allows presetting these properties
+   * for specific features without hardcoding that logic in the component.
+   */
+  props?: FeaturePropMap;
 }
 
 /**
@@ -86,7 +95,7 @@ export interface FeatureDefinitions {
  * - ▶️ `sourceIds` (`LabeledId[]`): the list of source IDs, when using a closed list.
  * - ▶️ `sourceTypes` (`LabeledId[]`): the list of source types, when using a closed list.
  * - ▶️ `featureDefs` (`FeatureDefinitions`): definitions for features, including
- * names and values.
+ * names, values, and properties.
  * - ▶️ `rangePatch` (`BaseTextRange`): when set, the edited operation's text
  * range (at and run) will be patched with the provided one.
  * - 🔥 `operationChange` (`CharChainOperation`): emitted when the operation
@@ -175,7 +184,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly hidePreview = input<boolean | undefined>();
 
   /**
-   * Definitions for features, including names and values.
+   * Definitions for features, including names, values, and properties.
    */
   public readonly featureDefs = input<FeatureDefinitions | undefined>();
 
@@ -256,12 +265,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   // root
   public form: FormGroup;
 
-  constructor(
-    formBuilder: FormBuilder,
-    private _clipboard: Clipboard,
-    private _settings: SettingsService,
-    private _dialogService: DialogService,
-  ) {
+  constructor(formBuilder: FormBuilder) {
     this._subs = [];
     // general
     this.rank = formBuilder.control<number>(0, { nonNullable: true });

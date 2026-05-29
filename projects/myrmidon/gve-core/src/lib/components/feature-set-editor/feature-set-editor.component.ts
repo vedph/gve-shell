@@ -33,6 +33,7 @@ import {
 import {
   FeatureEditorComponent,
   FeatureMap,
+  FeaturePropMap,
 } from '../feature-editor/feature-editor.component';
 
 /**
@@ -105,6 +106,15 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
    * to populate the value selection.
    */
   public readonly featValues = input<FeatureMap | undefined>();
+
+  /**
+   * The feature properties map. When specified and the user selects a
+   * feature name present in the map keys, the corresponding properties
+   * will be used to populate the form controls for set policy, negation,
+   * global, and short-lived. This allows presetting these properties
+   * for specific features without hardcoding that logic in the component.
+   */
+  public readonly featProps = input<FeaturePropMap | undefined>();
 
   /**
    * The threshold at which the features filter should become visible.
