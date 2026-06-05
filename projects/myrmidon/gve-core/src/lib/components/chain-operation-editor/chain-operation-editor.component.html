@@ -192,7 +192,12 @@
                 >
                   <mat-icon class="mat-primary">edit</mat-icon>
                 </button>
-                <button type="button" mat-icon-button color="warn">
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="warn"
+                  (click)="deleteSource($index)"
+                >
                   <mat-icon class="mat-warn">delete</mat-icon>
                 </button>
               </td>

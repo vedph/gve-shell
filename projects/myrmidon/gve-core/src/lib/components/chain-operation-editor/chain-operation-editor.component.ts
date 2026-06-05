@@ -213,11 +213,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly sourceTypes = input<LabeledId[] | undefined>();
 
   /**
-   * Emitted when the operation is changed.
-   */
-  public readonly operationChange = output<CharChainOperation>();
-
-  /**
    * Emitted when the operation preview is requested.
    */
   public readonly operationPreview = output<CharChainOperation>();
@@ -553,6 +548,14 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  public deleteSource(index: number): void {
+    const sources = [...this.sources.value];
+    sources.splice(index, 1);
+    this.sources.setValue(sources);
+    this.sources.updateValueAndValidity();
+    this.sources.markAsDirty();
+  }
+
   public requestPreview(): void {
     this.operationPreview.emit(this.getOperation());
   }
@@ -563,6 +566,5 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     }
 
     this.operation.set(this.getOperation());
-    this.operationChange.emit(this.operation()!);
   }
 }
