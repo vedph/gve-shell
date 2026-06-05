@@ -1,5 +1,9 @@
 # History
 
+- 2026-06-05:
+  - fixed delete source button not connected to code.
+  - ⚠️ upgraded to Angular 22.
+
 ## 7.0.9
 
 - 2026-05-29: 🆕 added `featProps` to `FeatureEditorComponent` (and its ancestors) to preset features properties when the user picks a feature from the component. Example:

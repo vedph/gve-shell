@@ -177,9 +177,9 @@
                 [batchMode]="true"
                 [features]="operationFeats() || []"
                 [isVar]="true"
-                [featNames]="featureDefs()?.names"
-                [featValues]="featureDefs()?.values"
-                [featProps]="featureDefs()?.props"
+                [featNames]="$safeNavigationMigration(featureDefs()?.names)"
+                [featValues]="$safeNavigationMigration(featureDefs()?.values)"
+                [featProps]="$safeNavigationMigration(featureDefs()?.props)"
                 [multiValuedFeatureIds]="multiValuedFeatureIds()"
                 (close)="closeOperationFeats()"
                 (featuresChange)="saveOperationsFeats($event)"
@@ -352,14 +352,14 @@
                                 <span class="fname">{{
                                   feat.name
                                     | flatLookup
-                                      : featureDefs()?.names
+                                      : $safeNavigationMigration(featureDefs()?.names)
                                       : "id"
                                       : "label"
                                 }}</span
                                 >=<span class="fvalue">{{
                                   feat.value
                                     | flatLookup
-                                      : featureDefs()?.values?.[feat.name]
+                                      : $safeNavigationMigration(featureDefs()?.values?.[feat.name])
                                       : "id"
                                       : "label"
                                 }}</span>
