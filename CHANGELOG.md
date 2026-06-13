@@ -1,5 +1,8 @@
 # History
 
+## 7.0.11
+
+- 2026-06-13: removed unused Monaco dependencies and updated packages.
 - 2026-06-05:
   - fixed delete source button not connected to code.
   - ⚠️ upgraded to Angular 22.

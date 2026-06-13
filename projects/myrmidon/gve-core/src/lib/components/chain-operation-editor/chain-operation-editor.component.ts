@@ -33,7 +33,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 // vendor
-import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
@@ -156,7 +155,6 @@ export interface FeatureDefinitions {
     MatSelectModule,
     MatTabsModule,
     MatTooltipModule,
-    NgeMonacoModule,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
     FlatLookupPipe,

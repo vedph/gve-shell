@@ -7,8 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
-import { NgeMonacoModule } from '@cisstech/nge/monaco';
-
 import { EnvService } from '@myrmidon/ngx-tools';
 import { ThemeToggleComponent } from '@myrmidon/ngx-mat-tools';
 
@@ -23,7 +21,6 @@ import { SettingsService } from '@myrmidon/gve-core';
     MatIconModule,
     MatMenuModule,
     MatToolbarModule,
-    NgeMonacoModule,
     ThemeToggleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
