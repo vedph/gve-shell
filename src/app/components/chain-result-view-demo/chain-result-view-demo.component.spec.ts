@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ChainResultViewDemoComponent } from './chain-result-view-demo.component';
 
@@ -8,7 +10,8 @@ describe('ChainResultViewDemoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChainResultViewDemoComponent]
+      imports: [ChainResultViewDemoComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     })
     .compileComponents();
 

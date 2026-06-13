@@ -22,22 +22,6 @@
       "request": "launch",
       "url": "http://localhost:4200",
       "webRoot": "${workspaceFolder}"
-    },
-    {
-      "name": "Jest",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
-      "stopOnEntry": false,
-      "args": ["-i"],
-      "cwd": "${workspaceRoot}",
-      "runtimeExecutable": null,
-      "env": {
-        "NODE_ENV": "test"
-      },
-      "console": "integratedTerminal",
-      "outFiles": ["${workspaceRoot}/dist/**/*"],
-      "sourceMaps": true
     }
   ]
 }

@@ -2,8 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ChainOperationEditorDemoComponent } from './chain-operation-editor-demo.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { NgeMonacoModule } from '@cisstech/nge/monaco';
-import { importProvidersFrom } from '@angular/core';
 
 describe('VarOperationEditorDemoComponent', () => {
   let component: ChainOperationEditorDemoComponent;
@@ -11,12 +9,7 @@ describe('VarOperationEditorDemoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        NoopAnimationsModule,
-        ChainOperationEditorDemoComponent,
-        NgeMonacoModule,
-      ],
-      providers: [importProvidersFrom(NgeMonacoModule.forRoot({}))],
+      imports: [NoopAnimationsModule, ChainOperationEditorDemoComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChainOperationEditorDemoComponent);

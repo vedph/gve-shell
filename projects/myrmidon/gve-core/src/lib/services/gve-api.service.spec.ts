@@ -7,7 +7,7 @@ describe('GveApiService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClientTesting],
+      providers: [provideHttpClientTesting()],
     });
     service = TestBed.inject(GveApiService);
   });
