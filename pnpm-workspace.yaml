@@ -28,3 +28,4 @@ minimumReleaseAgeExclude:
   - '@angular/platform-browser@21.2.14'
   - '@angular/router@21.2.14'
   - '@myrmidon/gve-snapshot-rendition@2.0.4'
+  - '@rollup/rollup-win32-arm64-msvc@4.62.0'
