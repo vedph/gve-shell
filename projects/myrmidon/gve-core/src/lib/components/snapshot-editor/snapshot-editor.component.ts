@@ -36,6 +36,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 
+import { Subscription } from 'rxjs';
+
 import { customAlphabet } from 'nanoid';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
@@ -139,6 +141,7 @@ export class SnapshotEditorComponent {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
   private _previewing?: boolean;
   private _stepPickFrozen?: boolean;
+  private _currentRunSubscription?: Subscription;
 
   /**
    * Reference to the snapshot rendition web component.
@@ -351,6 +354,17 @@ export class SnapshotEditorComponent {
       }
     });
 
+    // re-apply settings whenever the renditionSettings input changes (e.g. loaded
+    // asynchronously from the backend after the first render already completed)
+    effect(() => {
+      // reading renditionSettings() tracks it as a dependency
+      this.renditionSettings();
+      const rendition = this.renditionRef()?.nativeElement;
+      if (rendition) {
+        this.applyRenditionSettings();
+      }
+    });
+
     // when operation editor panel becomes available, scroll it into view
     effect(() => {
       const panel = this.operationEditorPanelRef()?.nativeElement;
@@ -376,6 +390,17 @@ export class SnapshotEditorComponent {
 
     // set initial settings
     this.applyRenditionSettings();
+
+    // Push data immediately if already available. updateRendition() is called
+    // synchronously after result.set() in runTo(), but at that moment the @if
+    // block hasn't yet been added to the DOM (zoneless CD is asynchronous).
+    // This call recovers from that missed push once the element is actually live.
+    const result = this.result();
+    if (result) {
+      const r = { ...result, text: this.baseText.value };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rendition.data = r as any;
+    }
 
     // listen to version change events
     rendition.addEventListener('versionTagChange', (event: Event) => {
@@ -980,8 +1005,13 @@ export class SnapshotEditorComponent {
    * @returns A promise that resolves to the execution result.
    */
   public runTo(index: number, lastOperation?: CharChainOperation): void {
-    if (this.busy()) {
-      return;
+    // Cancel any in-flight run so new data always wins over stale requests.
+    // The old busy() guard silently dropped new requests while the API was
+    // still responding, causing the component to freeze on rapid edits.
+    if (this._currentRunSubscription) {
+      this._currentRunSubscription.unsubscribe();
+      this._currentRunSubscription = undefined;
+      this.busy.set(false);
     }
     console.log('run to: ' + index);
 
@@ -1007,7 +1037,7 @@ export class SnapshotEditorComponent {
     // run the operations
     this.busy.set(true);
     this.initialStepIndex.set(index);
-    this._api
+    this._currentRunSubscription = this._api
       .runOperations(snapshot.text as CharNode[], snapshot.operations)
       .subscribe({
         next: (wrapper) => {
@@ -1021,7 +1051,10 @@ export class SnapshotEditorComponent {
           console.log('result:', wrapper.result);
           this.result.set(wrapper.result);
 
-          // update the rendition component
+          // update the rendition component; note that when result() transitions
+          // from undefined→truthy the @if element may not yet be in the DOM
+          // (zoneless CD is async). initRendition() will recover the missed push
+          // once Angular inserts the element.
           this.updateRendition();
 
           // supply the last operation output tag from its result step if not set
@@ -1045,8 +1078,11 @@ export class SnapshotEditorComponent {
         error: (error) => {
           console.error(error);
           this._snackbar.open('Error running operations', 'OK');
+          this._currentRunSubscription = undefined;
+          this.busy.set(false);
         },
         complete: () => {
+          this._currentRunSubscription = undefined;
           this.busy.set(false);
         },
       });

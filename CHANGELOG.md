@@ -1,6 +1,14 @@
 # History
 
-- 2026-06-26: updated Angular and packages.
+## 7.0.13
+
+- 2026-06-26:
+  - updated Angular and packages.
+  - fixes to snapshot editor:
+    - `runTo()` silently dropped updates when busy (primary freeze cause). In `snapshot-editor.component.ts`, `if (this.busy()) return` caused any new data that arrived while the API was still responding to be silently discarded. The component then stayed frozen showing old state. Fix: replace with subscription cancellation — the in-flight request is unsubscribed and the new one starts immediately. Latest data always wins.
+  - `updateRendition()` called before the element exists in DOM (first-load blank render).
+  - `result.set(wrapper.result)` followed immediately by `updateRendition()` doesn't work on first load because in zoneless Angular the `@if (result())` DOM insertion is asynchronous. `renditionRef()?.nativeElement` is undefined at that moment. Fix: `initRendition()` (the effect that fires when the element appears) now also pushes the current result data if already available, recovering the missed push.
+  - no reactive path for settings arriving after first render. `renditionSettings` is loaded async from the backend. If it arrives after the element was already initialized, nothing re-applied it. Fix: a new `effect()` watches `renditionSettings()` and calls `applyRenditionSettings()` whenever it changes.
 
 ## 7.0.11
 

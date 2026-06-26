@@ -9,7 +9,7 @@ allowBuilds:
   optipng-bin: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@myrmidon/gve-snapshot-rendition@2.0.3'
+  - '@myrmidon/gve-snapshot-rendition@2.0.3 || 2.0.4 || 2.0.5 || 2.0.6'
   - '@angular-devkit/architect@0.2102.12'
   - '@angular-devkit/core@21.2.12'
   - '@angular-devkit/schematics@21.2.12'
@@ -27,5 +27,4 @@ minimumReleaseAgeExclude:
   - '@angular/platform-browser-dynamic@21.2.14'
   - '@angular/platform-browser@21.2.14'
   - '@angular/router@21.2.14'
-  - '@myrmidon/gve-snapshot-rendition@2.0.4'
   - '@rollup/rollup-win32-arm64-msvc@4.62.0'
