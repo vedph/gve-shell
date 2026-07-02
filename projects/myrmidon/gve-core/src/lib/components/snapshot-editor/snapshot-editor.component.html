@@ -215,7 +215,10 @@
             [disabled]="!editedOp()"
           >
             <mat-expansion-panel-header>
-              <mat-panel-title>operation {{ editedOp()?.id }}</mat-panel-title>
+              <mat-panel-title
+                >operation {{ editedOpIndex() + 1 }}:
+                {{ editedOp()?.id }}</mat-panel-title
+              >
             </mat-expansion-panel-header>
             <fieldset>
               <gve-chain-operation-editor
@@ -224,6 +227,7 @@
                 [hidePreview]="editedOpIndex() === -1"
                 [operation]="editedOp()"
                 [rangePatch]="editedOpRangePatch()"
+                [snapshot]="{ text: baseText.value, operations: operations.value }"
                 [sourceIds]="sourceIds()"
                 [sourceTypes]="sourceTypes()"
                 (operationCancel)="onOperationCancel()"
@@ -252,8 +256,11 @@
                   <th>at</th>
                   <th>run</th>
                   <th>value</th>
-                  <th>itag</th>
-                  <th>otag</th>
+                  <th>feats</th>
+                  @if (!featDetails.value) {
+                    <th>itag</th>
+                    <th>otag</th>
+                  }
                   <th>gid</th>
                   <th>feats</th>
                   <th>src</th>
@@ -336,8 +343,10 @@
                     <td>{{ operation.at }}</td>
                     <td>{{ operation.run }}</td>
                     <td>{{ operation.value }}</td>
-                    <td>{{ operation.inputTag }}</td>
-                    <td>{{ operation.outputTag }}</td>
+                    @if (!featDetails.value) {
+                      <td>{{ operation.inputTag }}</td>
+                      <td>{{ operation.outputTag }}</td>
+                    }
                     <td>{{ operation.groupId }}</td>
                     <td>
                       @if (operation.features?.length) {
@@ -352,14 +361,18 @@
                                 <span class="fname">{{
                                   feat.name
                                     | flatLookup
-                                      : $safeNavigationMigration(featureDefs()?.names)
+                                      : $safeNavigationMigration(
+                                          featureDefs()?.names
+                                        )
                                       : "id"
                                       : "label"
                                 }}</span
                                 >=<span class="fvalue">{{
                                   feat.value
                                     | flatLookup
-                                      : $safeNavigationMigration(featureDefs()?.values?.[feat.name])
+                                      : $safeNavigationMigration(
+                                          featureDefs()?.values?.[feat.name]
+                                        )
                                       : "id"
                                       : "label"
                                 }}</span>
@@ -427,6 +440,7 @@
       class="mat-warn"
       mat-flat-button
       matTooltip="Discard changes"
+      [disabled]="busy()"
       (click)="close()"
     >
       <mat-icon>clear</mat-icon>
@@ -438,7 +452,7 @@
         class="mat-primary"
         mat-flat-button
         matTooltip="Save changes"
-        [disabled]="form.invalid"
+        [disabled]="form.invalid || busy()"
       >
         <mat-icon>check_circle</mat-icon>
         save

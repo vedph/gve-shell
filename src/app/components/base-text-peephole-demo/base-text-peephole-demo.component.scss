@@ -1,0 +1,13 @@
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nr {
+  width: 8em;
+}

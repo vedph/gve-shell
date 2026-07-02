@@ -1,0 +1,67 @@
+<div class="peephole">
+  <button
+    type="button"
+    mat-icon-button
+    class="nav-btn"
+    [disabled]="windowStart() === 0"
+    (click)="scrollLeft()"
+    aria-label="Scroll window left"
+  >
+    <mat-icon>chevron_left</mat-icon>
+  </button>
+
+  <div class="hidden-count left">
+    @if (hiddenLeftCount() > 0) {
+      {{ hiddenLeftCount() }}
+    }
+  </div>
+
+  <div
+    class="window"
+    tabindex="0"
+    [class.dragging]="isDragging()"
+    (keydown)="onKeyDown($event)"
+    (dblclick)="onWindowDblClick()"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp()"
+    (pointercancel)="onPointerUp()"
+  >
+    @for (c of visibleChars(); track c.id; let i = $index) {
+      @let selected = isSelected(windowStart() + i);
+      <div class="char-cell" [style.transform]="'scale(' + getScale(i) + ')'">
+        <div
+          class="c-label"
+          [class.selected]="selected"
+          [style.fontSize.em]="emSize()"
+        >
+          {{ c.label }}
+        </div>
+        <div
+          class="c-id"
+          [class.selected]="selected"
+          [style.fontSize.em]="emSize() / 2"
+        >
+          {{ c.id }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="hidden-count right">
+    @if (hiddenRightCount() > 0) {
+      {{ hiddenRightCount() }}
+    }
+  </div>
+
+  <button
+    type="button"
+    mat-icon-button
+    class="nav-btn"
+    [disabled]="hiddenRightCount() === 0"
+    (click)="scrollRight()"
+    aria-label="Scroll window right"
+  >
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+</div>

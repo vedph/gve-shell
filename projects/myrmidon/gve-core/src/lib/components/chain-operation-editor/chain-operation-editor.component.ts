@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   model,
@@ -16,8 +17,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { debounceTime, filter } from 'rxjs/operators';
+import { combineLatest, Subscription } from 'rxjs';
+import { debounceTime, filter, startWith } from 'rxjs/operators';
 
 // material
 import { ClipboardModule } from '@angular/cdk/clipboard';
@@ -41,6 +42,7 @@ import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 // local
 import {
   CharChainOperation,
+  CharNode,
   Feature,
   OperationFeature,
   OperationType,
@@ -56,6 +58,11 @@ import {
   FeaturePropMap,
 } from '../feature-editor/feature-editor.component';
 import { BaseTextRange } from '../base-text-view/base-text-view.component';
+import {
+  BaseTextPeepholeComponent,
+  OpBaseTextRange,
+} from '../base-text-peephole/base-text-peephole.component';
+import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 /**
  * Definitions for features, including names and values.
@@ -97,6 +104,10 @@ export interface FeatureDefinitions {
  * names, values, and properties.
  * - ▶️ `rangePatch` (`BaseTextRange`): when set, the edited operation's text
  * range (at and run) will be patched with the provided one.
+ * - ▶️ `precedingText` (`CharNode[]`): the text resulting from running the
+ * operations preceding the edited one, i.e. this operation's input text.
+ * Used to feed the at/run peephole preview. When not provided (e.g. not
+ * yet computed), the snapshot's base text is used instead.
  * - 🔥 `operationChange` (`CharChainOperation`): emitted when the operation
  * is changed.
  * - 🔥 `operationPreview` (`CharChainOperation`): emitted when the operation
@@ -157,6 +168,7 @@ export interface FeatureDefinitions {
     MatTooltipModule,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
+    BaseTextPeepholeComponent,
     FlatLookupPipe,
   ],
   templateUrl: './chain-operation-editor.component.html',
@@ -190,6 +202,14 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
    * Set when the edited operation's text range is to be patched.
    */
   public readonly rangePatch = input<BaseTextRange | undefined>();
+
+  /**
+   * The text resulting from running the operations preceding the edited
+   * one, i.e. this operation's input text. Used to feed the at/run
+   * peephole preview shown next to the run field. When not provided
+   * (e.g. not yet computed), the snapshot's base text is used instead.
+   */
+  public readonly precedingText = input<CharNode[] | undefined>();
 
   /**
    * The IDs of the features that are multi-valued. If a feature being
@@ -232,6 +252,33 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   // source
   public readonly editedSource = signal<OperationSource | undefined>(undefined);
   public readonly editedSourceIndex = signal<number>(-1);
+
+  // peephole preview of the operation's input text, tracking the
+  // at/run/atAsIndex form values
+  public readonly peepholeRange = signal<OpBaseTextRange>({
+    at: 0,
+    run: 0,
+    atAsIndex: false,
+  });
+
+  /**
+   * The text to feed the at/run peephole preview: the preceding text
+   * (this operation's input) when available, otherwise the snapshot's
+   * base text.
+   */
+  public readonly peepholeText = computed<CharNode[]>(() => {
+    const preceding = this.precedingText();
+    if (preceding?.length) {
+      return preceding;
+    }
+    const snapshot = this.snapshot();
+    if (!snapshot?.text) {
+      return [];
+    }
+    return Array.isArray(snapshot.text)
+      ? snapshot.text
+      : GveBaseTextService.stringToBaseChars(snapshot.text);
+  });
 
   // general
   public rank: FormControl<number>;
@@ -391,6 +438,17 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     // whenever type changes, update args UI
     this._subs.push(
       this.type.valueChanges.subscribe(() => this.updateArgsUI()),
+    );
+
+    // keep the peephole selection in sync with at/run/atAsIndex
+    this._subs.push(
+      combineLatest([
+        this.at.valueChanges.pipe(startWith(this.at.value)),
+        this.run.valueChanges.pipe(startWith(this.run.value)),
+        this.atAsIndex.valueChanges.pipe(startWith(this.atAsIndex.value)),
+      ]).subscribe(([at, run, atAsIndex]) => {
+        this.peepholeRange.set({ at, run, atAsIndex });
+      }),
     );
   }
 

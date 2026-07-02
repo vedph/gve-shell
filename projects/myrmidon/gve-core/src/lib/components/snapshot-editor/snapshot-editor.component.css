@@ -59,6 +59,15 @@ div#visual-info {
 #list {
   margin: 8px 0;
 }
+#list th,
+td {
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+#list th:last-child,
+#list td:last-child {
+  border-right: none; /* avoid double border on the far right */
+}
+
 #opStyle {
   margin-top: 8px;
 }

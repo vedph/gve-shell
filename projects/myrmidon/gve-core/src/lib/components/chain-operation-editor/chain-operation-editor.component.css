@@ -24,6 +24,9 @@
 .nr {
   width: 6em;
 }
+.op-peephole {
+  width: 420px;
+}
 .long-text {
   width: 100%;
   max-width: 800px;

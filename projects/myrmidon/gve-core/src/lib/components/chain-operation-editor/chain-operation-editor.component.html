@@ -65,6 +65,15 @@
           }
         </mat-form-field>
 
+        <!-- peephole: preview of the text targeted by at/run -->
+        <gve-base-text-peephole
+          class="op-peephole"
+          [text]="peepholeText()"
+          [selectedRange]="peepholeRange()"
+          [windowWidth]="12"
+          [emSize]="0.9"
+        />
+
         <!-- to -->
         @if (hasTo()) {
           <mat-form-field class="nr">

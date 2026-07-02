@@ -1,5 +1,13 @@
 # History
 
+## 7.0.14
+
+- 2026-07-02:
+  - 🆕 added text peephole to operation editor.
+  - added vertical gridlines to table.
+  - added operation number to editor.
+  - updated packages.
+
 ## 7.0.13
 
 - 2026-06-26:
