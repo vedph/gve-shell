@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
   viewChild,
+  inject,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -40,7 +41,7 @@ import { Subscription } from 'rxjs';
 
 import { customAlphabet } from 'nanoid';
 
-import { FlatLookupPipe } from '@myrmidon/ngx-tools';
+import { EnvService, FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   DEFAULT_SETTINGS,
@@ -294,6 +295,8 @@ export class SnapshotEditorComponent {
   // true when the batch editing targets sources instead of features
   public readonly batchForSource = signal<boolean>(false);
 
+  public readonly peepholeWindowWidth = signal<number>(15);
+
   constructor(
     formBuilder: FormBuilder,
     private _api: GveApiService,
@@ -310,6 +313,13 @@ export class SnapshotEditorComponent {
     this.operations = new FormControl<CharChainOperation[]>([], {
       nonNullable: true,
     });
+
+    // set the peephole window width from the environment variable,
+    // defaulting to 15 if not set
+    const env = inject(EnvService);
+    this.peepholeWindowWidth.set(
+      parseInt(env.get('gvePeeperWidth', '15')!, 10),
+    );
 
     // form
     this.form = formBuilder.group({

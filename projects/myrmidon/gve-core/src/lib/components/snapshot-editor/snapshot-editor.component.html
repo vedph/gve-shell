@@ -230,6 +230,7 @@
                 [snapshot]="{ text: baseText.value, operations: operations.value }"
                 [sourceIds]="sourceIds()"
                 [sourceTypes]="sourceTypes()"
+                [peepholeWindowWidth]="peepholeWindowWidth()"
                 (operationCancel)="onOperationCancel()"
                 (operationChange)="onOperationChange($event)"
                 (operationPreview)="onOperationPreview($event)"
@@ -256,7 +257,6 @@
                   <th>at</th>
                   <th>run</th>
                   <th>value</th>
-                  <th>feats</th>
                   @if (!featDetails.value) {
                     <th>itag</th>
                     <th>otag</th>
@@ -338,16 +338,16 @@
                         <mat-icon>arrow_circle_down</mat-icon>
                       </button>
                     </td>
-                    <td>{{ operation.id }}</td>
-                    <td>{{ operation.type | flatLookup: opTypeMap }}</td>
-                    <td>{{ operation.at }}</td>
-                    <td>{{ operation.run }}</td>
-                    <td>{{ operation.value }}</td>
+                    <td class="fit-width">{{ operation.id }}</td>
+                    <td class="fit-width">{{ operation.type | flatLookup: opTypeMap }}</td>
+                    <td class="fit-width">{{ operation.at }}</td>
+                    <td class="fit-width">{{ operation.run }}</td>
+                    <td class="fit-width">{{ operation.value }}</td>
                     @if (!featDetails.value) {
-                      <td>{{ operation.inputTag }}</td>
-                      <td>{{ operation.outputTag }}</td>
+                      <td class="fit-width">{{ operation.inputTag }}</td>
+                      <td class="fit-width">{{ operation.outputTag }}</td>
                     }
-                    <td>{{ operation.groupId }}</td>
+                    <td class="fit-width">{{ operation.groupId }}</td>
                     <td>
                       @if (operation.features?.length) {
                         @if (featDetails.value) {
@@ -393,7 +393,7 @@
                         }
                       }
                     </td>
-                    <td>{{ operation.sources?.length || "" }}</td>
+                    <td class="fit-width">{{ operation.sources?.length || "" }}</td>
                   </tr>
                 }
               </tbody>

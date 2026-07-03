@@ -62,6 +62,7 @@ div#visual-info {
 #list th,
 td {
   border-right: 1px solid var(--mat-sys-outline-variant);
+  padding: 0 4px;
 }
 #list th:last-child,
 #list td:last-child {

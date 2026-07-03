@@ -253,6 +253,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly editedSource = signal<OperationSource | undefined>(undefined);
   public readonly editedSourceIndex = signal<number>(-1);
 
+  public readonly peepholeWindowWidth = input<number>(15);
+
   // peephole preview of the operation's input text, tracking the
   // at/run/atAsIndex form values
   public readonly peepholeRange = signal<OpBaseTextRange>({

@@ -1,5 +1,11 @@
 # History
 
+## 7.0.15
+
+- 2026-07-03:
+  - minor layout fixes in operations list.
+  - parameterized peephole window with (`env.js`).
+
 ## 7.0.14
 
 - 2026-07-02:
