@@ -65,15 +65,6 @@
           }
         </mat-form-field>
 
-        <!-- peephole: preview of the text targeted by at/run -->
-        <gve-base-text-peephole
-          class="op-peephole"
-          [text]="peepholeText()"
-          [selectedRange]="peepholeRange()"
-          [windowWidth]="peepholeWindowWidth()"
-          [emSize]="0.9"
-        />
-
         <!-- to -->
         @if (hasTo()) {
           <mat-form-field class="nr">
@@ -113,6 +104,15 @@
             }
           </mat-form-field>
         }
+
+        <!-- peephole: preview of the text targeted by at/run -->
+        <gve-base-text-peephole
+          class="op-peephole"
+          [text]="peepholeText()"
+          [selectedRange]="peepholeRange()"
+          [windowWidth]="peepholeWindowWidth()"
+          [emSize]="0.9"
+        />
       </div>
       <div class="form-row">
         <!-- rank -->
@@ -260,6 +260,28 @@
         <mat-icon class="mat-primary">preview</mat-icon>
       </button>
     }
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Edit previous operation"
+      [disabled]="!operationOrdinal() || operationOrdinal()! <= 1"
+      (click)="editPreviousOperation()"
+    >
+      <mat-icon>skip_previous</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Edit next operation"
+      [disabled]="
+        !operationOrdinal() ||
+        !operationCount() ||
+        operationOrdinal()! >= operationCount()!
+      "
+      (click)="editNextOperation()"
+    >
+      <mat-icon>skip_next</mat-icon>
+    </button>
     <button
       type="submit"
       color="primary"

@@ -1,5 +1,14 @@
 # History
 
+## 7.0.16
+
+- 2026-07-10:
+  - 🆕 added edit previous/next operation to operation editor.
+  - 🆕 added tooltips for sources in operations list.
+  - increased default peephole width from 15 to 20 and adjusted its layout.
+  - updated packages (fixes to renderer).
+  - updated rendition-settings.json with new hints and animations.
+
 ## 7.0.15
 
 - 2026-07-03:

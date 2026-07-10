@@ -69,7 +69,7 @@
                 [disabled]="!operations.value.length || busy()"
                 (click)="copyOperationsDsl()"
               >
-                <mat-icon>content_copy</mat-icon>
+                <mat-icon class="mat-primary">content_copy</mat-icon>
               </button>
 
               <!-- copy base text and operations JSON -->
@@ -231,9 +231,12 @@
                 [sourceIds]="sourceIds()"
                 [sourceTypes]="sourceTypes()"
                 [peepholeWindowWidth]="peepholeWindowWidth()"
+                [operationOrdinal]="editedOpIndex() + 1"
+                [operationCount]="operations.value.length"
                 (operationCancel)="onOperationCancel()"
                 (operationChange)="onOperationChange($event)"
                 (operationPreview)="onOperationPreview($event)"
+                (operationOrdinalRequest)="editOperation($event - 1)"
               />
             </fieldset>
           </mat-expansion-panel>
@@ -382,18 +385,27 @@
                         } @else {
                           <!-- version badge -->
                           @if (
-                            operation.features?.some(f => f.name === 'version')
+                            operation.features.some(f => f.name === 'version')
                           ) {
                             <span
-                              matBadge="{{ operation.features?.find(f => f.name === 'version')?.value }}"
+                              matBadge="{{ operation.features.find(f => f.name === 'version')?.value }}"
                               matBadgeOverlap="false"
-                              >{{ operation.features?.length }}</span
+                              >{{ operation.features.length }}</span
                             >
                           }
                         }
                       }
                     </td>
-                    <td class="fit-width">{{ operation.sources?.length || "" }}</td>
+                    <td
+                      class="fit-width"
+                      [matTooltip]="
+                        operation.sources?.length
+                          ? sourcesTooltip(operation.sources)
+                          : ''
+                      "
+                    >
+                      {{ operation.sources?.length || "" }}
+                    </td>
                   </tr>
                 }
               </tbody>

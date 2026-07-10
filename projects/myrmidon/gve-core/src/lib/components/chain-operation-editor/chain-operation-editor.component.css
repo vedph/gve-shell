@@ -25,7 +25,7 @@
   width: 6em;
 }
 .op-peephole {
-  width: 420px;
+  flex: 1 0 420px;
 }
 .long-text {
   width: 100%;

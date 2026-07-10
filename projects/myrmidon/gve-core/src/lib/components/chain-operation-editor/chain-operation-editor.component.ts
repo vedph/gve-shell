@@ -38,6 +38,7 @@ import { customAlphabet } from 'nanoid';
 
 // myrmidon
 import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 // local
 import {
@@ -231,6 +232,20 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly sourceTypes = input<LabeledId[] | undefined>();
 
   /**
+   * The 1-based ordinal number of the edited operation among its siblings
+   * in the chain. Used to enable/disable the previous/next navigation
+   * buttons and to compute the requested ordinal when they are clicked.
+   */
+  public readonly operationOrdinal = input<number | undefined>();
+
+  /**
+   * The total number of operations in the chain the edited operation
+   * belongs to. Used together with `operationOrdinal` to enable/disable
+   * the previous/next navigation buttons.
+   */
+  public readonly operationCount = input<number | undefined>();
+
+  /**
    * Emitted when the operation preview is requested.
    */
   public readonly operationPreview = output<CharChainOperation>();
@@ -239,6 +254,14 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
    * Emitted when operation editing is cancelled.
    */
   public readonly operationCancel = output();
+
+  /**
+   * Emitted when the user asks to edit another operation of the chain via
+   * the previous/next navigation buttons. The parent component should
+   * handle this by loading the operation at the requested 1-based ordinal
+   * number into this editor.
+   */
+  public readonly operationOrdinalRequest = output<number>();
 
   public readonly tabIndex = signal<number>(0);
   public readonly id = signal<string | undefined>(undefined);
@@ -307,7 +330,10 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   // root
   public form: FormGroup;
 
-  constructor(formBuilder: FormBuilder) {
+  constructor(
+    formBuilder: FormBuilder,
+    private _dialogService: DialogService,
+  ) {
     this._subs = [];
     // general
     this.rank = formBuilder.control<number>(0, { nonNullable: true });
@@ -583,6 +609,37 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   public cancel(): void {
     this.operationCancel.emit();
+  }
+
+  private requestOperationOrdinal(ordinal: number): void {
+    if (this.form.dirty) {
+      this._dialogService
+        .confirm('Confirm', 'Discard unsaved changes to this operation?')
+        .subscribe((yes: boolean) => {
+          if (yes) {
+            this.operationOrdinalRequest.emit(ordinal);
+          }
+        });
+    } else {
+      this.operationOrdinalRequest.emit(ordinal);
+    }
+  }
+
+  public editPreviousOperation(): void {
+    const ordinal = this.operationOrdinal();
+    if (!ordinal || ordinal <= 1) {
+      return;
+    }
+    this.requestOperationOrdinal(ordinal - 1);
+  }
+
+  public editNextOperation(): void {
+    const ordinal = this.operationOrdinal();
+    const count = this.operationCount();
+    if (!ordinal || !count || ordinal >= count) {
+      return;
+    }
+    this.requestOperationOrdinal(ordinal + 1);
   }
 
   private getOperation(): CharChainOperation {

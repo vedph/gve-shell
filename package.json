@@ -1,6 +1,6 @@
 {
   "name": "gve-shell",
-  "version": "7.0.7",
+  "version": "7.0.16",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -13,7 +13,7 @@
     "mv-img": "gulp move-docs-img"
   },
   "private": true,
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.11.0",
   "dependencies": {
     "@angular/animations": "^22.0.1",
     "@angular/cdk": "^22.0.1",
@@ -25,7 +25,7 @@
     "@angular/platform-browser": "^22.0.1",
     "@angular/platform-browser-dynamic": "^22.0.1",
     "@angular/router": "^22.0.1",
-    "@myrmidon/gve-snapshot-rendition": "^2.0.7",
+    "@myrmidon/gve-snapshot-rendition": "^2.0.10",
     "@myrmidon/ngx-mat-tools": "^2.0.0",
     "@myrmidon/ngx-tools": "^3.0.0",
     "@myrmidon/ngx-viz": "^1.0.1",
@@ -42,9 +42,9 @@
     "gulp": "^5.0.1",
     "gulp-imagemin": "^9.2.0",
     "jsdom": "^29.1.1",
-    "ng-packagr": "^22.0.0",
+    "ng-packagr": "^22.0.1",
     "typescript": "~6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "optionalDependencies": {
     "@rollup/rollup-win32-arm64-msvc": "^4.62.2"

@@ -297,6 +297,8 @@ export class SnapshotEditorComponent {
 
   public readonly peepholeWindowWidth = signal<number>(15);
 
+  private readonly _flatLookup = new FlatLookupPipe();
+
   constructor(
     formBuilder: FormBuilder,
     private _api: GveApiService,
@@ -566,6 +568,20 @@ export class SnapshotEditorComponent {
   public editOperation(index: number) {
     this.editedOpIndex.set(index);
     this.editedOp.set(structuredClone(this.operations.value[index]));
+  }
+
+  /**
+   * Build the tooltip text listing the human-friendly names of the given
+   * operation's sources, space-separated.
+   * @param sources The operation's sources.
+   */
+  public sourcesTooltip(sources: OperationSource[] | undefined): string {
+    if (!sources?.length) {
+      return '';
+    }
+    return sources
+      .map((s) => this._flatLookup.transform(s.id, this.sourceIds(), 'id', 'label'))
+      .join(' ');
   }
 
   /**
