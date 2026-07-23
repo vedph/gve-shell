@@ -1,6 +1,6 @@
 {
   "name": "@myrmidon/gve-core",
-  "version": "7.0.16",
+  "version": "7.0.17",
   "description": "Cadmus - GVE Angular frontend core components.",
   "keywords": [
     "GVE"
@@ -17,12 +17,11 @@
     "@angular/common": "^22.0.1",
     "@angular/core": "^22.0.1",
     "@angular/material": "^22.0.1",
-    "@cisstech/nge": "^18.3.0",
     "@myrmidon/ngx-mat-tools": "^2.0.0",
     "@myrmidon/ngx-tools": "^3.0.0",
-    "@myrmidon/gve-snapshot-rendition": "^2.0.7",
+    "@myrmidon/gve-snapshot-rendition": "^2.0.11",
     "gsap": "^3.15.0",
-    "nanoid": "^5.1.16"
+    "nanoid": "^6.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
