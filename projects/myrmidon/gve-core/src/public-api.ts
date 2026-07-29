@@ -14,6 +14,7 @@ export * from './lib/components/feature-editor/feature-editor.component';
 export * from './lib/components/feature-set-editor/feature-set-editor.component';
 export * from './lib/components/feature-set-view/feature-set-view.component';
 export * from './lib/components/operation-source-editor/operation-source-editor.component';
+export * from './lib/components/searchable-select/searchable-select.component';
 export * from './lib/components/snapshot-editor/snapshot-editor.component';
 export * from './lib/components/snapshot-text-editor/snapshot-text-editor.component';
 export * from './lib/components/steps-map/steps-map.component';

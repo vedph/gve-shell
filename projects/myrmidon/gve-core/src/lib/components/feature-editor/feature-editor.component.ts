@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   effect,
-  ElementRef,
   input,
   model,
   OnDestroy,
@@ -38,6 +37,7 @@ import {
   LabeledId,
   OperationFeature,
 } from '../../models';
+import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 
 /**
  * Features map. This is used for features from closed sets,
@@ -100,6 +100,7 @@ export interface FeaturePropMap {
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
+    SearchableSelectComponent,
   ],
   templateUrl: './feature-editor.component.html',
   styleUrl: './feature-editor.component.css',
@@ -107,7 +108,9 @@ export interface FeaturePropMap {
 export class FeatureEditorComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
 
-  public readonly nameControl = viewChild<ElementRef>('nameCtl');
+  public readonly nameControl = viewChild<
+    SearchableSelectComponent | HTMLInputElement
+  >('nameCtl');
 
   /**
    * The list of feature names to display in the name selection.
@@ -229,7 +232,10 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     // this effect and accidentally overwrite in-progress user edits.
     effect(() => {
       this.updateForm(this.feature());
-      setTimeout(() => this.nameControl()?.nativeElement?.focus(), 0);
+      // nameCtl may still point at the just-unmounted branch's element
+      // for one tick after an unrelated input (e.g. featNames) flips
+      // which branch is rendered, so guard the call, not just the ref.
+      setTimeout(() => this.nameControl()?.focus?.(), 0);
     });
   }
 

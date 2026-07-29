@@ -1,0 +1,27 @@
+.filter-box {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  background-color: inherit;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  cursor: default;
+}
+
+.filter-box mat-icon {
+  opacity: 0.6;
+  flex: 0 0 auto;
+}
+
+.filter-box input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}

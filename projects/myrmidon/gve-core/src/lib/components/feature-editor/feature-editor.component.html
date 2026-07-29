@@ -2,17 +2,16 @@
   <div class="form-row">
     @if (featNames()?.length) {
       <!-- name (bound) -->
-      <mat-form-field>
-        <mat-label>name</mat-label>
-        <mat-select #nameCtl [formControl]="name">
-          @for (i of featNames(); track i) {
-            <mat-option [value]="i.id">{{ i.label }}</mat-option>
-          }
-        </mat-select>
+      <gve-searchable-select
+        #nameCtl
+        label="name"
+        [options]="featNames()!"
+        [formControl]="name"
+      >
         @if ($any(name).errors?.required && (name.dirty || name.touched)) {
           <mat-error>name required</mat-error>
         }
-      </mat-form-field>
+      </gve-searchable-select>
     } @else {
       <!-- name (free) -->
       <mat-form-field>

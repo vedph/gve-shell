@@ -1,0 +1,35 @@
+<mat-form-field>
+  @if (label()) {
+    <mat-label>{{ label() }}</mat-label>
+  }
+  <mat-select
+    #select
+    [value]="value()"
+    [disabled]="disabled()"
+    [required]="required()"
+    (selectionChange)="onSelectionChange($event.value)"
+    (openedChange)="onOpenedChange($event)"
+  >
+    <div class="filter-box" (click)="$event.stopPropagation()">
+      <mat-icon>search</mat-icon>
+      <input
+        #filterInput
+        type="text"
+        autocomplete="off"
+        [value]="filterTerm()"
+        [placeholder]="filterPlaceholder()"
+        (input)="onFilterInput($event)"
+        (keydown)="onFilterKeydown($event)"
+      />
+    </div>
+
+    @for (o of filteredOptions(); track o.id) {
+      <mat-option [value]="o.id">{{ o.label }}</mat-option>
+    } @empty {
+      <mat-option disabled>{{ noOptionsText() }}</mat-option>
+    }
+  </mat-select>
+
+  <ng-content select="mat-error" />
+  <ng-content select="mat-hint" />
+</mat-form-field>

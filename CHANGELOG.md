@@ -1,5 +1,9 @@
 # History
 
+## 7.0.18
+
+- 2026-07-29: 🆕 added search box in feature picker.
+
 ## 7.0.17
 
 - 2026-07-23: updated packages.
