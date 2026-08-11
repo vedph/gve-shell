@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
+  computed,
   effect,
   ElementRef,
   input,
@@ -280,6 +281,33 @@ export class SnapshotEditorComponent {
   public readonly result = signal<CharChainResult | undefined>(undefined);
   public readonly resultOperationId = signal<string | undefined>(undefined);
   public readonly initialStepIndex = signal<number>(-1);
+
+  /**
+   * The text of the input version for the currently edited operation, i.e.
+   * the version whose characters `at`/`run` (or their index-based
+   * counterparts) refer to. This is fed to the operation editor's peephole
+   * preview. It is resolved from the latest execution result, honoring the
+   * operation's `inputTag` (which may point to any earlier version, not
+   * necessarily the output of the operation preceding it in the list, since
+   * chains can branch). When it cannot be resolved (e.g. nothing has been
+   * run yet), this is undefined and the operation editor falls back to the
+   * snapshot's base text.
+   */
+  public readonly editedOpPrecedingText = computed<CharNode[] | undefined>(
+    () => {
+      const op = this.editedOp();
+      const result = this.result();
+      if (!op || !result) {
+        return undefined;
+      }
+      const tag = this.resolveOperationInputTag(
+        op,
+        this.editedOpIndex(),
+        result,
+      );
+      return tag ? this.getVersionText(result, tag) : undefined;
+    },
+  );
 
   // operations batch editing for features
   public readonly editFeatsRange: FormControl<string | null>;
@@ -949,6 +977,93 @@ export class SnapshotEditorComponent {
       return undefined;
     }
     return this.parseSvgIds(g)?.filter((id) => id.endsWith(SVG_TRANSP_SUFFIX));
+  }
+
+  /**
+   * Resolve the tag of the input version for the given operation, i.e. the
+   * version its `at`/`run` (or their index-based counterparts) refer to.
+   *
+   * The chain is not necessarily linear: an operation's input tag can point
+   * to any earlier version, not just the output of the operation preceding
+   * it in the list. So this first looks up the operation among the steps of
+   * the given (already executed) result, which carries the tag the backend
+   * actually resolved for it — this is authoritative and correctly accounts
+   * for branching. It falls back to the operation's own `inputTag` when that
+   * tag is known to the result, and finally, when `inputTag` is blank
+   * (meaning "latest"), to the resolved output tag of the operation
+   * preceding it in the list (or the base text, for the first operation).
+   *
+   * @param op The operation whose input tag is to be resolved.
+   * @param index The operation's index in the list, or -1 for a new,
+   * not yet appended operation.
+   * @param result The latest operations execution result.
+   * @returns The resolved input tag, or undefined when it cannot be
+   * determined from the given result.
+   */
+  private resolveOperationInputTag(
+    op: CharChainOperation,
+    index: number,
+    result: CharChainResult,
+  ): string | undefined {
+    const step = result.steps.find((s) => s.operation.id === op.id);
+    if (step) {
+      return step.inputTag;
+    }
+
+    if (op.inputTag && result.versionNodeIds[op.inputTag]) {
+      return op.inputTag;
+    }
+
+    const precedingIndex =
+      index > -1 ? index - 1 : this.operations.value.length - 1;
+    if (precedingIndex < 0) {
+      return 'v0';
+    }
+
+    const precedingOp = this.operations.value[precedingIndex];
+    if (!precedingOp) {
+      return 'v0';
+    }
+    const precedingStep = result.steps.find(
+      (s) => s.operation.id === precedingOp.id,
+    );
+    if (precedingStep) {
+      return precedingStep.outputTag;
+    }
+    if (precedingOp.outputTag && result.versionNodeIds[precedingOp.outputTag]) {
+      return precedingOp.outputTag;
+    }
+    return undefined;
+  }
+
+  /**
+   * Build the ordered list of character nodes making up the given version
+   * tag, by looking up its node IDs in `versionNodeIds` and resolving each
+   * one against `nodes`.
+   *
+   * @param result The operations execution result.
+   * @param tag The version tag to build the text for.
+   * @returns The version's text, or undefined when the tag is unknown.
+   */
+  private getVersionText(
+    result: CharChainResult,
+    tag: string,
+  ): CharNode[] | undefined {
+    const ids = result.versionNodeIds[tag];
+    if (!ids) {
+      return undefined;
+    }
+    const nodeMap = new Map<number, CharNode>(
+      result.nodes.map((n) => [n.id, n]),
+    );
+    const nodes: CharNode[] = [];
+    for (const id of ids) {
+      const node = nodeMap.get(id);
+      if (node) {
+        nodes.push(node);
+      }
+    }
+    return nodes;
   }
 
   /**

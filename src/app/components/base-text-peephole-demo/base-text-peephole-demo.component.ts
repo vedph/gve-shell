@@ -21,10 +21,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import {
-  BaseTextPeepholeComponent,
+  TextPeepholeComponent,
   CharNode,
   GveBaseTextService,
-  OpBaseTextRange,
+  OpTextRange,
 } from '@myrmidon/gve-core';
 
 @Component({
@@ -36,7 +36,7 @@ import {
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
-    BaseTextPeepholeComponent,
+    TextPeepholeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './base-text-peephole-demo.component.html',
@@ -53,7 +53,7 @@ export class BaseTextPeepholeDemoComponent implements OnInit, OnDestroy {
   public emSize: FormControl<number>;
 
   public readonly nodes = signal<CharNode[]>([]);
-  public readonly selectedRange = signal<OpBaseTextRange>({
+  public readonly selectedRange = signal<OpTextRange>({
     at: 1,
     run: 1,
     atAsIndex: false,

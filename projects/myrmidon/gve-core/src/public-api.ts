@@ -5,7 +5,6 @@
 export * from './lib/models';
 export * from './lib/components/base-text-char/base-text-char.component';
 export * from './lib/components/base-text-editor/base-text-editor.component';
-export * from './lib/components/base-text-peephole/base-text-peephole.component';
 export * from './lib/components/base-text-view/base-text-view.component';
 export * from './lib/components/batch-operation-editor/batch-operation-editor.component';
 export * from './lib/components/chain-operation-editor/chain-operation-editor.component';
@@ -18,6 +17,7 @@ export * from './lib/components/searchable-select/searchable-select.component';
 export * from './lib/components/snapshot-editor/snapshot-editor.component';
 export * from './lib/components/snapshot-text-editor/snapshot-text-editor.component';
 export * from './lib/components/steps-map/steps-map.component';
+export * from './lib/components/text-peephole/text-peephole.component';
 
 export * from './lib/services/gve-api.service';
 export * from './lib/services/gve-base-text.service';

@@ -60,9 +60,9 @@ import {
 } from '../feature-editor/feature-editor.component';
 import { BaseTextRange } from '../base-text-view/base-text-view.component';
 import {
-  BaseTextPeepholeComponent,
-  OpBaseTextRange,
-} from '../base-text-peephole/base-text-peephole.component';
+  TextPeepholeComponent,
+  OpTextRange,
+} from '../text-peephole/text-peephole.component';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 /**
@@ -169,7 +169,7 @@ export interface FeatureDefinitions {
     MatTooltipModule,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
-    BaseTextPeepholeComponent,
+    TextPeepholeComponent,
     FlatLookupPipe,
   ],
   templateUrl: './chain-operation-editor.component.html',
@@ -280,7 +280,7 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   // peephole preview of the operation's input text, tracking the
   // at/run/atAsIndex form values
-  public readonly peepholeRange = signal<OpBaseTextRange>({
+  public readonly peepholeRange = signal<OpTextRange>({
     at: 0,
     run: 0,
     atAsIndex: false,

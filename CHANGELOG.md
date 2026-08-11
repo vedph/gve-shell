@@ -1,5 +1,18 @@
 # History
 
+- 2026-08-11: fixed the base text limitation of the `BaseTextPeepholeComponent`, both of which traced back to a single root cause: `chain-operation-editor.component.ts`:213 already had a `precedingText` input designed to feed the peephole the operation's actual input-version text (falling back to base text when absent).
+
+The fix is in snapshot-editor.component.ts: a new `editedOpPrecedingText` computed signal resolves the correct input text for the operation being edited, and it's now wired into the template via [precedingText]="`editedOpPrecedingText()`".
+
+Resolution logic (`resolveOperationInputTag`), respecting branching per your note:
+
+Look up the edited operation by id among result().steps — the backend already resolved the actual inputTag there, correctly handling branches and blank tags.
+If not found (e.g. a brand-new, never-run operation) but `inputTag` is explicitly set and known to `result().versionNodeIds`, use it directly.
+Otherwise (blank inputTag, "= latest"), fall back to the resolved output tag of the preceding operation in the list — or v0 for the first operation.
+`getVersionText` then builds the ordered `CharNode[]` for that tag from versionNodeIds + nodes, matching the model you described.
+
+Renamed `BaseTextPeepholeComponent` → `TextPeepholeComponent` (and `OpBaseTextRange` → `OpTextRange`), moving base-text-peephole/ to text-peephole/, selector gve-base-text-peephole → gve-text-peephole, updating all references in chain-operation-editor, public-api.ts, and the demo app.
+
 ## 7.0.18
 
 - 2026-07-29: 🆕 added search box in feature picker.

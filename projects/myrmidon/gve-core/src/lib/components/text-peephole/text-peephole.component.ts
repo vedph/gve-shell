@@ -12,30 +12,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { CharNode } from '../../models';
 import { BaseTextRange } from '../base-text-view/base-text-view.component';
 
-export interface OpBaseTextRange extends BaseTextRange {
+export interface OpTextRange extends BaseTextRange {
   /**
-   * If true, the `at` property is treated as an index into the base
-   * text array.
+   * If true, the `at` property is treated as an index into the text
+   * array rather than a node ID.
    */
   atAsIndex?: boolean;
 }
 
 /**
- * Base text peephole component. This shows a window of the base text,
+ * Text peephole component. This shows a window of a text version,
  * with a maximum number of characters, each with its text value and
  * numeric ID similar to the BaseTextCharComponent. Users can scroll
- * the window to "slide" the base text and see its surrounding characters,
+ * the window to "slide" the text and see its surrounding characters,
  * or double click to reset the window to its default position, where
  * selected characters are centered.
  */
 @Component({
-  selector: 'gve-base-text-peephole',
+  selector: 'gve-text-peephole',
   imports: [MatButtonModule, MatIconModule],
-  templateUrl: './base-text-peephole.component.html',
-  styleUrl: './base-text-peephole.component.css',
+  templateUrl: './text-peephole.component.html',
+  styleUrl: './text-peephole.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BaseTextPeepholeComponent {
+export class TextPeepholeComponent {
   private _dragStartX = 0;
   private _dragStartWindowStart = 0;
 
@@ -53,15 +53,15 @@ export class BaseTextPeepholeComponent {
   public readonly emSize = input<number>(1.0);
 
   /**
-   * The full base text.
+   * The full text of the version being peeked into.
    */
   public readonly text = input<CharNode[]>([]);
 
   /**
    * The range of selected characters. If not set, the peephole will show the
-   * first character in the base text plus its surrounding context.
+   * first character in the text plus its surrounding context.
    */
-  public readonly selectedRange = input<OpBaseTextRange | null>(null);
+  public readonly selectedRange = input<OpTextRange | null>(null);
 
   /**
    * The index of the first character shown in the window.
@@ -130,7 +130,7 @@ export class BaseTextPeepholeComponent {
     });
   }
 
-  private resolveSelectionStartIndex(range: OpBaseTextRange): number {
+  private resolveSelectionStartIndex(range: OpTextRange): number {
     if (range.atAsIndex) {
       return range.at;
     }
