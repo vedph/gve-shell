@@ -42,7 +42,7 @@
           [class.selected]="selected"
           [style.fontSize.em]="emSize() / 2"
         >
-          {{ c.id }}
+          {{ showIndex() ? windowStart() + i : c.id }}
         </div>
       </div>
     }

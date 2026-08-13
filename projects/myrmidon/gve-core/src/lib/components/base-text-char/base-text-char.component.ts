@@ -13,6 +13,11 @@ import { ColorToContrastPipe } from '@myrmidon/ngx-tools';
  */
 export interface BaseTextChar {
   id: number;
+  /**
+   * The 0-based index of this character in the flat text sequence it
+   * belongs to.
+   */
+  index: number;
   value: string;
   label: string;
   color: string;
@@ -49,6 +54,11 @@ export class BaseTextCharComponent {
    * The character to display.
    */
   public readonly char = input<BaseTextChar | undefined>();
+
+  /**
+   * True to show the character's index instead of its ID.
+   */
+  public readonly showIndex = input<boolean>(false);
 
   /**
    * Emitted when the character is clicked.

@@ -54,6 +54,8 @@ export interface BaseTextRange {
  * - ▶️ `selectionColor` (`string`): the color for the selected text.
  * - ▶️ `hasLineNumber` (`boolean`): true if line numbers should be displayed next
  * to each line.
+ * - a toolbar button lets users toggle between showing each character's node
+ * ID or its 0-based index, tracked by the `showIndex` signal.
  * - ▶️ `text` (`string` | `CharNode[]`): the text to display.
  * - 🔥 `charPick` (`BaseTextCharEvent`): emitted when a character is picked.
  * - 🔥 `rangePick` (`BaseTextRange`): emitted when a range is picked.
@@ -150,6 +152,12 @@ export class BaseTextViewComponent implements OnInit {
    * The range is inclusive.
    */
   public readonly rangePick = output<BaseTextRange>();
+
+  /**
+   * True to show each character's 0-based index instead of its node ID.
+   * Toggled at will by the user via the toolbar button.
+   */
+  public readonly showIndex = signal<boolean>(false);
 
   /**
    * The base characters organized by lines, computed from text input.
@@ -268,6 +276,7 @@ export class BaseTextViewComponent implements OnInit {
     for (let i = 0; i < nodes.length; i++) {
       const char: BaseTextChar = {
         id: nodes[i].id,
+        index: i,
         value: nodes[i].data,
         label: nodes[i].label,
         color: colorCallback
@@ -428,6 +437,13 @@ export class BaseTextViewComponent implements OnInit {
   public clearSearch(): void {
     this.searchQuery.set('');
     this.searchMatches.set([]);
+  }
+
+  /**
+   * Toggle between showing each character's node ID or its 0-based index.
+   */
+  public toggleShowIndex(): void {
+    this.showIndex.set(!this.showIndex());
   }
 
   /**

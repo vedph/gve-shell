@@ -48,6 +48,17 @@
     copy coords
   </button>
 
+  <button
+    type="button"
+    mat-stroked-button
+    [class.active]="showIndex()"
+    [matTooltip]="showIndex() ? 'Show character IDs' : 'Show character indexes'"
+    (click)="toggleShowIndex()"
+  >
+    <mat-icon>{{ showIndex() ? 'tag' : 'numbers' }}</mat-icon>
+    {{ showIndex() ? 'index' : 'id' }}
+  </button>
+
   @if (pickedIds()) {
     <span class="picked-ids" matTooltip="Double-clicked character IDs">{{ pickedIds() }}</span>
     <button
@@ -79,7 +90,7 @@
         </div>
       }
       @for (c of line; track c.id) {
-        <gve-base-text-char [char]="c" (charPick)="onCharPick($event)" (charDblPick)="onCharDblPick($event)" />
+        <gve-base-text-char [char]="c" [showIndex]="showIndex()" (charPick)="onCharPick($event)" (charDblPick)="onCharDblPick($event)" />
       }
     </div>
   }

@@ -110,6 +110,7 @@
           class="op-peephole"
           [text]="peepholeText()"
           [selectedRange]="peepholeRange()"
+          [showIndex]="peepholeRange().atAsIndex ?? false"
           [windowWidth]="peepholeWindowWidth()"
           [emSize]="0.9"
         />

@@ -14,7 +14,7 @@
     [style.borderColor]="char()!.borderColor"
     [style.backgroundColor]="char()!.color"
   >
-    {{ char()!.id }}
+    {{ showIndex() ? char()!.index : char()!.id }}
   </div>
 </div>
 }

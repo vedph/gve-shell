@@ -1,5 +1,9 @@
 # History
 
+- 2026-08-13:
+  - 🆕 `TextPeepholeComponent`: new `showIndex` input; when true, the number shown under each character is its window-relative position (`windowStart() + i`) instead of its node ID. Consequently, `ChainOperationEditorComponent` — binds `[showIndex]="peepholeRange().atAsIndex ?? false"` on the peephole, reusing the same signal already kept in sync with the atAsIndex form control, so the peephole automatically switches display mode as the user toggles the idx checkbox.
+  - 🆕 `BaseTextViewComponent` / `BaseTextCharComponent` — added a `showIndex` signal on the view (default off) with a `toggleShowIndex()` method and a new toolbar button (icon/text switches between tag/id and numbers/index). `BaseTextChar` now carries an index field (the character's 0-based position in the flat text sequence, continuous across lines/newlines), and `BaseTextCharComponent` takes a `showIndex` input to decide whether to render id or index.
+
 - 2026-08-11: fixed the base text limitation of the `BaseTextPeepholeComponent`, both of which traced back to a single root cause: `chain-operation-editor.component.ts`:213 already had a `precedingText` input designed to feed the peephole the operation's actual input-version text (falling back to base text when absent).
 
 The fix is in snapshot-editor.component.ts: a new `editedOpPrecedingText` computed signal resolves the correct input text for the operation being edited, and it's now wired into the template via [precedingText]="`editedOpPrecedingText()`".

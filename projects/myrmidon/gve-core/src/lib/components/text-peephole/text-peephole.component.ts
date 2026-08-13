@@ -64,6 +64,13 @@ export class TextPeepholeComponent {
   public readonly selectedRange = input<OpTextRange | null>(null);
 
   /**
+   * True to show each character's 0-based index in the displayed text
+   * instead of its node ID. Set this to keep the peephole consistent with
+   * `selectedRange.atAsIndex`.
+   */
+  public readonly showIndex = input<boolean>(false);
+
+  /**
    * The index of the first character shown in the window.
    */
   public readonly windowStart = signal<number>(0);
