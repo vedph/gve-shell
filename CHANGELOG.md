@@ -1,5 +1,7 @@
 # History
 
+## 7.0.19
+
 - 2026-08-13:
   - 🆕 `TextPeepholeComponent`: new `showIndex` input; when true, the number shown under each character is its window-relative position (`windowStart() + i`) instead of its node ID. Consequently, `ChainOperationEditorComponent` — binds `[showIndex]="peepholeRange().atAsIndex ?? false"` on the peephole, reusing the same signal already kept in sync with the atAsIndex form control, so the peephole automatically switches display mode as the user toggles the idx checkbox.
   - 🆕 `BaseTextViewComponent` / `BaseTextCharComponent` — added a `showIndex` signal on the view (default off) with a `toggleShowIndex()` method and a new toolbar button (icon/text switches between tag/id and numbers/index). `BaseTextChar` now carries an index field (the character's 0-based position in the flat text sequence, continuous across lines/newlines), and `BaseTextCharComponent` takes a `showIndex` input to decide whether to render id or index.
