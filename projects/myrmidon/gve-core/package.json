@@ -17,8 +17,8 @@
     "@angular/common": "^22.0.1",
     "@angular/core": "^22.0.1",
     "@angular/material": "^22.0.1",
-    "@myrmidon/ngx-mat-tools": "^2.0.0",
-    "@myrmidon/ngx-tools": "^3.0.0",
+    "@myrmidon/ngx-mat-tools": "^3.0.1",
+    "@myrmidon/ngx-tools": "^3.0.2",
     "@myrmidon/gve-snapshot-rendition": "^2.0.11",
     "gsap": "^3.15.0",
     "nanoid": "^6.0.0"
