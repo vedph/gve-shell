@@ -18,15 +18,25 @@ export class SvgValidators {
 
       try {
         const doc = parser.parseFromString(control.value, 'image/svg+xml');
-        svgRoot =
-          doc.documentElement.nodeName === 'svg' ? doc.documentElement : null;
+        // DOMParser does not throw on malformed XML: it returns a document
+        // containing a parsererror element instead
+        if (doc.getElementsByTagName('parsererror').length) {
+          error = { svgInvalid: { value: control.value } };
+        } else {
+          svgRoot =
+            doc.documentElement.nodeName === 'svg'
+              ? doc.documentElement
+              : null;
+        }
       } catch (e) {
         error = { svgInvalid: { value: control.value } };
       }
 
       if (!error && svgRoot) {
-        const gElements = svgRoot.getElementsByTagName('g');
-        if (gElements.length !== 1 || svgRoot.childNodes.length > 1) {
+        // the svg root must have a single g element child (whitespace
+        // and nested elements inside g are allowed)
+        const children = Array.from(svgRoot.children);
+        if (children.length !== 1 || children[0].nodeName !== 'g') {
           error = { svgInvalidRoot: { value: control.value } };
         }
       }

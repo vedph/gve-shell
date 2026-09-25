@@ -8,6 +8,21 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 - [Cadmus editor frontend](https://github.com/vedph/cadmus-gve-app). This is a [Cadmus](https://vedph.github.io/cadmus-doc)-based editor for GVE entities including (but not limited to) GVE snapshots.
 - [documentation](https://github.com/vedph/gve-doc). This repository is the source for the [VEdition documentation web pages](https://vedph.github.io/gve-doc).
 
+## Workspace
+
+Local libraries (the `library` projects in `angular.json`) are consumed by the app **only** through the `tsconfig.json` `paths` mapping to their `dist/` output, never through `node_modules`:
+
+- `pnpm run build-libs`: builds all the local libraries in dependency order (derived from their `package.json` files). Pass library names to build them plus all their dependents, e.g. `node scripts/build-libs.mjs @myrmidon/gve-core`; add `--clear-cache` to also remove `.angular/cache`, whose Vite pre-bundle is not invalidated when a library is rebuilt into `dist/`. A library change reaches the app only after rebuilding it (and its dependents).
+- `pnpm run check-libs`: fails if a local library is found in `node_modules` or in the lockfile, is listed among the workspace dependencies, or is not mapped to its `dist/` in `tsconfig.json`. This guard runs automatically before `pnpm start`, `pnpm run build` and `pnpm run build-libs`.
+
+If a change does not appear in the app, check what is being served (`ls -la node_modules/@myrmidon/`, `grep -r "someNewString" .angular/cache dist/`), then remove `.angular/cache` and restart `ng serve`.
+
+Tests (Vitest, jsdom, Angular Testing Library) cover the libraries only (the app's pages are just demos):
+
+- `pnpm test`: run once.
+- `pnpm run test:watch`: watch mode.
+- `pnpm run test:coverage`: with coverage report in `coverage/`.
+
 ## Docker
 
 🐋 Quick Docker image build:

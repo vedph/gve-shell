@@ -192,13 +192,15 @@
         </thead>
         <tbody>
           @for (s of sources.value; track s) {
-            <tr [class.selected]="s === editedSource()">
+            <tr [class.selected]="$index === editedSourceIndex()">
               <td class="fit-width">
                 <button
                   type="button"
                   mat-icon-button
                   color="primary"
+                  matTooltip="Edit this source"
                   (click)="editSource($index)"
+                  aria-label="Edit this source"
                 >
                   <mat-icon class="mat-primary">edit</mat-icon>
                 </button>
@@ -206,7 +208,9 @@
                   type="button"
                   mat-icon-button
                   color="warn"
+                  matTooltip="Delete this source"
                   (click)="deleteSource($index)"
+                  aria-label="Delete this source"
                 >
                   <mat-icon class="mat-warn">delete</mat-icon>
                 </button>
@@ -247,6 +251,7 @@
       mat-icon-button
       matTooltip="Discard operation"
       (click)="cancel()"
+      aria-label="Discard operation"
     >
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
@@ -257,6 +262,7 @@
         mat-icon-button
         matTooltip="Preview operation"
         (click)="requestPreview()"
+        aria-label="Preview operation"
       >
         <mat-icon class="mat-primary">preview</mat-icon>
       </button>
@@ -267,6 +273,7 @@
       matTooltip="Edit previous operation"
       [disabled]="!operationOrdinal() || operationOrdinal()! <= 1"
       (click)="editPreviousOperation()"
+      aria-label="Edit previous operation"
     >
       <mat-icon>skip_previous</mat-icon>
     </button>
@@ -280,6 +287,7 @@
         operationOrdinal()! >= operationCount()!
       "
       (click)="editNextOperation()"
+      aria-label="Edit next operation"
     >
       <mat-icon>skip_next</mat-icon>
     </button>

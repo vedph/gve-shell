@@ -28,7 +28,9 @@
               "src/assets",
               "src/env.js"
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/styles.scss"
+            ],
             "scripts": [
               "node_modules/gsap/dist/gsap.min.js",
               "node_modules/gsap/dist/DrawSVGPlugin.min.js"
@@ -75,13 +77,6 @@
           "options": {
             "buildTarget": "gve-shell:build"
           }
-        },
-        "test": {
-          "builder": "@angular/build:unit-test",
-          "options": {
-            "tsConfig": "tsconfig.spec.json",
-            "buildTarget": "::development"
-          }
         }
       }
     },
@@ -110,7 +105,22 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "tsConfig": "projects/myrmidon/gve-core/tsconfig.spec.json",
-            "buildTarget": "::development"
+            "buildTarget": "::development",
+            "runner": "vitest",
+            "setupFiles": [
+              "projects/myrmidon/gve-core/src/test-setup.ts"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/gve-core/src/lib/**/*.ts"
+            ],
+            "coverageExclude": [
+              "**/*.spec.ts",
+              "projects/myrmidon/gve-core/src/lib/services/gve-api.service.ts"
+            ],
+            "coverageReporters": [
+              "text-summary",
+              "html"
+            ]
           }
         }
       }

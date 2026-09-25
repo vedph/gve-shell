@@ -20,6 +20,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { CharNode, PayloadMatDialogConfig } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
@@ -43,6 +44,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatTooltipModule,
   ],
   templateUrl: './snapshot-text-editor.component.html',
   styleUrl: './snapshot-text-editor.component.css',

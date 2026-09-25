@@ -68,6 +68,7 @@
                 matTooltip="Copy operations as DSL to clipboard"
                 [disabled]="!operations.value.length || busy()"
                 (click)="copyOperationsDsl()"
+                aria-label="Copy operations as DSL to clipboard"
               >
                 <mat-icon class="mat-primary">content_copy</mat-icon>
               </button>
@@ -81,6 +82,7 @@
                   (!baseText.value && !operations.value.length) || busy()
                 "
                 (click)="copyOperationsJson()"
+                aria-label="Copy text and operations as JSON to clipboard"
               >
                 <mat-icon>copy_all</mat-icon>
               </button>
@@ -111,7 +113,7 @@
 
               <!-- edit operations feats/sources -->
               <form
-                (submit)="editOperationsFeats()"
+                (submit)="$event.stopPropagation(); editOperationsFeats()"
                 [formGroup]="editFeatsForm"
               >
                 <mat-form-field>
@@ -135,6 +137,7 @@
                     matSuffix
                     matTooltip="Edit sources for range"
                     (click)="editOperationSources()"
+                    aria-label="Edit sources for range"
                   >
                     <mat-icon>people</mat-icon>
                   </button>
@@ -143,6 +146,7 @@
                     matIconButton
                     matSuffix
                     matTooltip="Edit features for range"
+                    aria-label="Edit features for range"
                   >
                     <mat-icon>edit_note</mat-icon>
                   </button>
@@ -289,6 +293,7 @@
                         class="mat-primary"
                         (click)="editOperation(index)"
                         matTooltip="Edit operation"
+                        aria-label="Edit operation"
                       >
                         <mat-icon>edit</mat-icon>
                       </button>
@@ -299,6 +304,7 @@
                         class="mat-warn"
                         (click)="deleteOperation(index)"
                         matTooltip="Delete operation"
+                        aria-label="Delete operation"
                       >
                         <mat-icon class="mat-warn">delete</mat-icon>
                       </button>
@@ -309,6 +315,7 @@
                         class="mat-accent"
                         (click)="runTo(index)"
                         matTooltip="Run to this operation"
+                        aria-label="Run to this operation"
                       >
                         <mat-icon class="mat-accent">subscriptions</mat-icon>
                       </button>
@@ -318,6 +325,7 @@
                         mat-icon-button
                         (click)="duplicateOperation(index)"
                         matTooltip="Duplicate operation"
+                        aria-label="Duplicate operation"
                       >
                         <mat-icon>control_point_duplicate</mat-icon>
                       </button>
@@ -328,6 +336,7 @@
                         (click)="moveOperationUp(index)"
                         matTooltip="Move operation up"
                         [disabled]="index === 0"
+                        aria-label="Move operation up"
                       >
                         <mat-icon>arrow_circle_up</mat-icon>
                       </button>
@@ -338,6 +347,7 @@
                         (click)="moveOperationDown(index)"
                         matTooltip="Move operation down"
                         [disabled]="index === operations.value.length - 1"
+                        aria-label="Move operation down"
                       >
                         <mat-icon>arrow_circle_down</mat-icon>
                       </button>

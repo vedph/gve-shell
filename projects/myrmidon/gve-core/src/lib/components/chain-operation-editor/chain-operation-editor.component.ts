@@ -486,12 +486,22 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Toggle the escape of line feeds in the specified text. As the value
+   * is edited in a single-line input, LF characters are represented
+   * there by backslashes.
+   *
+   * @param text The text.
+   * @param on True to escape LF (LF to backslash), false to unescape it
+   * (backslash to LF).
+   * @returns The text.
+   */
   private toggleLfEscape(
     text: string | null | undefined,
     on: boolean,
   ): string | null | undefined {
     if (!text) return text;
-    return on ? text.replace(/\\/g, '\n') : text.replace(/\n/g, '\\');
+    return on ? text.replace(/\n/g, '\\') : text.replace(/\\/g, '\n');
   }
 
   public onFeaturesChange(features: OperationFeature[]): void {
@@ -569,6 +579,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     if (!value) {
       this.value.reset();
     }
+    // value's required validation depends on type
+    this.value.updateValueAndValidity();
   }
 
   private updateForm(operation?: CharChainOperation | null): void {
@@ -666,6 +678,15 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public deleteSource(index: number): void {
     const sources = [...this.sources.value];
     sources.splice(index, 1);
+
+    // keep the edited source index in sync with the list
+    const editedIndex = this.editedSourceIndex();
+    if (editedIndex === index) {
+      this.closeSource();
+    } else if (editedIndex > index) {
+      this.editedSourceIndex.set(editedIndex - 1);
+    }
+
     this.sources.setValue(sources);
     this.sources.updateValueAndValidity();
     this.sources.markAsDirty();

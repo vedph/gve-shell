@@ -335,35 +335,24 @@ export class ChainResultViewComponent
     }
     this.selection.set(range.at + '×' + range.run);
     this.selectionRange.set(range);
-    const end = range.at + range.run;
 
-    const features: Feature[] = [];
-    const result = this.result()!;
-    const tag = this.tag.value!;
-    const nodeIds = result.versionNodeIds[tag] ?? [];
-    const nodeMap = new Map(result.nodes.map((n) => [n.id, n]));
+    // the range refers to the displayed text of the current step, i.e. it
+    // starts from the node with ID=at and spans run nodes in version order;
+    // node IDs in a version are not necessarily contiguous
+    const nodes = this.stepNodes();
+    const start = nodes.findIndex((n) => n.id === range.at);
+    if (start === -1) {
+      this.selectionFeatures.set([]);
+      return;
+    }
 
-    for (const nodeId of nodeIds) {
-      const node = nodeMap.get(nodeId);
-      if (!node) continue;
-      if (node.id >= range.at && node.id < end) {
-        const nodeFeatures = this.getNodeFeatures(node.id);
-
-        if (node.id === range.at) {
-          for (const f of nodeFeatures) {
-            features.push(f);
-          }
-        } else {
-          // features = intersection of features and nodeFeatures
-          features.splice(
-            0,
-            features.length,
-            ...features.filter((f) =>
-              nodeFeatures.some((cf) => cf.name === f.name)
-            )
-          );
-        }
-      }
+    // features = intersection (by name) of the features of all the nodes
+    let features: Feature[] = [...this.getNodeFeatures(range.at)];
+    for (const node of nodes.slice(start + 1, start + range.run)) {
+      const nodeFeatures = this.getNodeFeatures(node.id);
+      features = features.filter((f) =>
+        nodeFeatures.some((cf) => cf.name === f.name)
+      );
     }
 
     this.selectionFeatures.set(features);

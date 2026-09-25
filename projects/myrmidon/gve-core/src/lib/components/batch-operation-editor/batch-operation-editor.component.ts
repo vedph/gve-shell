@@ -23,6 +23,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { CharChainOperation, PayloadMatDialogConfig } from '../../models';
 import { GveApiService } from '../../services/gve-api.service';
@@ -45,7 +46,8 @@ import { GveApiService } from '../../services/gve-api.service';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-],
+    MatTooltipModule,
+  ],
   templateUrl: './batch-operation-editor.component.html',
   styleUrl: './batch-operation-editor.component.css',
 })
@@ -121,6 +123,7 @@ export class BatchOperationEditorComponent implements OnInit {
       },
       error: (error) => {
         this.parseError.set(error.message);
+        this.busy.set(false);
       },
       complete: () => {
         this.busy.set(false);

@@ -3,6 +3,39 @@
 - 2026-09-25:
   - updated Angular and packages.
   - removed unused `@myrmidon/ngx-viz`.
+  - 🧪 **tests**: full Vitest test suite for `gve-core` (Angular Testing Library for components, plain Vitest for services, validators and utilities; API services excluded). Added `@testing-library/jest-dom` matchers and `@vitest/coverage-v8`; test setup in `projects/myrmidon/gve-core/src/test-setup.ts`. Removed the app's test target and its stub specs (demo pages are not tested). Scripts: `test`, `test:watch`, `test:coverage`.
+  - 🛠️ **workspace**: local libraries are resolved only via `tsconfig.json` `paths` to `dist/`. Added `scripts/build-libs.mjs` (`pnpm run build-libs`/`build-lib`: builds libraries in dependency order, optionally clearing `.angular/cache`) and `scripts/check-local-libs.mjs` (`pnpm run check-libs`, also run before `start`, `build` and `build-libs`), which fails when a local library is found in `node_modules`/lockfile or is not mapped to its `dist/`.
+  - 🐛 **fixes** found while testing:
+    - `FeatureSetEditorComponent`:
+      - saving an edited feature when another feature with the same name had a single set policy (or the edited one had it) replaced the wrong feature, losing data: removing duplicates shifted indexes before the edited feature was replaced at its old index.
+      - deleting a feature while editing another one left a stale edited index, so that saving the edit replaced the wrong feature.
+      - the edited row highlight used the filtered row index, so it was wrong while filtering.
+      - filter label was a plain `label` rather than `mat-label`.
+    - `FeatureEditorComponent`:
+      - accepting a feature submitted its form, and the submit event bubbled up to any ancestor form: e.g. in the operation editor it also saved (and closed) the whole operation, and in the base text editor it prompted to reset the text. The form now stops the submit propagation.
+      - after a feature was loaded programmatically, re-picking the name the user had last picked was ignored (`distinctUntilChanged` compared against a stale value), so the value list and value reset were not updated.
+      - the free-text name input never got the focus when loading a feature (the view child is an `ElementRef`, not the input element).
+      - "too long" errors were never shown (`maxLength` vs. Angular's `maxlength` error key). The same fix applies to `BaseTextEditorComponent`, `OperationSourceEditorComponent` and `SnapshotTextEditorComponent`.
+    - `OperationSourceEditorComponent`: its form submit no longer bubbles to ancestor forms (e.g. saving the operation when accepting a source).
+    - `ChainOperationEditorComponent`:
+      - line feeds escaping in the operation value was reversed: loading an operation turned backslashes into LF, and saving turned LF into backslashes, so that a value with LF was corrupted on save. Now, as intended, LF is shown as `\` in the (single-line) value input, and `\` is saved as LF. Note that as a consequence of this convention a literal backslash cannot be entered in a value.
+      - changing the operation type to one requiring a value (replace, add-before, add-after) did not re-validate the value, so that the operation could be saved without it.
+      - deleting a source while editing another one left a stale edited index, so that saving the source replaced the wrong one.
+      - the edited source row highlight never showed (it compared against a clone). Added tooltips to the source edit/delete buttons.
+    - `ChainResultViewComponent`: the features of a picked text range were computed by filtering nodes with IDs in the numeric range `at`..`at+run-1`, while the range refers to consecutive nodes in the version text (whose IDs are not contiguous once operations add or move nodes); also, the current version was taken from the tag control, which is not set when the step comes from `initialStepIndex`. Now the range is resolved positionally in the current step's text.
+    - `BaseTextViewComponent`: after clearing a search, searching again for the same text did nothing (`distinctUntilChanged`); and a search still pending when cleared could bring its highlights back.
+    - `BatchOperationEditorComponent`: an API error left the component busy forever, disabling any further parsing. Also added the missing `MatTooltipModule` import (tooltips were not shown), as in `SnapshotTextEditorComponent`.
+    - `SnapshotEditorComponent`:
+      - deleting, duplicating or moving operations while editing one left a stale edited index, so that saving the edited operation replaced another one.
+      - batch-adding features or sources to a range of operations mutated the operation objects, which are shared with the snapshot received as input (so changes leaked even when not saved).
+      - submitting the operations range form (to edit features/sources of a range) also submitted the outer form, thus saving the snapshot.
+      - picking a step whose operation is not in the list threw an error.
+      - applying rendition settings mutated the input settings object (by default the shared `DEFAULT_SETTINGS` of `@myrmidon/gve-snapshot-rendition`).
+    - `SnapshotTextEditorComponent`: text label was a plain `label` rather than `mat-label`.
+    - `SettingsService`: the key prefix was not transparent as documented: `getKeys` and `settingChange$` returned prefixed keys, so that e.g. `get(getKeys()[0])` failed.
+    - `GveGraphvizService`: double quotes (and backslashes) in node labels were not escaped, producing invalid DOT code.
+    - `SvgValidators.rootGValidator`: malformed XML was accepted (`DOMParser` does not throw), while an SVG with whitespace around its root `g`, or with nested `g` elements, was rejected.
+  - ♿ **accessibility**: added `aria-label`s to all the icon-only buttons (they had no accessible name, as the icon is `aria-hidden` and a tooltip is just a description).
 - 2026-09-22: updated packages.
 - 2026-09-14: updated packages.
 - 2026-09-04: updated packages.

@@ -42,6 +42,18 @@ export class SettingsService {
     return this.keyPrefix ? this.keyPrefix + key : key;
   }
 
+  /**
+   * Removes the keyPrefix (if any) from a scoped key.
+   *
+   * @param key The scoped key.
+   * @returns The unscoped key.
+   */
+  private getUnscopedKey(key: string): string {
+    return this.keyPrefix && key.startsWith(this.keyPrefix)
+      ? key.substring(this.keyPrefix.length)
+      : key;
+  }
+
   private isPersist(persist?: boolean): boolean {
     return persist === undefined ? this.persistDefault : persist;
   }
@@ -63,7 +75,7 @@ export class SettingsService {
         console.error(`Error saving key "${key}" to localStorage`, e);
       }
     }
-    this._subject.next(key);
+    this._subject.next(this.getUnscopedKey(key));
   }
 
   /**
@@ -160,8 +172,8 @@ export class SettingsService {
     // collect keys from cache
     this._cache.forEach((_, key) => keys.add(key));
 
-    // return keys as array
-    return Array.from(keys);
+    // return unscoped keys as array, as the prefix is transparent to callers
+    return Array.from(keys).map((k) => this.getUnscopedKey(k));
   }
 
   /**
@@ -177,7 +189,7 @@ export class SettingsService {
     if (this.isPersist(persist)) {
       localStorage.removeItem(key);
     }
-    this._subject.next(key);
+    this._subject.next(this.getUnscopedKey(key));
   }
 
   /**
@@ -209,12 +221,12 @@ export class SettingsService {
     // remove from cache all the items emitting change events
     this._cache.forEach((_, key) => {
       this._cache.delete(key);
-      this._subject.next(key);
+      this._subject.next(this.getUnscopedKey(key));
       removedKeys.delete(key);
     });
 
     // emit changes for the remaining removed keys
     // for when the cache was not in sync with the local storage
-    removedKeys.forEach((key) => this._subject.next(key));
+    removedKeys.forEach((key) => this._subject.next(this.getUnscopedKey(key)));
   }
 }

@@ -14,6 +14,7 @@
         mat-icon-button
         matTooltip="Clear search"
         (click)="clearSearch()"
+        aria-label="Clear search"
       >
         <mat-icon class="mat-warn">close</mat-icon>
       </button>
@@ -66,6 +67,7 @@
       mat-icon-button
       matTooltip="Clear collected IDs"
       (click)="clearPickedIds()"
+      aria-label="Clear collected IDs"
     >
       <mat-icon>clear</mat-icon>
     </button>
@@ -74,6 +76,7 @@
       mat-icon-button
       matTooltip="Copy collected IDs to clipboard"
       (click)="copyPickedIds()"
+      aria-label="Copy collected IDs to clipboard"
     >
       <mat-icon>content_copy</mat-icon>
     </button>

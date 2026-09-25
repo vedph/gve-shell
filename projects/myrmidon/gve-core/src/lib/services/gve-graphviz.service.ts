@@ -65,6 +65,10 @@ export class GveGraphvizService {
     return this.hslToRgb(hue, saturation, lightness);
   }
 
+  private escapeLabel(label: string): string {
+    return label.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
   private getExcludedNodeIds(chain: CharChain, tags?: string[]): Set<number> {
     // get only the desired links
     const links = chain.links.filter((link) =>
@@ -107,9 +111,9 @@ export class GveGraphvizService {
     sb.push('  node [style=filled];');
     sb.push(`  rankdir=${rankdir};`);
     chain.nodes.forEach((node) => {
-      // note that in label we must escape the double quotes
+      // note that in label we must escape backslashes and double quotes
       sb.push(
-        `  ${node.id} [label="${node.label === '"' ? '"' : node.label}"` +
+        `  ${node.id} [label="${this.escapeLabel(node.label)}"` +
           (node.sourceTag
             ? ` fillcolor="${this.getColorForTag(node.sourceTag)}"`
             : '') +

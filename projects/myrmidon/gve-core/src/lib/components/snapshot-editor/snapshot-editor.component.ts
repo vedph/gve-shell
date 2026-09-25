@@ -458,9 +458,12 @@ export class SnapshotEditorComponent {
       return;
     }
 
-    const settings = this.renditionSettings();
-    settings.debug = this.debug() || false;
-    rendition.settings = settings as GveRenditionSettings;
+    // copy the settings rather than mutating the input value, which
+    // by default is the shared DEFAULT_SETTINGS object
+    rendition.settings = {
+      ...this.renditionSettings(),
+      debug: this.debug() || false,
+    };
   }
 
   /**
@@ -663,8 +666,13 @@ export class SnapshotEditorComponent {
     const operations = [...this.operations.value];
     for (const opNumber of opNumbers) {
       const op = operations[opNumber - 1];
-      // just add features to the existing ones, without touching existing features
-      op.features = [...(op.features || []), ...features];
+      // just add features to the existing ones, without touching existing
+      // features; replace the operation object instead of mutating it, as
+      // it might be shared with the snapshot received as input
+      operations[opNumber - 1] = {
+        ...op,
+        features: [...(op.features || []), ...features],
+      };
     }
     this.operations.setValue(operations);
     this.operations.markAsDirty();
@@ -702,7 +710,10 @@ export class SnapshotEditorComponent {
     const operations = [...this.operations.value];
     for (const opNumber of opNumbers) {
       const op = operations[opNumber - 1];
-      op.sources = [...(op.sources || []), source];
+      operations[opNumber - 1] = {
+        ...op,
+        sources: [...(op.sources || []), source],
+      };
     }
     this.operations.setValue(operations);
     this.operations.markAsDirty();
@@ -787,9 +798,12 @@ export class SnapshotEditorComponent {
       )
       .subscribe((yes: boolean) => {
         if (yes) {
-          // close the edited operation if it is the one being deleted
+          // close the edited operation if it is the one being deleted,
+          // else keep its index in sync
           if (this.editedOpIndex() === index) {
             this.closeEditedOperation();
+          } else if (this.editedOpIndex() > index) {
+            this.editedOpIndex.set(this.editedOpIndex() - 1);
           }
           // reset the result operation ID if it is the one being deleted
           if (this.resultOperationId() === this.operations.value[index].id) {
@@ -820,9 +834,24 @@ export class SnapshotEditorComponent {
     const clone = structuredClone(operations[index]);
     clone.id = this._nanoid();
     operations.splice(index + 1, 0, clone);
+    if (this.editedOpIndex() > index) {
+      this.editedOpIndex.set(this.editedOpIndex() + 1);
+    }
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
+  }
+
+  /**
+   * Keep the edited operation index in sync when the operations at the
+   * specified indexes are swapped.
+   */
+  private swapEditedOpIndex(a: number, b: number): void {
+    if (this.editedOpIndex() === a) {
+      this.editedOpIndex.set(b);
+    } else if (this.editedOpIndex() === b) {
+      this.editedOpIndex.set(a);
+    }
   }
 
   /**
@@ -836,6 +865,7 @@ export class SnapshotEditorComponent {
     const operations = [...this.operations.value];
     const op = operations.splice(index, 1)[0];
     operations.splice(index - 1, 0, op);
+    this.swapEditedOpIndex(index, index - 1);
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
@@ -852,6 +882,7 @@ export class SnapshotEditorComponent {
     }
     const op = operations.splice(index, 1)[0];
     operations.splice(index + 1, 0, op);
+    this.swapEditedOpIndex(index, index + 1);
     this.operations.setValue(operations);
     this.operations.markAsDirty();
     this.operations.updateValueAndValidity();
@@ -1280,6 +1311,9 @@ export class SnapshotEditorComponent {
     const index = snapshot.operations.findIndex(
       (o) => o.id === step.operation.id,
     );
+    if (index === -1) {
+      return;
+    }
 
     // remove snapshot operations after the picked step to avoid
     // their visuals creep into the snapshot view

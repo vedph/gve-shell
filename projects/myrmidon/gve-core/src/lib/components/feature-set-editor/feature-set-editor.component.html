@@ -3,7 +3,7 @@
     <!-- filter -->
     @if (filterThreshold() === 0 || workingFeatures().length >= filterThreshold()) {
       <mat-form-field>
-        <label>filter</label>
+        <mat-label>filter</mat-label>
         <input matInput [formControl]="filter" />
         <button
           type="button"
@@ -79,7 +79,7 @@
       </thead>
       <tbody>
         @for (feature of filteredFeatures(); track $index) {
-          <tr [class.selected]="$index === editedFeatureIndex()">
+          <tr [class.selected]="isEdited(feature)">
             <td class="fit-width">
               <!-- edit -->
               <button
@@ -88,6 +88,7 @@
                 mat-icon-button
                 matTooltip="Edit this feature"
                 (click)="editFeature(feature)"
+                aria-label="Edit this feature"
               >
                 <mat-icon class="mat-primary">edit</mat-icon>
               </button>
@@ -98,6 +99,7 @@
                 mat-icon-button
                 matTooltip="Delete this feature"
                 (click)="deleteFeature(feature)"
+                aria-label="Delete this feature"
               >
                 <mat-icon class="mat-warn">delete</mat-icon>
               </button>

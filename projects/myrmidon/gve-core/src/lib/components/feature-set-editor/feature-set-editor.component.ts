@@ -232,6 +232,15 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     }
     const features = [...source];
     features.splice(index, 1);
+
+    // keep the edited feature index in sync with the list
+    const editedIndex = this.editedFeatureIndex();
+    if (editedIndex === index) {
+      this.onFeatureCancel();
+    } else if (editedIndex > index) {
+      this.editedFeatureIndex.set(editedIndex - 1);
+    }
+
     if (this.batchMode()) {
       this.draftFeatures.set(features);
     } else {
@@ -250,23 +259,25 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     if (!feature) {
       return;
     }
-    const features = [...this.workingFeatures()];
+    const editedIndex = this.editedFeatureIndex();
+    const features: (Feature | OperationFeature)[] = [];
 
-    for (let i = features.length - 1; i >= 0; i--) {
-      if (features[i].name === feature.name) {
-        if (
-          feature.setPolicy === FeatureSetPolicy.single ||
-          features[i].setPolicy === FeatureSetPolicy.single
-        ) {
-          features.splice(i, 1);
-        }
+    // copy all the features, replacing the edited one (if any) in place,
+    // and dropping the other features with the same name when either
+    // of them has a single set policy
+    this.workingFeatures().forEach((f, i) => {
+      if (i === editedIndex) {
+        features.push(feature);
+      } else if (
+        f.name !== feature.name ||
+        (feature.setPolicy !== FeatureSetPolicy.single &&
+          f.setPolicy !== FeatureSetPolicy.single)
+      ) {
+        features.push(f);
       }
-    }
-
-    if (this.editedFeatureIndex() === -1) {
+    });
+    if (editedIndex === -1) {
       features.push(feature);
-    } else {
-      features.splice(this.editedFeatureIndex(), 1, feature);
     }
 
     this.onFeatureCancel();
@@ -275,6 +286,14 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     } else {
       this.features.set(features);
     }
+  }
+
+  /**
+   * True if the specified feature is the one being edited.
+   */
+  public isEdited(feature: Feature | OperationFeature): boolean {
+    const index = this.editedFeatureIndex();
+    return index > -1 && this.workingFeatures()[index] === feature;
   }
 
   public onFeatureCancel(): void {

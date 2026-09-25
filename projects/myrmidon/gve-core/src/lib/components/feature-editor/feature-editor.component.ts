@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   input,
   model,
   OnDestroy,
@@ -20,7 +21,7 @@ import {
   Validators,
 } from '@angular/forms';
 
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subscription, debounceTime } from 'rxjs';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -109,7 +110,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
   private _sub?: Subscription;
 
   public readonly nameControl = viewChild<
-    SearchableSelectComponent | HTMLInputElement
+    SearchableSelectComponent | ElementRef<HTMLInputElement>
   >('nameCtl');
 
   /**
@@ -235,7 +236,7 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
       // nameCtl may still point at the just-unmounted branch's element
       // for one tick after an unrelated input (e.g. featNames) flips
       // which branch is rendered, so guard the call, not just the ref.
-      setTimeout(() => this.nameControl()?.focus?.(), 0);
+      setTimeout(() => this.focusName(), 0);
     });
   }
 
@@ -244,8 +245,11 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     // updateForm uses { emitEvent: false } so programmatic loads never
     // reach this subscription, eliminating the race that caused value.reset()
     // to fire after a 300 ms debounce and wipe the just-loaded value.
+    // No distinctUntilChanged here: programmatic loads do not emit, so the
+    // last emitted name may be stale, and the user re-picking it after a
+    // load must still refresh the value IDs.
     this._sub = this.name.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged())
+      .pipe(debounceTime(300))
       .subscribe((name) => {
         this._currentName.set(name);
         this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
@@ -275,6 +279,15 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this._sub?.unsubscribe();
+  }
+
+  private focusName(): void {
+    const ctl = this.nameControl();
+    if (ctl instanceof ElementRef) {
+      ctl.nativeElement.focus?.();
+    } else {
+      ctl?.focus?.();
+    }
   }
 
   private getLabeledIdsFor(

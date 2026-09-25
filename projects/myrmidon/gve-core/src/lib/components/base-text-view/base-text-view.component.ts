@@ -10,7 +10,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -247,15 +247,14 @@ export class BaseTextViewComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    // Setup debounced search
+    // Setup debounced search. The search always uses the current query,
+    // so that a search pending when the query gets cleared (or when the
+    // text changes) does not resurrect stale highlights, and the same query
+    // can be searched again after clearing it.
     this._searchSubject
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        takeUntilDestroyed(this._destroyRef),
-      )
-      .subscribe((query) => {
-        this.performSearch(query);
+      .pipe(debounceTime(300), takeUntilDestroyed(this._destroyRef))
+      .subscribe(() => {
+        this.performSearch(this.searchQuery());
       });
   }
 

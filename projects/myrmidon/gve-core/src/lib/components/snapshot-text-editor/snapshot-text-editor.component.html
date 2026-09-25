@@ -7,7 +7,7 @@
       <div id="batch-input">
         <div>
           <mat-form-field class="full-width">
-            <label>base text</label>
+            <mat-label>base text</mat-label>
             <textarea matInput [formControl]="userText" rows="8"></textarea>
             @if (
               $any(userText).errors?.required &&
@@ -16,7 +16,7 @@
               <mat-error>text required</mat-error>
             }
             @if (
-              $any(userText).errors?.maxLength &&
+              $any(userText).errors?.maxlength &&
               (userText.dirty || userText.touched)
             ) {
               <mat-error>text too long</mat-error>
