@@ -1,5 +1,7 @@
 # History
 
+## 7.0.20
+
 - 2026-09-25:
   - updated Angular and packages.
   - removed unused `@myrmidon/ngx-viz`.

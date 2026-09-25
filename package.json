@@ -1,6 +1,6 @@
 {
   "name": "gve-shell",
-  "version": "7.0.19",
+  "version": "7.0.20",
   "scripts": {
     "ng": "ng",
     "check-libs": "node scripts/check-local-libs.mjs",
