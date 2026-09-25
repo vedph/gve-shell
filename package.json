@@ -28,7 +28,6 @@
     "@myrmidon/gve-snapshot-rendition": "^2.0.11",
     "@myrmidon/ngx-mat-tools": "^3.0.1",
     "@myrmidon/ngx-tools": "^3.0.2",
-    "@myrmidon/ngx-viz": "^1.0.1",
     "gsap": "^3.15.0",
     "monaco-editor": "^0.55.1",
     "nanoid": "^6.0.1",
