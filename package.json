@@ -10,8 +10,7 @@
     "test": "ng test @myrmidon/gve-core --watch=false",
     "test:watch": "ng test @myrmidon/gve-core",
     "test:coverage": "ng test @myrmidon/gve-core --watch=false --coverage",
-    "build-libs": "node scripts/build-libs.mjs",
-    "build-lib": "node scripts/build-libs.mjs",
+    "build:libs": "node scripts/build-libs.mjs",
     "compodoc": "npx compodoc -p tsconfig.doc.json --disablePrivate --includes docs --assetsFolder docs/img",
     "mv-img": "gulp move-docs-img"
   },
