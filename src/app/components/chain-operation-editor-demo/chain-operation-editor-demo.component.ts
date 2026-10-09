@@ -1,9 +1,17 @@
-import { CommonModule } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatExpansionModule } from '@angular/material/expansion';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
 
 import {
   ChainOperationEditorComponent,
@@ -16,10 +24,14 @@ import {
 @Component({
   selector: 'app-chain-operation-editor-demo',
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatExpansionModule,
+    JsonPipe,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
     ChainOperationEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

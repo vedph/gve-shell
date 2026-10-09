@@ -109,18 +109,27 @@ Inputs, outputs and models are unchanged. Form internals changed:
 - **What makes the form materialize (and tag) array items** that have no per-item rules. It happens through `getChild()`/`ensureChildrenMap()` (source read), but I did not identify which call triggers it for `features`. Check: break in `computeChildrenMap` with `forceMaterialize === true` while running the operation editor spec. The `structuredClone` boundaries make the answer irrelevant for correctness.
 - **`editedOpPrecedingText` (snapshot editor) now also tracks the operations list,** because it reads the draft signal. Before, it tracked only the edited op, its index and the result. This should only make it fresher. Check: change the operations while editing a new operation and compare the peephole.
 
-## Housekeeping (reported, not fixed)
+## Housekeeping
 
-- `pnpm test` / `pnpm run …` fail with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN`: pnpm 12 no longer reads `"pnpm": { "overrides": … }` from `package.json`. Move `overrides` to `pnpm-workspace.yaml`. This migration ran the Angular CLI directly.
+Done after the migration commit:
+
+- **pnpm scripts:** `pnpm test` / `pnpm run …` failed with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN`, because pnpm 12 no longer reads `"pnpm": { "overrides": … }` from `package.json`. The `rollup` override was moved to `pnpm-workspace.yaml`, and `pnpm install` now actually applies it: `@rollup/wasm-node` replaces the per-platform native rollup packages in the lockfile. `pnpm test`, `pnpm run build-libs` and `pnpm run check-libs` work (verified).
+- **Duplicate rendition listeners:** confirmed in Chrome (verified). After one new execution result, a single `versionTagChange` event logged `Version changed` twice, and `GveSnapshotRendition.version` was logged a second time. Cause: the rendition effect tracks `result()` (and `renditionSettings()`, `debug()`) through `initRendition()`, so every new result re-runs it and adds another listener. **Fixed:** the effect now runs `initRendition()` untracked, keyed on the element only. New data still reaches the rendition through `updateRendition()`, and settings changes through the settings effect. Verified: a new spec test failed before the fix (4 listeners after 4 results) and passes after it; in Chrome, after 4 distinct results, a version change is handled once.
+- **`chain-operation-editor` dead state commented out:** the `svg`, `elementFeatures`, `newTextHidden` and `dpFeatures` draft fields, the SVG rule, `elements`, `editedElementId`, `onDpFeaturesChange` and its spec test. They were unused: not in the template, not in `toOperation()` or `CharChainOperation`, not referenced by the demo app or by `cadmus-part-gve-snapshot`, which uses only `gve-snapshot-editor` (verified by search). `SvgValidators` is now unused, but was kept.
+- **NgModule imports replaced** by the standalone directives, components and pipes the templates actually use, in the library and in the app (including `CommonModule` → `JsonPipe`, `RouterModule` → `RouterLink`). The symbols were resolved like the compiler does: module exports were expanded from the packages' `.d.ts`, and selectors matched against the templates. Verified:
+  - build and tests pass;
+  - in Chrome, the multiset of directives Angular instantiated (`ng.getDirectives`) on every demo route, and with the operation and feature editors open, is identical before and after.
+- **Injection modernized:**
+  - constructor parameters → `inject()`;
+  - `@Optional() @Inject(MAT_DIALOG_DATA)` → `inject(…, { optional: true }) ?? undefined`, keeping the public `dialogRef`/`data` types;
+  - `@Injectable({ providedIn: 'root' })` → `@Service()` (`GveApiService`, `GveGraphvizService`, `SettingsService`, the app's `AssetService`).
+  - Verified: tests, builds, unchanged browser census and nested flow.
+
+Still open (reported, not fixed):
+
 - `console.log` calls left in library code:
   - the `multiValuedFeatureIds` diagnostic effects in `base-text-editor`, `chain-operation-editor` and `snapshot-editor`
   - `'patching range'` in `chain-operation-editor`
   - `'set view data'`, `'run to'`, `'result:'`, `'operation change'`, `'Version changed'` and the rendition version in `snapshot-editor`
-- `snapshot-editor`'s rendition effect tracks `result()` through `initRendition()`. So, believed: every new result adds another `versionTagChange` listener. Check by counting listener invocations after several runs.
 - `snapshot-editor.setViewData()` only logs and computes an unused snapshot.
-- `chain-operation-editor` has dead state:
-  - The `svg`, `elementFeatures`, `newTextHidden` and `dpFeatures` controls are not bound in the template and not saved. They were kept, and are now reset on every load instead of only on clear; that is unobservable.
-  - `onDpFeaturesChange`, `elements` and `editedElementId` are unused.
-- `CommonModule` is imported in `snapshot-editor` and two demos, against CLAUDE.md.
-- The dialog-capable components (`batch-operation-editor`, `snapshot-text-editor`) still use constructor `@Optional() @Inject` injection.
 - The `searchable-select` spec hosts the component with reactive forms. That is correct for testing its CVA contract.

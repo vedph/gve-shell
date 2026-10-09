@@ -4,7 +4,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import { MatRippleModule } from '@angular/material/core';
+import { MatRipple } from '@angular/material/core';
 
 import { ColorToContrastPipe } from '@myrmidon/ngx-tools';
 
@@ -44,7 +44,10 @@ export interface BaseTextCharEvent {
  */
 @Component({
   selector: 'gve-base-text-char',
-  imports: [MatRippleModule, ColorToContrastPipe],
+  imports: [
+    MatRipple,
+    ColorToContrastPipe,
+  ],
   templateUrl: './base-text-char.component.html',
   styleUrl: './base-text-char.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

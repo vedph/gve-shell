@@ -1,11 +1,15 @@
-import { CommonModule } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { form, FormField, min } from '@angular/forms/signals';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 
 import { Feature, LabeledId } from '@myrmidon/gve-core';
 import { FeatureMap, FeatureSetEditorComponent } from '@myrmidon/gve-core';
@@ -13,12 +17,15 @@ import { FeatureMap, FeatureSetEditorComponent } from '@myrmidon/gve-core';
 @Component({
   selector: 'app-feature-set-editor-demo',
   imports: [
-    CommonModule,
+    JsonPipe,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatFormField,
+    MatLabel,
+    MatInput,
     FormField,
-    MatCardModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatInputModule,
     FeatureSetEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

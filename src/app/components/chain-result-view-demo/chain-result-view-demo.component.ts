@@ -1,7 +1,16 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
 
 import { AssetService } from '../../services/asset.service';
 import {
@@ -13,8 +22,10 @@ import {
 @Component({
   selector: 'app-chain-result-view-demo',
   imports: [
-    MatCardModule,
-    MatCheckboxModule,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
     ChainResultViewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,10 +39,12 @@ export class ChainResultViewDemoComponent {
   );
   public readonly initialStepIndex = signal<number>(-1); // last step
 
-  constructor(asset: AssetService) {
-    asset.loadText('arzdc-result.json').subscribe((text) => {
-      this.result.set(JSON.parse(text));
-    });
+  constructor() {
+    inject(AssetService)
+      .loadText('arzdc-result.json')
+      .subscribe((text) => {
+        this.result.set(JSON.parse(text));
+      });
   }
 
   public onStepPick(step: ChainOperationContextStep): void {

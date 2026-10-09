@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { CharChain, CharChainNode } from './gve-api.service';
 
 // You can use this online tool to visualize the graph:
@@ -8,9 +8,7 @@ import { CharChain, CharChainNode } from './gve-api.service';
 // https://graphviz.org/docs/attr-types/rankdir
 export type GraphvizRankdir = 'TB' | 'LR' | 'BT' | 'RL';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class GveGraphvizService {
   private hashString(str: string): number {
     let hash = 0;

@@ -1,19 +1,25 @@
-import { CommonModule } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  inject,
   OnInit,
   signal,
 } from '@angular/core';
 
 import { form, FormField } from '@angular/forms/signals';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import { MatCheckbox } from '@angular/material/checkbox';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
 
 import {
   FeatureDefinitions,
@@ -32,15 +38,16 @@ import { AssetService } from '../../services/asset.service';
 @Component({
   selector: 'app-snapshot-editor-demo',
   imports: [
-    CommonModule,
+    JsonPipe,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatCheckbox,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
     FormField,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatTooltipModule,
     SnapshotEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -337,7 +344,7 @@ export class SnapshotEditorDemoComponent implements OnInit {
 
   public readonly options = form(signal({ debug: true }));
 
-  constructor(private _asset: AssetService) {}
+  private readonly _asset = inject(AssetService);
 
   public ngOnInit(): void {
     // load settings

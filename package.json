@@ -55,10 +55,5 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-win32-arm64-msvc": "^4.64.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "rollup": "npm:@rollup/wasm-node"
-    }
   }
 }

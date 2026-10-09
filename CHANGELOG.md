@@ -4,6 +4,10 @@
   - updated packages.
   - ⚠️ migrated `gve-core` and the demo app from reactive/template-driven forms to signal forms (`@angular/forms/signals`). Components no longer render `<form>` elements; component inputs/outputs/models are unchanged, but the public `FormControl` fields are replaced by signal form field trees. See `signal-forms-migration.md` for details and behaviour changes.
   - replaced `scripts/build-libs.mjs` (dependency order from manifests and imports, `--dry`, `--clear-cache`).
+  - moved the `rollup` override from `package.json` to `pnpm-workspace.yaml` (pnpm 12 no longer reads the former, which broke all `pnpm run` scripts).
+  - replaced NgModule imports with standalone directives/components/pipes; `inject()` instead of constructor injection; `@Service()` for root services.
+  - 🐛 `SnapshotEditorComponent`: every new execution result added another `versionTagChange` listener to the rendition (the init effect tracked `result()`).
+  - `ChainOperationEditorComponent`: commented out the unused diplomatic/SVG/elements state (never in the template nor in the saved operation).
 
 ## 7.0.20
 

@@ -7,10 +7,14 @@ import {
 } from '@angular/core';
 import { debounce, form, FormField } from '@angular/forms/signals';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatIconButton } from '@angular/material/button';
+import {
+  MatFormField,
+  MatLabel,
+  MatSuffix,
+} from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import {
@@ -43,10 +47,12 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
+    MatIconButton,
+    MatFormField,
+    MatLabel,
+    MatSuffix,
+    MatIcon,
+    MatInput,
     FlatLookupPipe,
   ],
   templateUrl: './feature-set-view.component.html',

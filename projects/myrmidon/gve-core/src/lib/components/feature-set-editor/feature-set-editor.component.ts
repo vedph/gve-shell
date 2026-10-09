@@ -10,13 +10,20 @@ import {
 } from '@angular/core';
 import { debounce, form, FormField } from '@angular/forms/signals';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import {
+  MatFormField,
+  MatLabel,
+  MatSuffix,
+} from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import {
@@ -66,13 +73,17 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTooltipModule,
+    MatButton,
+    MatIconButton,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatFormField,
+    MatLabel,
+    MatSuffix,
+    MatIcon,
+    MatInput,
+    MatTooltip,
     FlatLookupPipe,
     FeatureEditorComponent,
   ],

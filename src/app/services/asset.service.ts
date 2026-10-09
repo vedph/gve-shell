@@ -1,15 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 
 /**
  * A service to load resources from assets files.
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class AssetService {
-  constructor(private _http: HttpClient) {}
+  private readonly _http = inject(HttpClient);
 
   /**
    * Load a text from the specified path in the shop.

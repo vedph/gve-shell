@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 
 import { Observable, catchError } from 'rxjs';
 
@@ -124,15 +124,11 @@ export interface CharChain {
 /**
  * Service to interact with the GVE API.
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class GveApiService {
-  constructor(
-    private _http: HttpClient,
-    private _error: ErrorService,
-    private _env: EnvService,
-  ) {}
+  private readonly _http = inject(HttpClient);
+  private readonly _error = inject(ErrorService);
+  private readonly _env = inject(EnvService);
 
   /**
    * Parse the specified text into operations. Each operation is a line

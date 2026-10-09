@@ -323,12 +323,13 @@ describe('ChainOperationEditorComponent', () => {
       expect(c.form.features().dirty()).toBe(true);
     });
 
-    it('should set diplomatic features', async () => {
-      const { c } = await setup({ operation: op() });
-      c.onDpFeaturesChange([{ name: 'f', value: 'v', setPolicy: 0 }]);
-      expect(c.form.dpFeatures().value()).toHaveLength(1);
-      expect(c.form.dpFeatures().dirty()).toBe(true);
-    });
+    // diplomatic features are disabled in the component
+    // it('should set diplomatic features', async () => {
+    //   const { c } = await setup({ operation: op() });
+    //   c.onDpFeaturesChange([{ name: 'f', value: 'v', setPolicy: 0 }]);
+    //   expect(c.form.dpFeatures().value()).toHaveLength(1);
+    //   expect(c.form.dpFeatures().dirty()).toBe(true);
+    // });
 
     it('should not save the operation when accepting a feature', async () => {
       const user = userEvent.setup();

@@ -12,10 +12,11 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { form, FormField } from '@angular/forms/signals';
 import { distinctUntilChanged, skip } from 'rxjs';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
+import { MatIconButton } from '@angular/material/button';
+import { MatOption } from '@angular/material/core';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatSelect } from '@angular/material/select';
 
 import {
   CharNode,
@@ -54,15 +55,17 @@ import { MatTooltip } from "@angular/material/tooltip";
   selector: 'gve-chain-result-view',
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatSelectModule,
+    MatIconButton,
+    MatFormField,
+    MatLabel,
+    MatIcon,
+    MatSelect,
+    MatOption,
     FeatureSetViewComponent,
     StepsMapComponent,
     BaseTextViewComponent,
-    MatTooltip
-],
+    MatTooltip,
+  ],
   templateUrl: './chain-result-view.component.html',
   styleUrl: './chain-result-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

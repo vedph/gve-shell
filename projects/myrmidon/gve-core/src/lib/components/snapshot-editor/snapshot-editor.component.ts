@@ -15,21 +15,26 @@ import {
   inject,
 } from '@angular/core';
 import { form, FormField, pattern, required } from '@angular/forms/signals';
-import { CommonModule } from '@angular/common';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSliderModule } from '@angular/material/slider';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import {
+  MatFormField,
+  MatLabel,
+  MatError,
+  MatSuffix,
+} from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTabLabel, MatTab, MatTabGroup } from '@angular/material/tabs';
+import { MatTooltip } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 
 import { Subscription } from 'rxjs';
@@ -137,22 +142,25 @@ function countLines(text: CharNode[]): number {
 @Component({
   selector: 'gve-snapshot-editor',
   imports: [
-    CommonModule,
+    MatButton,
+    MatIconButton,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatFormField,
+    MatLabel,
+    MatError,
+    MatSuffix,
+    MatIcon,
+    MatInput,
+    MatProgressBar,
+    MatTabLabel,
+    MatTab,
+    MatTabGroup,
+    MatTooltip,
     FormField,
     MatBadge,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatCheckboxModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressBarModule,
-    MatSliderModule,
     MatSlideToggle,
-    MatSnackBarModule,
-    MatTabsModule,
-    MatTooltipModule,
     ChainOperationEditorComponent,
     ChainResultViewComponent,
     BaseTextViewComponent,
@@ -364,12 +372,12 @@ export class SnapshotEditorComponent {
 
   private readonly _flatLookup = new FlatLookupPipe();
 
-  constructor(
-    private _api: GveApiService,
-    private _dialog: MatDialog,
-    private _dialogService: DialogService,
-    private _snackbar: MatSnackBar,
-  ) {
+  private readonly _api = inject(GveApiService);
+  private readonly _dialog = inject(MatDialog);
+  private readonly _dialogService = inject(DialogService);
+  private readonly _snackbar = inject(MatSnackBar);
+
+  constructor() {
     // set the peephole window width from the environment variable,
     // defaulting to 15 if not set
     const env = inject(EnvService);
@@ -400,11 +408,15 @@ export class SnapshotEditorComponent {
     });
 
     // when rendition element becomes available (conditionally rendered),
-    // initialize its settings and event listeners
+    // initialize its settings and event listeners. Keyed on the element only:
+    // initRendition reads result(), renditionSettings() and debug(), and if
+    // these were tracked every new result would add another listener. New
+    // results are pushed by updateRendition, and settings changes by the
+    // effect below.
     effect(() => {
       const rendition = this.renditionRef()?.nativeElement;
       if (rendition) {
-        this.initRendition(rendition);
+        untracked(() => this.initRendition(rendition));
       }
     });
 

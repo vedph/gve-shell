@@ -2,21 +2,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
-  Inject,
+  inject,
   linkedSignal,
   model,
   OnInit,
-  Optional,
   untracked,
 } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 
-import { MatButtonModule } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { CharNode, PayloadMatDialogConfig } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
@@ -51,11 +49,12 @@ function toDraft(nodes: CharNode[]): SnapshotTextControls {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTooltipModule,
+    MatButton,
+    MatFormField,
+    MatLabel,
+    MatError,
+    MatInput,
+    MatTooltip,
   ],
   templateUrl: './snapshot-text-editor.component.html',
   styleUrl: './snapshot-text-editor.component.css',
@@ -75,15 +74,19 @@ export class SnapshotTextEditorComponent implements OnInit {
     softMaxLength(path.userText, 5000);
   });
 
-  constructor(
-    private _snackbar: MatSnackBar,
-    // this component can be used as a dialog
-    @Optional()
-    public dialogRef?: MatDialogRef<SnapshotTextEditorComponent>,
-    @Optional()
-    @Inject(MAT_DIALOG_DATA)
-    public data?: PayloadMatDialogConfig<{ text?: CharNode[] }>,
-  ) {
+  private readonly _snackbar = inject(MatSnackBar);
+
+  // this component can be used as a dialog
+  public readonly dialogRef =
+    inject<MatDialogRef<SnapshotTextEditorComponent>>(MatDialogRef, {
+      optional: true,
+    }) ?? undefined;
+  public readonly data =
+    inject<PayloadMatDialogConfig<{ text?: CharNode[] }>>(MAT_DIALOG_DATA, {
+      optional: true,
+    }) ?? undefined;
+
+  constructor() {
     // a new bound text (including the echo of our own save) means there are
     // no unsaved edits, so clear the interaction state. Keyed on the model,
     // not on the draft: a draft that merely returns to the bound value (e.g.

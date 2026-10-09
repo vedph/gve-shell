@@ -1,12 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 /**
  * Service to store and retrieve dynamic settings.
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class SettingsService {
   private readonly _cache: Map<string, unknown> = new Map<string, unknown>();
   private readonly _subject: BehaviorSubject<string | null> =

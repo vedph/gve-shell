@@ -108,10 +108,8 @@ describe('SnapshotEditorComponent', () => {
         { provide: GveApiService, useValue: api },
         { provide: DialogService, useValue: dialog },
         { provide: MatDialog, useValue: matDialog },
+        { provide: MatSnackBar, useValue: snackBar },
       ],
-      // the component imports MatSnackBarModule, whose provider would
-      // shadow a root-level mock
-      componentProviders: [{ provide: MatSnackBar, useValue: snackBar }],
     });
     const saved: (Snapshot | undefined)[] = [];
     result.fixture.componentInstance.snapshot.subscribe((s) => saved.push(s));
@@ -238,6 +236,39 @@ describe('SnapshotEditorComponent', () => {
       const { fixture } = await setup({ snapshot: SNAPSHOT(), debug: true });
       await fixture.whenStable();
       expect(DEFAULT_SETTINGS).toEqual(before);
+    });
+
+    it('should add the rendition listener once, however many results arrive', async () => {
+      const { c, container, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await fixture.whenStable();
+      const rendition = container.querySelector(
+        'gve-snapshot-rendition',
+      ) as HTMLElement & {
+        data: { steps: unknown };
+        settings: { debug?: boolean };
+      };
+      expect(rendition).not.toBeNull();
+
+      // new results (each run returns a new result object)
+      for (let i = 0; i < 3; i++) {
+        c.runToLast();
+        await fixture.whenStable();
+      }
+      // the latest result still reaches the rendition
+      expect(rendition.data.steps).toBe(c.result()!.steps);
+
+      const log = vi.mocked(console.log);
+      log.mockClear();
+      rendition.dispatchEvent(
+        new CustomEvent('versionTagChange', { detail: 'v1' }),
+      );
+      const changes = log.mock.calls.filter((a) => a[0] === 'Version changed:');
+      expect(changes).toHaveLength(1);
+
+      // settings still follow their inputs
+      fixture.componentRef.setInput('debug', true);
+      await fixture.whenStable();
+      expect(rendition.settings.debug).toBe(true);
     });
   });
 

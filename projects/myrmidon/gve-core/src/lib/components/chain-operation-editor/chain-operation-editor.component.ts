@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   effect,
+  inject,
   input,
   linkedSignal,
   model,
@@ -14,17 +15,25 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { form, FormField, min, required } from '@angular/forms/signals';
 
 // material
-import { ClipboardModule } from '@angular/cdk/clipboard';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatOption } from '@angular/material/core';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import {
+  MatFormField,
+  MatLabel,
+  MatHint,
+  MatError,
+} from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatTab, MatTabGroup } from '@angular/material/tabs';
+import { MatTooltip } from '@angular/material/tooltip';
 
 // vendor
 import { customAlphabet } from 'nanoid';
@@ -37,7 +46,6 @@ import { DialogService } from '@myrmidon/ngx-mat-tools';
 import {
   CharChainOperation,
   CharNode,
-  Feature,
   OperationFeature,
   OperationType,
   OperationSource,
@@ -46,7 +54,7 @@ import {
 } from '../../models';
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
-import { SvgValidators } from '../../validators/svg-validators';
+// import { SvgValidators } from '../../validators/svg-validators';
 import {
   FeatureMap,
   FeaturePropMap,
@@ -78,13 +86,15 @@ interface OperationControls {
   run: number | null;
   toRun: number | null;
   value: string;
-  // svg
-  svg: string;
-  // elements
-  elementFeatures: Record<string, Feature[]>;
-  // diplomatic
-  newTextHidden: boolean;
-  dpFeatures: Feature[];
+  // disabled: the diplomatic (SVG), elements and diplomatic features sections are
+  // not in the template, nor in CharChainOperation:
+  // // svg
+  // svg: string;
+  // // elements
+  // elementFeatures: Record<string, Feature[]>;
+  // // diplomatic
+  // newTextHidden: boolean;
+  // dpFeatures: Feature[];
 }
 
 /**
@@ -152,10 +162,11 @@ function toDraft(operation: CharChainOperation | undefined): OperationControls {
     toRun: args.toRun ? operation?.toRun || 0 : 0,
     // escape line feeds in value for editing
     value: args.value ? toggleLfEscape(operation?.value, true) || '' : '',
-    svg: '',
-    elementFeatures: {},
-    newTextHidden: false,
-    dpFeatures: [],
+    // disabled: see OperationControls
+    // svg: '',
+    // elementFeatures: {},
+    // newTextHidden: false,
+    // dpFeatures: [],
   };
 }
 
@@ -253,6 +264,8 @@ export interface FeatureDefinitions {
  * the source(s) for each operation, just like in a traditional apparatus you
  * specify witnesses for each variant. Each source has an ID, a type, a
  * probability rank (0=not specified, else 1-N), and an optional free text note.
+ *
+ * The following sections are currently disabled (not in the template):
  * - **diplomatic**: SVG `g` code. The diplomatic section is the approximate
  * diplomatic representation of the layout of the annotated text. It essentially
  * consists in a freely editable SVG code, always grouped into a single root `g`
@@ -276,17 +289,23 @@ export interface FeatureDefinitions {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    ClipboardModule,
-    MatBadgeModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTabsModule,
-    MatTooltipModule,
+    MatButton,
+    MatIconButton,
+    MatCheckbox,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatFormField,
+    MatLabel,
+    MatHint,
+    MatError,
+    MatIcon,
+    MatInput,
+    MatSelect,
+    MatOption,
+    MatTab,
+    MatTabGroup,
+    MatTooltip,
     FeatureSetEditorComponent,
     OperationSourceEditorComponent,
     TextPeepholeComponent,
@@ -383,10 +402,11 @@ export class ChainOperationEditorComponent {
   public readonly operationOrdinalRequest = output<number>();
 
   public readonly tabIndex = signal<number>(0);
-  // elements parsed from SVG and having an id attribute;
-  // we can attach features to each of these elements
-  public readonly elements = signal<SVGElement[]>([]);
-  public readonly editedElementId = signal<string | undefined>(undefined);
+  // disabled: the elements section is not in the template.
+  // // elements parsed from SVG and having an id attribute;
+  // // we can attach features to each of these elements
+  // public readonly elements = signal<SVGElement[]>([]);
+  // public readonly editedElementId = signal<string | undefined>(undefined);
   // source
   public readonly editedSource = signal<OperationSource | undefined>(undefined);
   public readonly editedSourceIndex = signal<number>(-1);
@@ -446,7 +466,8 @@ export class ChainOperationEditorComponent {
     required(path.value, {
       when: ({ valueOf }) => getOperationArgs(valueOf(path.type)).value,
     });
-    SvgValidators.rootG(path.svg);
+    // disabled: see OperationControls
+    // SvgValidators.rootG(path.svg);
   });
 
   /**
@@ -476,7 +497,9 @@ export class ChainOperationEditorComponent {
     atAsIndex: this.form.atAsIndex().value(),
   }));
 
-  constructor(private _dialogService: DialogService) {
+  private readonly _dialogService = inject(DialogService);
+
+  constructor() {
     // a new bound operation means there are no unsaved edits
     effect(() => {
       this.operation();
@@ -542,10 +565,11 @@ export class ChainOperationEditorComponent {
     this.form.features().markAsDirty();
   }
 
-  public onDpFeaturesChange(features: Feature[]): void {
-    this.form.dpFeatures().value.set(features);
-    this.form.dpFeatures().markAsDirty();
-  }
+  // disabled: the diplomatic features section is not in the template.
+  // public onDpFeaturesChange(features: Feature[]): void {
+  //   this.form.dpFeatures().value.set(features);
+  //   this.form.dpFeatures().markAsDirty();
+  // }
 
   // #region sources
   public addSource(): void {

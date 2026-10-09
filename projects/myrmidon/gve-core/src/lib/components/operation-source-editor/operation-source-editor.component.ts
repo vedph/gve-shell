@@ -10,12 +10,13 @@ import {
 } from '@angular/core';
 import { form, FormField, min, required } from '@angular/forms/signals';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconButton } from '@angular/material/button';
+import { MatOption } from '@angular/material/core';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { LabeledId, OperationSource } from '../../models';
 import { softMaxLength } from '../../validators/signal-validators';
@@ -75,12 +76,15 @@ function toSource(v: OperationSourceControls): OperationSource {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTooltipModule,
+    MatIconButton,
+    MatFormField,
+    MatLabel,
+    MatError,
+    MatIcon,
+    MatInput,
+    MatSelect,
+    MatOption,
+    MatTooltip,
   ],
   templateUrl: './operation-source-editor.component.html',
   styleUrl: './operation-source-editor.component.css',

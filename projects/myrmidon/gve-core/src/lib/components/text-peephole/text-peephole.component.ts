@@ -6,8 +6,8 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 import { CharNode } from '../../models';
 import { BaseTextRange } from '../base-text-view/base-text-view.component';
@@ -30,7 +30,10 @@ export interface OpTextRange extends BaseTextRange {
  */
 @Component({
   selector: 'gve-text-peephole',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [
+    MatIconButton,
+    MatIcon,
+  ],
   templateUrl: './text-peephole.component.html',
   styleUrl: './text-peephole.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

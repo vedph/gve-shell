@@ -17,13 +17,14 @@ import { form, FormField, required, validate } from '@angular/forms/signals';
 import { filter, map, pairwise } from 'rxjs';
 
 // material
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconButton } from '@angular/material/button';
+import { MatOption } from '@angular/material/core';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import {
   Feature,
@@ -165,13 +166,16 @@ function toDraft(
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTooltipModule,
+    MatIconButton,
+    MatCheckbox,
+    MatFormField,
+    MatLabel,
+    MatError,
+    MatIcon,
+    MatInput,
+    MatSelect,
+    MatOption,
+    MatTooltip,
     SearchableSelectComponent,
   ],
   templateUrl: './feature-editor.component.html',

@@ -4,11 +4,16 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { form, FormField } from '@angular/forms/signals';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import { MatCheckbox } from '@angular/material/checkbox';
 
 import { Feature, LabeledId } from '@myrmidon/gve-core';
 
@@ -20,10 +25,13 @@ import {
 @Component({
   selector: 'app-feature-editor-demo',
   imports: [
-    CommonModule,
+    JsonPipe,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatCheckbox,
     FormField,
-    MatCardModule,
-    MatCheckboxModule,
     FeatureEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

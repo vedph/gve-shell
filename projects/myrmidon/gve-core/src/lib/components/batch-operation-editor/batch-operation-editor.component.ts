@@ -2,22 +2,20 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
-  Inject,
+  inject,
   input,
   OnInit,
-  Optional,
   output,
   signal,
   untracked,
 } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 
-import { MatButtonModule } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { CharChainOperation, PayloadMatDialogConfig } from '../../models';
 import { GveApiService } from '../../services/gve-api.service';
@@ -37,11 +35,11 @@ import { softMaxLength } from '../../validators/signal-validators';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTooltipModule,
+    MatButton,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatTooltip,
   ],
   templateUrl: './batch-operation-editor.component.html',
   styleUrl: './batch-operation-editor.component.css',
@@ -66,15 +64,19 @@ export class BatchOperationEditorComponent implements OnInit {
    */
   public readonly operationsChange = output<CharChainOperation[]>();
 
-  constructor(
-    private _api: GveApiService,
-    // this component can be used as a dialog
-    @Optional()
-    public dialogRef?: MatDialogRef<BatchOperationEditorComponent>,
-    @Optional()
-    @Inject(MAT_DIALOG_DATA)
-    public data?: PayloadMatDialogConfig<{ preset?: string }>,
-  ) {
+  private readonly _api = inject(GveApiService);
+
+  // this component can be used as a dialog
+  public readonly dialogRef =
+    inject<MatDialogRef<BatchOperationEditorComponent>>(MatDialogRef, {
+      optional: true,
+    }) ?? undefined;
+  public readonly data =
+    inject<PayloadMatDialogConfig<{ preset?: string }>>(MAT_DIALOG_DATA, {
+      optional: true,
+    }) ?? undefined;
+
+  constructor() {
     // Track only the preset signal; use untracked for the call so that
     // busy() read inside parseOperations() is not tracked as a dependency
     // (otherwise the API completing and setting busy=false would re-trigger

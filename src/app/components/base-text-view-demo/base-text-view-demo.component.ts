@@ -6,9 +6,14 @@ import {
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 
 import {
   BaseTextCharEvent,
@@ -29,9 +34,12 @@ const SAMPLE_TEXT =
   selector: 'app-var-base-text-view-demo',
   imports: [
     FormField,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatFormField,
+    MatInput,
     BaseTextViewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

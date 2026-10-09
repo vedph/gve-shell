@@ -12,11 +12,11 @@ import {
 } from '@angular/core';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatFormField, MatSuffix } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Clipboard } from '@angular/cdk/clipboard';
 
@@ -62,11 +62,13 @@ export interface BaseTextRange {
 @Component({
   selector: 'gve-base-text-view',
   imports: [
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTooltipModule,
+    MatButton,
+    MatIconButton,
+    MatFormField,
+    MatSuffix,
+    MatIcon,
+    MatInput,
+    MatTooltip,
     BaseTextCharComponent,
   ],
   templateUrl: './base-text-view.component.html',

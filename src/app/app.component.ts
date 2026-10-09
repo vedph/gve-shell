@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatToolbar } from '@angular/material/toolbar';
 
 import { EnvService } from '@myrmidon/ngx-tools';
 import { ThemeToggleComponent } from '@myrmidon/ngx-mat-tools';
@@ -15,13 +20,15 @@ import { SettingsService } from '@myrmidon/gve-core';
 @Component({
   selector: 'app-root',
   imports: [
-    RouterModule,
+    RouterLink,
+    MatButton,
+    MatIcon,
+    MatMenu,
+    MatMenuItem,
+    MatMenuTrigger,
+    MatToolbar,
     RouterOutlet,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatToolbarModule,
-    ThemeToggleComponent
+    ThemeToggleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
@@ -30,7 +37,9 @@ import { SettingsService } from '@myrmidon/gve-core';
 export class AppComponent {
   public readonly version = signal<string | undefined>(undefined);
 
-  constructor(settings: SettingsService, env: EnvService) {
+  constructor() {
+    const settings = inject(SettingsService);
+    const env = inject(EnvService);
     this.version.set(env.get('version') || '');
     settings.keyPrefix = 'gve-shell-';
 

@@ -10,11 +10,10 @@ import {
   untracked,
 } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 
@@ -48,11 +47,12 @@ interface BaseTextControls {
   selector: 'gve-base-text-editor',
   imports: [
     FormField,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTooltipModule,
+    MatButton,
+    MatFormField,
+    MatLabel,
+    MatError,
+    MatInput,
+    MatTooltip,
     BaseTextViewComponent,
     FeatureSetEditorComponent,
   ],

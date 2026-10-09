@@ -9,11 +9,11 @@ import {
   signal,
 } from '@angular/core';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatRippleModule } from '@angular/material/core';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { MatRipple } from '@angular/material/core';
+import { MatIcon } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { ChainOperationContextStep } from '../../services/gve-api.service';
 
@@ -38,7 +38,12 @@ import { ChainOperationContextStep } from '../../services/gve-api.service';
  */
 @Component({
   selector: 'gve-steps-map',
-  imports: [MatButtonModule, MatIconModule, MatRippleModule, MatTooltipModule],
+  imports: [
+    MatIconButton,
+    MatIcon,
+    MatRipple,
+    MatTooltip,
+  ],
   templateUrl: './steps-map.component.html',
   styleUrl: './steps-map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

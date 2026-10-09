@@ -6,10 +6,15 @@ import {
 } from '@angular/core';
 import { form, FormField, min } from '@angular/forms/signals';
 
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 
 import {
   TextPeepholeComponent,
@@ -29,10 +34,14 @@ const SAMPLE_TEXT =
   selector: 'app-base-text-peephole-demo',
   imports: [
     FormField,
-    MatCardModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatInputModule,
+    MatCard,
+    MatCardContent,
+    MatCardHeader,
+    MatCardTitle,
+    MatCheckbox,
+    MatFormField,
+    MatLabel,
+    MatInput,
     TextPeepholeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

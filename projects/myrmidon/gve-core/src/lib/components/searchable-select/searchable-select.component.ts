@@ -11,9 +11,10 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 // material
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatOption } from '@angular/material/core';
+import { MatIcon } from '@angular/material/icon';
+import { MatSelect } from '@angular/material/select';
 
 import { LabeledId } from '../../models';
 
@@ -42,7 +43,13 @@ import { LabeledId } from '../../models';
 @Component({
   selector: 'gve-searchable-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [
+    MatFormField,
+    MatLabel,
+    MatIcon,
+    MatSelect,
+    MatOption,
+  ],
   templateUrl: './searchable-select.component.html',
   styleUrl: './searchable-select.component.css',
   providers: [
