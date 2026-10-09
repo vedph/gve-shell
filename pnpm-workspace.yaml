@@ -27,7 +27,7 @@ minimumReleaseAgeExclude:
   - '@angular/platform-browser-dynamic@21.2.14'
   - '@angular/platform-browser@21.2.14'
   - '@angular/router@21.2.14'
-  - '@rollup/rollup-win32-arm64-msvc@4.62.0'
+  - '@rollup/rollup-win32-arm64-msvc@4.62.0 || 4.64.3'
   - '@vitest/mocker@5.0.2'
   - '@vitest/spy@5.0.2'
   - vitest@5.0.2
