@@ -1,5 +1,7 @@
 # History
 
+## 8.0.0
+
 - 2026-10-09:
   - updated packages.
   - ⚠️ migrated `gve-core` and the demo app from reactive/template-driven forms to signal forms (`@angular/forms/signals`). Components no longer render `<form>` elements; component inputs/outputs/models are unchanged, but the public `FormControl` fields are replaced by signal form field trees. See `signal-forms-migration.md` for details and behaviour changes.
