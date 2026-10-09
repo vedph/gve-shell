@@ -2,17 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  inject,
   input,
+  linkedSignal,
   output,
   signal,
+  untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,6 +26,14 @@ import {
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import { CharNode, Feature } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
+import { softMaxLength } from '../../validators/signal-validators';
+
+/**
+ * The editable shape behind the base text form.
+ */
+interface BaseTextControls {
+  userText: string;
+}
 
 /**
  * 🔑 `gve-base-text-editor`
@@ -42,7 +47,7 @@ import { GveBaseTextService } from '../../services/gve-base-text.service';
 @Component({
   selector: 'gve-base-text-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -94,21 +99,22 @@ export class BaseTextEditorComponent {
   public readonly selectedCharLabel = signal<string | undefined>(undefined);
   public readonly textRange = signal<BaseTextRange | undefined>(undefined);
 
-  public userText: FormControl<string>;
-  public form: FormGroup;
+  private readonly _dialogService = inject(DialogService);
 
-  constructor(
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService,
-  ) {
-    this.userText = formBuilder.control('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(10000)],
-    });
-    this.form = formBuilder.group({
-      userText: this.userText,
-    });
+  /**
+   * The editable draft: the text as a plain string, rebuilt whenever the
+   * bound text changes. Edits are applied only via setTextFromUser.
+   */
+  private readonly _draft = linkedSignal<BaseTextControls>(() => ({
+    userText: (this.text() ?? []).map((c) => c.data).join(''),
+  }));
 
+  public readonly form = form(this._draft, (path) => {
+    required(path.userText);
+    softMaxLength(path.userText, 10000);
+  });
+
+  constructor() {
     // diagnostic logging for multiValuedFeatureIds
     effect(() => {
       console.log(
@@ -117,19 +123,14 @@ export class BaseTextEditorComponent {
       );
     });
 
+    // when the text changes (and so the draft is rebuilt from it), reset
+    // the selected char and the form interaction state
     effect(() => {
-      this.resetSelectedChar();
-      if (!this.text()) {
-        this.userText.reset();
-      } else {
-        this.userText.setValue(
-          this.text()!
-            .map((c) => c.data)
-            .join(''),
-        );
-        this.userText.markAsPristine();
-        this.userText.updateValueAndValidity();
-      }
+      this.text();
+      untracked(() => {
+        this.resetSelectedChar();
+        this.form().reset();
+      });
     });
   }
 
@@ -169,7 +170,7 @@ export class BaseTextEditorComponent {
       .subscribe((yes: boolean) => {
         if (yes) {
           this.textChange.emit(
-            GveBaseTextService.stringToBaseChars(this.userText.value),
+            GveBaseTextService.stringToBaseChars(this.form.userText().value()),
           );
         }
       });

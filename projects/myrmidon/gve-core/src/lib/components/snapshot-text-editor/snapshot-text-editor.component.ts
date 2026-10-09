@@ -3,17 +3,13 @@ import {
   Component,
   effect,
   Inject,
+  linkedSignal,
   model,
   OnInit,
   Optional,
+  untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, required } from '@angular/forms/signals';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -25,6 +21,21 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CharNode, PayloadMatDialogConfig } from '../../models';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { softMaxLength } from '../../validators/signal-validators';
+
+/**
+ * The editable shape behind the snapshot text form.
+ */
+interface SnapshotTextControls {
+  userText: string;
+}
+
+/**
+ * Bound text nodes -> editable draft.
+ */
+function toDraft(nodes: CharNode[]): SnapshotTextControls {
+  return { userText: nodes.map((node) => node.data).join('') };
+}
 
 /**
  * 🔑 `gve-snapshot-text-editor`
@@ -39,7 +50,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   selector: 'gve-snapshot-text-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -50,13 +61,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './snapshot-text-editor.component.css',
 })
 export class SnapshotTextEditorComponent implements OnInit {
-  public userText: FormControl<string>;
-  public form: FormGroup;
-
   public readonly text = model<CharNode[]>([]);
 
+  /**
+   * The editable draft, rebuilt from the bound text whenever it changes.
+   * This includes the echo of our own save: the text is saved only with an
+   * explicit action, and the saved nodes map back to the same string.
+   */
+  private readonly _draft = linkedSignal(() => toDraft(this.text()));
+
+  public readonly form = form(this._draft, (path) => {
+    required(path.userText);
+    softMaxLength(path.userText, 5000);
+  });
+
   constructor(
-    formBuilder: FormBuilder,
     private _snackbar: MatSnackBar,
     // this component can be used as a dialog
     @Optional()
@@ -65,24 +84,14 @@ export class SnapshotTextEditorComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data?: PayloadMatDialogConfig<{ text?: CharNode[] }>,
   ) {
-    this.userText = formBuilder.control<string>('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(5000)],
-    });
-    this.form = new FormGroup({
-      userText: this.userText,
-    });
-
-    // when text changes, update the user text
+    // a new bound text (including the echo of our own save) means there are
+    // no unsaved edits, so clear the interaction state. Keyed on the model,
+    // not on the draft: a draft that merely returns to the bound value (e.g.
+    // a blank text trimmed to empty by save) must keep its errors visible.
     effect(() => {
-      this.updateUserText(this.text());
+      this.text();
+      untracked(() => this.form().reset());
     });
-  }
-
-  private updateUserText(nodes: CharNode[]): void {
-    this.userText.setValue(nodes.map((node) => node.data).join(''));
-    this.userText.markAsPristine();
-    this.userText.updateValueAndValidity();
   }
 
   public ngOnInit() {
@@ -97,7 +106,7 @@ export class SnapshotTextEditorComponent implements OnInit {
 
   public copyToClipboard(): void {
     const json = JSON.stringify(
-      GveBaseTextService.stringToBaseChars(this.userText.value),
+      GveBaseTextService.stringToBaseChars(this.form.userText().value()),
     );
     navigator.clipboard.writeText(json);
     this._snackbar.open('Copied JSON code to clipboard', undefined, {
@@ -113,14 +122,15 @@ export class SnapshotTextEditorComponent implements OnInit {
   }
 
   public save(): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       return;
     }
-    this.userText.setValue(this.trimLines(this.userText.value));
-    if (!this.userText.value) {
+    const userText = this.trimLines(this.form.userText().value());
+    this.form.userText().value.set(userText);
+    if (!userText) {
       return;
     }
-    this.text.set(GveBaseTextService.stringToBaseChars(this.userText.value));
+    this.text.set(GveBaseTextService.stringToBaseChars(userText));
     this.dialogRef?.close(this.text());
   }
 }

@@ -10,13 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, required } from '@angular/forms/signals';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -27,6 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { CharChainOperation, PayloadMatDialogConfig } from '../../models';
 import { GveApiService } from '../../services/gve-api.service';
+import { softMaxLength } from '../../validators/signal-validators';
 
 /**
  * 🔑 `gve-batch-operation-editor`
@@ -41,7 +36,7 @@ import { GveApiService } from '../../services/gve-api.service';
   selector: 'gve-batch-operation-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -55,8 +50,10 @@ export class BatchOperationEditorComponent implements OnInit {
   public readonly busy = signal<boolean>(false);
   public readonly parseError = signal<string | undefined>(undefined);
 
-  public text: FormControl<string | null>;
-  public form: FormGroup;
+  public readonly form = form(signal({ inputOps: '' }), (path) => {
+    required(path.inputOps);
+    softMaxLength(path.inputOps, 2000);
+  });
 
   /**
    * The preset text to parse if any. Usually you start with a blank
@@ -70,7 +67,6 @@ export class BatchOperationEditorComponent implements OnInit {
   public readonly operationsChange = output<CharChainOperation[]>();
 
   constructor(
-    formBuilder: FormBuilder,
     private _api: GveApiService,
     // this component can be used as a dialog
     @Optional()
@@ -79,14 +75,6 @@ export class BatchOperationEditorComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data?: PayloadMatDialogConfig<{ preset?: string }>,
   ) {
-    this.text = formBuilder.control<string | null>(null, [
-      Validators.required,
-      Validators.maxLength(2000),
-    ]);
-    this.form = formBuilder.group({
-      inputOps: this.text,
-    });
-
     // Track only the preset signal; use untracked for the call so that
     // busy() read inside parseOperations() is not tracked as a dependency
     // (otherwise the API completing and setting busy=false would re-trigger

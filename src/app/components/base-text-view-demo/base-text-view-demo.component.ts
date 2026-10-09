@@ -1,18 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  computed,
   signal,
 } from '@angular/core';
-
-import {
-  FormBuilder,
-  FormControl,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { form, FormField } from '@angular/forms/signals';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,11 +18,17 @@ import {
   GveBaseTextService,
 } from '@myrmidon/gve-core';
 
+const SAMPLE_TEXT =
+  'there was an old man with a beard\n' +
+  'who cried: "It is just as I feared!\n' +
+  'four larks and a wren,\n' +
+  'two swans and a hen,\n' +
+  'all built their nests in my beard!';
+
 @Component({
   selector: 'app-var-base-text-view-demo',
   imports: [
-    FormsModule,
-    ReactiveFormsModule,
+    FormField,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -40,34 +38,14 @@ import {
   templateUrl: './base-text-view-demo.component.html',
   styleUrl: './base-text-view-demo.component.scss',
 })
-export class BaseTextViewDemoComponent implements OnInit, OnDestroy {
-  private _sub?: Subscription;
-
-  public text: FormControl<string | null>;
+export class BaseTextViewDemoComponent {
+  public readonly form = form(signal({ text: SAMPLE_TEXT }));
 
   public readonly range = signal<BaseTextRange | undefined>(undefined);
-  public readonly nodes = signal<CharNode[]>([]);
-
-  constructor(formBuilder: FormBuilder) {
-    this.text = formBuilder.control('');
-  }
-
-  public ngOnInit(): void {
-    this._sub = this.text.valueChanges.subscribe((value) => {
-      this.nodes.set(value ? GveBaseTextService.stringToBaseChars(value) : []);
-    });
-    this.text.setValue(
-      'there was an old man with a beard\n' +
-        'who cried: "It is just as I feared!\n' +
-        'four larks and a wren,\n' +
-        'two swans and a hen,\n' +
-        'all built their nests in my beard!',
-    );
-  }
-
-  public ngOnDestroy(): void {
-    this._sub?.unsubscribe();
-  }
+  public readonly nodes = computed<CharNode[]>(() => {
+    const text = this.form.text().value();
+    return text ? GveBaseTextService.stringToBaseChars(text) : [];
+  });
 
   public onCharPick(event: BaseTextCharEvent): void {
     console.log('Char picked:', event.char);

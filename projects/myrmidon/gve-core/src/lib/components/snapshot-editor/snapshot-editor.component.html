@@ -1,4 +1,4 @@
-<form [formGroup]="form" (submit)="save()">
+<div>
   <mat-tab-group>
     <!-- text -->
     <mat-tab>
@@ -31,7 +31,7 @@
 
         <!-- text characters -->
         <gve-base-text-view
-          [text]="baseText.value"
+          [text]="form.baseText().value()"
           [hasLineNumber]="true"
           (rangePick)="onRangePick($event)"
         />
@@ -49,13 +49,13 @@
           <div class="form-row">
             <!-- feat details -->
             <mat-slide-toggle
-              [formControl]="featDetails"
+              [formField]="options.featDetails"
               matTooltip="Toggle feature details"
               >feat. details</mat-slide-toggle
             >
             <!-- auto run on edit -->
             <mat-slide-toggle
-              [formControl]="autoRun"
+              [formField]="options.autoRun"
               matTooltip="Auto-run operations on edit"
               >auto-run</mat-slide-toggle
             >
@@ -66,7 +66,7 @@
                 type="button"
                 mat-icon-button
                 matTooltip="Copy operations as DSL to clipboard"
-                [disabled]="!operations.value.length || busy()"
+                [disabled]="!form.operations().value().length || busy()"
                 (click)="copyOperationsDsl()"
                 aria-label="Copy operations as DSL to clipboard"
               >
@@ -79,7 +79,9 @@
                 mat-icon-button
                 matTooltip="Copy text and operations as JSON to clipboard"
                 [disabled]="
-                  (!baseText.value && !operations.value.length) || busy()
+                  (!form.baseText().value() &&
+                    !form.operations().value().length) ||
+                  busy()
                 "
                 (click)="copyOperationsJson()"
                 aria-label="Copy text and operations as JSON to clipboard"
@@ -93,7 +95,7 @@
                 class="mat-warn"
                 mat-flat-button
                 matTooltip="Remove all the operations"
-                [disabled]="!operations.value.length || busy()"
+                [disabled]="!form.operations().value().length || busy()"
                 (click)="clearOperations()"
               >
                 <mat-icon>delete_forever</mat-icon> clear
@@ -112,22 +114,25 @@
               </button>
 
               <!-- edit operations feats/sources -->
-              <form
-                (submit)="$event.stopPropagation(); editOperationsFeats()"
-                [formGroup]="editFeatsForm"
-              >
+              <div>
                 <mat-form-field>
                   <mat-label>operations (e.g. 2, 5-7, 9)</mat-label>
-                  <input matInput [formControl]="editFeatsRange" />
+                  <input
+                    matInput
+                    [formField]="editFeatsForm.editFeatsRange"
+                    (keydown.enter)="onRangeEnter($event)"
+                  />
                   @if (
-                    $any(editFeatsRange).errors?.required &&
-                    (editFeatsRange.dirty || editFeatsRange.touched)
+                    editFeatsForm.editFeatsRange().getError('required') &&
+                    (editFeatsForm.editFeatsRange().dirty() ||
+                      editFeatsForm.editFeatsRange().touched())
                   ) {
                     <mat-error>range required</mat-error>
                   }
                   @if (
-                    $any(editFeatsRange).errors?.pattern &&
-                    (editFeatsRange.dirty || editFeatsRange.touched)
+                    editFeatsForm.editFeatsRange().getError('pattern') &&
+                    (editFeatsForm.editFeatsRange().dirty() ||
+                      editFeatsForm.editFeatsRange().touched())
                   ) {
                     <mat-error>invalid range (use e.g. 2, 5-7, 9)</mat-error>
                   }
@@ -142,23 +147,24 @@
                     <mat-icon>people</mat-icon>
                   </button>
                   <button
-                    type="submit"
+                    type="button"
                     matIconButton
                     matSuffix
                     matTooltip="Edit features for range"
+                    (click)="editOperationsFeats()"
                     aria-label="Edit features for range"
                   >
                     <mat-icon>edit_note</mat-icon>
                   </button>
                 </mat-form-field>
-              </form>
+              </div>
 
               <!-- add op -->
               <button
                 type="button"
                 mat-flat-button
                 class="mat-primary"
-                [disabled]="busy() || !baseText.value"
+                [disabled]="busy() || !form.baseText().value()"
                 (click)="editNewOperation()"
                 matTooltip="Add a new operation"
               >
@@ -231,13 +237,16 @@
                 [hidePreview]="editedOpIndex() === -1"
                 [operation]="editedOp()"
                 [rangePatch]="editedOpRangePatch()"
-                [snapshot]="{ text: baseText.value, operations: operations.value }"
+                [snapshot]="{
+                  text: form.baseText().value(),
+                  operations: form.operations().value()
+                }"
                 [precedingText]="editedOpPrecedingText()"
                 [sourceIds]="sourceIds()"
                 [sourceTypes]="sourceTypes()"
                 [peepholeWindowWidth]="peepholeWindowWidth()"
                 [operationOrdinal]="editedOpIndex() + 1"
-                [operationCount]="operations.value.length"
+                [operationCount]="form.operations().value().length"
                 (operationCancel)="onOperationCancel()"
                 (operationChange)="onOperationChange($event)"
                 (operationPreview)="onOperationPreview($event)"
@@ -254,7 +263,7 @@
           [style.overflow-y]="opListMaxHeight() ? 'auto' : null"
         >
           <!-- operations list -->
-          @if (operations.value.length) {
+          @if (form.operations().value().length) {
             <table id="list">
               <thead>
                 <tr>
@@ -265,7 +274,7 @@
                   <th>at</th>
                   <th>run</th>
                   <th>value</th>
-                  @if (!featDetails.value) {
+                  @if (!options.featDetails().value()) {
                     <th>itag</th>
                     <th>otag</th>
                   }
@@ -276,7 +285,7 @@
               </thead>
               <tbody>
                 @for (
-                  operation of operations.value;
+                  operation of form.operations().value();
                   track operation.id;
                   let index = $index
                 ) {
@@ -346,7 +355,9 @@
                         mat-icon-button
                         (click)="moveOperationDown(index)"
                         matTooltip="Move operation down"
-                        [disabled]="index === operations.value.length - 1"
+                        [disabled]="
+                          index === form.operations().value().length - 1
+                        "
                         aria-label="Move operation down"
                       >
                         <mat-icon>arrow_circle_down</mat-icon>
@@ -357,14 +368,14 @@
                     <td class="fit-width">{{ operation.at }}</td>
                     <td class="fit-width">{{ operation.run }}</td>
                     <td class="fit-width">{{ operation.value }}</td>
-                    @if (!featDetails.value) {
+                    @if (!options.featDetails().value()) {
                       <td class="fit-width">{{ operation.inputTag }}</td>
                       <td class="fit-width">{{ operation.outputTag }}</td>
                     }
                     <td class="fit-width">{{ operation.groupId }}</td>
                     <td>
                       @if (operation.features?.length) {
-                        @if (featDetails.value) {
+                        @if (options.featDetails().value()) {
                           <div class="form-row">
                             @for (
                               feat of operation.features;
@@ -471,15 +482,16 @@
     </button>
     @if (!noSave()) {
       <button
-        type="submit"
+        type="button"
         class="mat-primary"
         mat-flat-button
         matTooltip="Save changes"
-        [disabled]="form.invalid || busy()"
+        [disabled]="form().invalid() || busy()"
+        (click)="save()"
       >
         <mat-icon>check_circle</mat-icon>
         save
       </button>
     }
   </div>
-</form>
+</div>

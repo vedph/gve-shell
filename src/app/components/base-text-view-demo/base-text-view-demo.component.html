@@ -6,7 +6,7 @@
   <div>
     <mat-form-field class="long-text">
       <label>text</label>
-      <textarea matInput [formControl]="text" rows="5"></textarea>
+      <textarea matInput [formField]="form.text" rows="5"></textarea>
     </mat-form-field>
   </div>
   @if (range()) {

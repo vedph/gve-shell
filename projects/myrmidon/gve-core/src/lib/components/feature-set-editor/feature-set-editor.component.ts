@@ -5,12 +5,10 @@ import {
   effect,
   input,
   model,
-  OnDestroy,
-  OnInit,
   output,
   signal,
 } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounce, form, FormField } from '@angular/forms/signals';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -19,8 +17,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import {
@@ -69,7 +65,7 @@ import {
   selector: 'gve-feature-set-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatExpansionModule,
     MatFormFieldModule,
@@ -83,9 +79,7 @@ import {
   templateUrl: './feature-set-editor.component.html',
   styleUrl: './feature-set-editor.component.css',
 })
-export class FeatureSetEditorComponent implements OnInit, OnDestroy {
-  private _sub?: Subscription;
-
+export class FeatureSetEditorComponent {
   public readonly POLICIES = ['M', 'S', 'SF'];
 
   /**
@@ -154,7 +148,6 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
     Feature | OperationFeature | undefined
   >(undefined);
   public readonly editedFeatureIndex = signal<number>(-1);
-  public filteredFeatures = signal<Feature[] | OperationFeature[]>([]);
 
   // In batch mode, mutations accumulate here until the user clicks OK.
   public readonly draftFeatures = signal<Feature[] | OperationFeature[]>([]);
@@ -167,47 +160,38 @@ export class FeatureSetEditorComponent implements OnInit, OnDestroy {
   // Show Close/OK buttons only in batch mode.
   public readonly hasCloseButton = computed(() => this.batchMode());
 
-  // filter
-  public filter: FormControl<string | null>;
+  /**
+   * The features name filter.
+   */
+  private readonly _filter = signal('');
 
-  constructor(formBuilder: FormBuilder) {
-    this.filter = formBuilder.control<string | null>(null);
+  /**
+   * The filter field. User input reaches the filter debounced.
+   */
+  public readonly filter = form(this._filter, (path) => debounce(path, 300));
 
+  /**
+   * The working features matching the filter, if any.
+   */
+  public readonly filteredFeatures = computed<Feature[] | OperationFeature[]>(
+    () => {
+      const name = this._filter().toLowerCase();
+      const features = this.workingFeatures();
+      return name
+        ? features.filter((feature) =>
+            feature.name.toLowerCase().includes(name),
+          )
+        : features;
+    },
+  );
+
+  constructor() {
     // Sync draft from the model input whenever features or batchMode changes.
     effect(() => {
       if (this.batchMode()) {
         this.draftFeatures.set([...this.features()]);
       }
     });
-
-    // When the working list changes, re-apply the filter.
-    effect(() => {
-      this.applyFeatureFilter(this.workingFeatures(), this.filter.value);
-    });
-  }
-
-  private applyFeatureFilter(
-    features: Feature[] | OperationFeature[],
-    name?: string | null,
-  ): void {
-    this.filteredFeatures.set(
-      features.filter((feature) => {
-        return !name || feature.name.toLowerCase().includes(name.toLowerCase());
-      }) || [],
-    );
-  }
-
-  public ngOnInit(): void {
-    // when the filter changes, apply the filter
-    this._sub = this.filter.valueChanges
-      .pipe(distinctUntilChanged(), debounceTime(300))
-      .subscribe((value) => {
-        this.applyFeatureFilter(this.workingFeatures(), value);
-      });
-  }
-
-  public ngOnDestroy(): void {
-    this._sub?.unsubscribe();
   }
 
   public addFeature(): void {

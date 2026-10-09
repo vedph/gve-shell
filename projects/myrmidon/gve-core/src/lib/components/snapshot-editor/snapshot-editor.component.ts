@@ -6,6 +6,7 @@ import {
   effect,
   ElementRef,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -13,14 +14,7 @@ import {
   viewChild,
   inject,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, pattern, required } from '@angular/forms/signals';
 import { CommonModule } from '@angular/common';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -80,12 +74,45 @@ import {
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 import { MatBadge } from '@angular/material/badge';
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
+import { requiredArray } from '../../validators/signal-validators';
 
 // default snapshot view title
 const VIEW_TITLE = 'preview';
 
 // suffix for IDs of SVG elements to be made transparent at first rendition
 const SVG_TRANSP_SUFFIX = '_t';
+
+/**
+ * The editable shape behind the snapshot form.
+ */
+interface SnapshotControls {
+  baseText: CharNode[];
+  operations: CharChainOperation[];
+}
+
+/**
+ * Bound snapshot -> editable draft. Nodes and operations are deep-copied,
+ * so that the form never tags the caller's objects with its identity
+ * symbols (getSnapshot hands out clones again, which drop them).
+ */
+function toDraft(snapshot: Snapshot | undefined): SnapshotControls {
+  if (!snapshot) {
+    return { baseText: [], operations: [] };
+  }
+  return {
+    baseText: Array.isArray(snapshot.text)
+      ? structuredClone(snapshot.text)
+      : GveBaseTextService.stringToBaseChars(snapshot.text),
+    operations: structuredClone(snapshot.operations),
+  };
+}
+
+/**
+ * Count the lines of the specified text.
+ */
+function countLines(text: CharNode[]): number {
+  return text.length ? text.filter((c) => c.data === '\n').length + 1 : 0;
+}
 
 /**
  * 🔑 `gve-snapshot-editor`
@@ -111,8 +138,7 @@ const SVG_TRANSP_SUFFIX = '_t';
   selector: 'gve-snapshot-editor',
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
+    FormField,
     MatBadge,
     MatButtonModule,
     MatButtonToggleModule,
@@ -235,19 +261,22 @@ export class SnapshotEditorComponent {
    */
   public readonly snapshotCancel = output();
 
-  // base text
-  public baseText: FormControl<CharNode[]>;
-  // operations
-  public operations: FormControl<CharChainOperation[]>;
-  public form: FormGroup;
+  /**
+   * The editable draft: base text and operations, rebuilt from the bound
+   * snapshot whenever it changes (including the echo of our own save: the
+   * snapshot is saved only with an explicit action).
+   */
+  private readonly _draft = linkedSignal(() => toDraft(this.snapshot()));
 
-  public readonly featDetails: FormControl<boolean> = new FormControl<boolean>(
-    false,
-    { nonNullable: true },
-  );
-  public readonly autoRun: FormControl<boolean> = new FormControl<boolean>(
-    false,
-    { nonNullable: true },
+  public readonly form = form(this._draft, (path) => {
+    requiredArray(path.baseText);
+  });
+
+  /**
+   * View options: feature details, and auto-run operations on edit.
+   */
+  public readonly options = form(
+    signal({ featDetails: false, autoRun: false }),
   );
 
   public readonly chain = signal<CharChain | undefined>(undefined);
@@ -255,7 +284,9 @@ export class SnapshotEditorComponent {
   // the currently picked base text range
   public readonly textRange = signal<BaseTextRange | undefined>(undefined);
   // the lines count for the current base text
-  public readonly lineCount = signal<number>(0);
+  public readonly lineCount = computed(() =>
+    countLines(this.form.baseText().value()),
+  );
   // the currently edited operation
   public readonly editedOp = signal<CharChainOperation | undefined>(undefined);
   public readonly editedOpIndex = signal<number>(-1);
@@ -309,9 +340,15 @@ export class SnapshotEditorComponent {
     },
   );
 
-  // operations batch editing for features
-  public readonly editFeatsRange: FormControl<string | null>;
-  public readonly editFeatsForm: FormGroup;
+  // operations batch editing for features: the range accepts
+  // comma-separated N or N-M segments, e.g. "2, 5-7, 9"
+  public readonly editFeatsForm = form(
+    signal({ editFeatsRange: '' }),
+    (path) => {
+      required(path.editFeatsRange);
+      pattern(path.editFeatsRange, /^(\d+(?:-\d+)?)(\s*,\s*\d+(?:-\d+)?)*$/);
+    },
+  );
   // the edited operations features (set when editing features of multiple
   // operations at once)
   public readonly operationFeats = signal<Feature[] | undefined>(undefined);
@@ -328,22 +365,11 @@ export class SnapshotEditorComponent {
   private readonly _flatLookup = new FlatLookupPipe();
 
   constructor(
-    formBuilder: FormBuilder,
     private _api: GveApiService,
     private _dialog: MatDialog,
     private _dialogService: DialogService,
     private _snackbar: MatSnackBar,
   ) {
-    // base text
-    this.baseText = new FormControl<CharNode[]>([], {
-      nonNullable: true,
-      validators: [Validators.required],
-    });
-    // operations
-    this.operations = new FormControl<CharChainOperation[]>([], {
-      nonNullable: true,
-    });
-
     // set the peephole window width from the environment variable,
     // defaulting to 15 if not set
     const env = inject(EnvService);
@@ -351,30 +377,18 @@ export class SnapshotEditorComponent {
       parseInt(env.get('gvePeeperWidth', '15')!, 10),
     );
 
-    // form
-    this.form = formBuilder.group({
-      baseText: this.baseText,
-      operations: this.operations,
-    });
-
-    // feats form — accepts comma-separated N or N-M segments, e.g. "2, 5-7, 9"
-    this.editFeatsRange = formBuilder.control<string | null>(null, {
-      validators: [
-        Validators.required,
-        Validators.pattern(/^(\d+(?:-\d+)?)(\s*,\s*\d+(?:-\d+)?)*$/),
-      ],
-    });
-    this.editFeatsForm = formBuilder.group({
-      editFeatsRange: this.editFeatsRange,
-    });
-
-    // when snapshot changes, update the form and run all operations.
-    // untracked prevents busy() (read inside runToLast → runTo) from being
-    // tracked as a dependency, which would cause re-runs each time the API
-    // call completes and resets busy to false.
+    // when snapshot changes (so the draft is rebuilt from it), reset the
+    // form and run all operations. untracked prevents busy() and the draft
+    // (read inside runToLast → runTo) from being tracked as dependencies,
+    // which would cause re-runs each time the API call completes and resets
+    // busy to false.
     effect(() => {
-      this.updateForm(this.snapshot());
-      untracked(() => this.runToLast());
+      this.snapshot();
+      untracked(() => {
+        this.initialStepIndex.set(-1);
+        this.form().reset();
+        this.runToLast();
+      });
     });
 
     // diagnostic logging for multiValuedFeatureIds
@@ -437,7 +451,9 @@ export class SnapshotEditorComponent {
     // This call recovers from that missed push once the element is actually live.
     const result = this.result();
     if (result) {
-      const r = { ...result, text: this.baseText.value };
+      // untracked: the base text must not become a dependency of the
+      // effect calling this method
+      const r = { ...result, text: untracked(this.form.baseText().value) };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rendition.data = r as any;
     }
@@ -476,7 +492,7 @@ export class SnapshotEditorComponent {
       // update settings with latest rendition settings
       this.applyRenditionSettings();
       // supply the base text (not returned by API, must be provided by caller)
-      result.text = this.baseText.value;
+      result.text = this.form.baseText().value();
       // gve-snapshot-rendition@0.0.8 still types data with the old
       // CharChainResult (taggedNodes). Cast until the package is updated.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -500,26 +516,6 @@ export class SnapshotEditorComponent {
     }
   }
 
-  private updateForm(snapshot: Snapshot | undefined) {
-    this.initialStepIndex.set(-1);
-
-    if (!snapshot) {
-      this.form.reset();
-    } else {
-      if (Array.isArray(snapshot.text)) {
-        this.baseText.setValue(snapshot.text);
-      } else {
-        this.baseText.setValue(
-          GveBaseTextService.stringToBaseChars(snapshot.text),
-        );
-      }
-      this.operations.setValue(snapshot.operations);
-    }
-    this.updateLineCount(this.baseText.value);
-
-    this.form.markAsPristine();
-  }
-
   // #region base text
   public inputBaseText(): void {
     if (this.busy()) {
@@ -527,37 +523,21 @@ export class SnapshotEditorComponent {
     }
 
     const dialogRef = this._dialog.open(SnapshotTextEditorComponent, {
-      data: { payload: { text: [...this.baseText.value] } },
+      data: { payload: { text: [...this.form.baseText().value()] } },
       width: '80%',
     });
 
     dialogRef.afterClosed().subscribe((text: CharNode[]) => {
       if (text?.length) {
-        // update the form control and reset the current text range
-        this.baseText.setValue(text);
-        this.baseText.updateValueAndValidity();
-        this.baseText.markAsDirty();
+        // update the base text and reset the current text range
+        this.form.baseText().value.set(text);
+        this.form.baseText().markAsDirty();
         this.textRange.set(undefined);
-
-        // update the line count
-        this.updateLineCount(text);
 
         // remove all operations and update the view data
         this.removeAllOperations();
       }
     });
-  }
-
-  /**
-   * Update the line count based on the received text.
-   * @param text The text to use for counting lines.
-   */
-  private updateLineCount(text: CharNode[]) {
-    if (!text.length) {
-      this.lineCount.set(0);
-    } else {
-      this.lineCount.set(text.filter((c) => c.data === '\n').length + 1);
-    }
   }
 
   /**
@@ -598,7 +578,7 @@ export class SnapshotEditorComponent {
    */
   public editOperation(index: number) {
     this.editedOpIndex.set(index);
-    this.editedOp.set(structuredClone(this.operations.value[index]));
+    this.editedOp.set(structuredClone(this.form.operations().value()[index]));
   }
 
   /**
@@ -622,7 +602,7 @@ export class SnapshotEditorComponent {
    * is syntactically invalid or out of bounds.
    */
   private parseOpRange(rangeStr: string): number[] | null {
-    const total = this.operations.value.length;
+    const total = this.form.operations().value().length;
     const parts = rangeStr.split(',').map((p) => p.trim());
     const numbers = new Set<number>();
     for (const part of parts) {
@@ -642,12 +622,12 @@ export class SnapshotEditorComponent {
    * Supports comma-separated segments like "2, 5-7, 9".
    */
   public editOperationsFeats() {
-    if (this.editFeatsForm.invalid) {
-      this.editFeatsRange.markAsTouched();
+    if (this.editFeatsForm().invalid()) {
+      this.editFeatsForm.editFeatsRange().markAsTouched();
       return;
     }
 
-    const rangeValue = this.editFeatsRange.value!;
+    const rangeValue = this.editFeatsForm.editFeatsRange().value();
     const opNumbers = this.parseOpRange(rangeValue);
     if (!opNumbers) {
       return;
@@ -663,7 +643,7 @@ export class SnapshotEditorComponent {
     if (!opNumbers) {
       return;
     }
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
     for (const opNumber of opNumbers) {
       const op = operations[opNumber - 1];
       // just add features to the existing ones, without touching existing
@@ -674,20 +654,18 @@ export class SnapshotEditorComponent {
         features: [...(op.features || []), ...features],
       };
     }
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
 
     this.closeOperationFeats();
   }
 
   public editOperationSources() {
-    if (this.editFeatsForm.invalid) {
-      this.editFeatsRange.markAsTouched();
+    if (this.editFeatsForm().invalid()) {
+      this.editFeatsForm.editFeatsRange().markAsTouched();
       return;
     }
 
-    const rangeValue = this.editFeatsRange.value!;
+    const rangeValue = this.editFeatsForm.editFeatsRange().value();
     const opNumbers = this.parseOpRange(rangeValue);
     if (!opNumbers) {
       return;
@@ -707,7 +685,7 @@ export class SnapshotEditorComponent {
     if (!opNumbers) {
       return;
     }
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
     for (const opNumber of opNumbers) {
       const op = operations[opNumber - 1];
       operations[opNumber - 1] = {
@@ -715,9 +693,7 @@ export class SnapshotEditorComponent {
         sources: [...(op.sources || []), source],
       };
     }
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
 
     this.closeOperationSources();
   }
@@ -761,7 +737,7 @@ export class SnapshotEditorComponent {
       return;
     }
     console.log('operation change');
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
 
     // replace or add the operation
     let i = this.editedOpIndex();
@@ -773,12 +749,10 @@ export class SnapshotEditorComponent {
     }
 
     // update the operations form control
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
 
     // run to the edited operation if auto-run is enabled
-    if (this.autoRun.value) {
+    if (this.options.autoRun().value()) {
       this.runTo(i);
     }
 
@@ -794,7 +768,7 @@ export class SnapshotEditorComponent {
     this._dialogService
       .confirm(
         'Confirm Deletion',
-        `Delete operation "${this.operations.value[index].id}"?`,
+        `Delete operation "${this.form.operations().value()[index].id}"?`,
       )
       .subscribe((yes: boolean) => {
         if (yes) {
@@ -806,15 +780,13 @@ export class SnapshotEditorComponent {
             this.editedOpIndex.set(this.editedOpIndex() - 1);
           }
           // reset the result operation ID if it is the one being deleted
-          if (this.resultOperationId() === this.operations.value[index].id) {
+          if (this.resultOperationId() === this.form.operations().value()[index].id) {
             this.resultOperationId.set(undefined);
           }
           // delete the operation and update the form control
-          const operations = [...this.operations.value];
+          const operations = [...this.form.operations().value()];
           operations.splice(index, 1);
-          this.operations.setValue(operations);
-          this.operations.markAsDirty();
-          this.operations.updateValueAndValidity();
+          this.setOperations(operations);
 
           // update the view data
           setTimeout(() => {
@@ -830,16 +802,14 @@ export class SnapshotEditorComponent {
    * @param index The index of the operation to duplicate.
    */
   public duplicateOperation(index: number): void {
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
     const clone = structuredClone(operations[index]);
     clone.id = this._nanoid();
     operations.splice(index + 1, 0, clone);
     if (this.editedOpIndex() > index) {
       this.editedOpIndex.set(this.editedOpIndex() + 1);
     }
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
   }
 
   /**
@@ -862,13 +832,11 @@ export class SnapshotEditorComponent {
     if (index < 1) {
       return;
     }
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
     const op = operations.splice(index, 1)[0];
     operations.splice(index - 1, 0, op);
     this.swapEditedOpIndex(index, index - 1);
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
   }
 
   /**
@@ -876,24 +844,22 @@ export class SnapshotEditorComponent {
    * @param index The index of the operation to move down.
    */
   public moveOperationDown(index: number): void {
-    const operations = [...this.operations.value];
+    const operations = [...this.form.operations().value()];
     if (index >= operations.length - 1) {
       return;
     }
     const op = operations.splice(index, 1)[0];
     operations.splice(index + 1, 0, op);
     this.swapEditedOpIndex(index, index + 1);
-    this.operations.setValue(operations);
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations(operations);
   }
 
   public copyOperationsJson() {
-    if (!this.operations.value.length || this.busy()) {
+    if (!this.form.operations().value().length || this.busy()) {
       return;
     }
     const json = JSON.stringify(
-      { text: this.baseText.value, operations: this.operations.value },
+      { text: this.form.baseText().value(), operations: this.form.operations().value() },
       null,
       2,
     );
@@ -905,10 +871,10 @@ export class SnapshotEditorComponent {
   }
 
   public copyOperationsDsl() {
-    if (!this.operations.value.length || this.busy()) {
+    if (!this.form.operations().value().length || this.busy()) {
       return;
     }
-    this._api.getDsl(this.operations.value).subscribe({
+    this._api.getDsl(this.form.operations().value()).subscribe({
       next: (dsl: ResultWrapper<string[]>) => {
         if (dsl.result) {
           navigator.clipboard.writeText(dsl.result.join('\n')).then(() => {
@@ -941,11 +907,9 @@ export class SnapshotEditorComponent {
 
     dialogRef.afterClosed().subscribe((batchOps: CharChainOperation[]) => {
       if (batchOps) {
-        const operations = [...this.operations.value];
+        const operations = [...this.form.operations().value()];
         operations.push(...batchOps);
-        this.operations.setValue(operations);
-        this.operations.markAsDirty();
-        this.operations.updateValueAndValidity();
+        this.setOperations(operations);
         // update the view data
         setTimeout(() => {
           this.runToLast();
@@ -955,14 +919,20 @@ export class SnapshotEditorComponent {
   }
 
   /**
+   * Set the operations, marking them as changed.
+   */
+  private setOperations(operations: CharChainOperation[]): void {
+    this.form.operations().value.set(operations);
+    this.form.operations().markAsDirty();
+  }
+
+  /**
    * Remove all the operations, close the edited operation and update the view data.
    */
   private removeAllOperations(): void {
     this.resultOperationId.set(undefined);
     this.closeEditedOperation();
-    this.operations.reset();
-    this.operations.markAsDirty();
-    this.operations.updateValueAndValidity();
+    this.setOperations([]);
     this.setViewData();
     this.result.set(undefined);
   }
@@ -1046,12 +1016,12 @@ export class SnapshotEditorComponent {
     }
 
     const precedingIndex =
-      index > -1 ? index - 1 : this.operations.value.length - 1;
+      index > -1 ? index - 1 : this.form.operations().value().length - 1;
     if (precedingIndex < 0) {
       return 'v0';
     }
 
-    const precedingOp = this.operations.value[precedingIndex];
+    const precedingOp = this.form.operations().value()[precedingIndex];
     if (!precedingOp) {
       return 'v0';
     }
@@ -1266,8 +1236,8 @@ export class SnapshotEditorComponent {
    * all the operations, as users must be able to browse across its steps.
    */
   public runToLast(): void {
-    if (this.operations.value.length) {
-      this.runTo(this.operations.value.length - 1);
+    if (this.form.operations().value().length) {
+      this.runTo(this.form.operations().value().length - 1);
     } else {
       this.setViewData();
       this.result.set(undefined);
@@ -1282,7 +1252,7 @@ export class SnapshotEditorComponent {
    */
   public onOperationPreview(operation: CharChainOperation): void {
     // no multiple previews or previewing a new operation or auto-run disabled
-    if (this._previewing || this.editedOpIndex() < 0 || !this.autoRun.value) {
+    if (this._previewing || this.editedOpIndex() < 0 || !this.options.autoRun().value()) {
       return;
     }
     this._previewing = true;
@@ -1345,8 +1315,8 @@ export class SnapshotEditorComponent {
     const snapshot: Snapshot = {
       // snapshot nodes might be changed, so we copy them
       // to avoid changing the original snapshot
-      text: structuredClone(this.baseText.value),
-      operations: structuredClone(this.operations.value),
+      text: structuredClone(this.form.baseText().value()),
+      operations: structuredClone(this.form.operations().value()),
     };
 
     return snapshot;
@@ -1356,8 +1326,19 @@ export class SnapshotEditorComponent {
    * Get a snapshot from the form data and emit it
    * in the snapshot change event.
    */
+  /**
+   * Handle Enter in the operations range input: edit the features of the
+   * operations in range, like the implicit form submission this component
+   * used to rely on.
+   */
+  public onRangeEnter(event: Event): void {
+    // never let Enter reach an implicit submission of an outer form
+    event.preventDefault();
+    this.editOperationsFeats();
+  }
+
   public save(): void {
-    if (this.form.invalid || this.noSave()) {
+    if (this.form().invalid() || this.noSave()) {
       return;
     }
     this.snapshot.set(this.getSnapshot());

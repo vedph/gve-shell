@@ -53,7 +53,7 @@ describe('FeatureEditorComponent', () => {
   describe('free names and values', () => {
     it('should start with an empty invalid form', async () => {
       const { c } = await setup();
-      expect(c.form.invalid).toBe(true);
+      expect(c.form().invalid()).toBe(true);
       expect(
         screen.getByRole('button', { name: 'Accept changes' }),
       ).toBeDisabled();
@@ -67,12 +67,12 @@ describe('FeatureEditorComponent', () => {
           setPolicy: FeatureSetPolicy.single,
         },
       });
-      expect(c.name.value).toBe('n');
+      expect(c.form.name().value()).toBe('n');
       // no closed values: no prefix split
-      expect(c.value.value).toBe('v:x');
-      expect(c.valuePrefix.value).toBe('');
-      expect(c.setPolicy.value).toBe(FeatureSetPolicy.single);
-      expect(c.form.pristine).toBe(true);
+      expect(c.form.value().value()).toBe('v:x');
+      expect(c.form.valuePrefix().value()).toBe('');
+      expect(c.form.setPolicy().value()).toBe(FeatureSetPolicy.single);
+      expect(c.form().dirty()).toBe(false);
     });
 
     it('should edit and save a non-var feature, trimming values', async () => {
@@ -121,9 +121,9 @@ describe('FeatureEditorComponent', () => {
           isShortLived: true,
         } as OperationFeature,
       });
-      expect(c.isNegated.value).toBe(true);
-      expect(c.isGlobal.value).toBe(true);
-      expect(c.isShortLived.value).toBe(true);
+      expect(c.form.isNegated().value()).toBe(true);
+      expect(c.form.isGlobal().value()).toBe(true);
+      expect(c.form.isShortLived().value()).toBe(true);
     });
 
     it('should not save an invalid form', async () => {
@@ -157,7 +157,7 @@ describe('FeatureEditorComponent', () => {
       });
       await user.type(screen.getAllByRole('textbox')[0], 'x');
       await wait(DEBOUNCE);
-      expect(c.value.value).toBe('v');
+      expect(c.form.value().value()).toBe('v');
     });
 
     it('should reset the form when the feature is cleared', async () => {
@@ -166,7 +166,7 @@ describe('FeatureEditorComponent', () => {
       });
       fixture.componentRef.setInput('feature', undefined);
       await fixture.whenStable();
-      expect(c.name.value).toBe('');
+      expect(c.form.name().value()).toBe('');
       expect(c.nameIds()).toBeUndefined();
     });
 
@@ -202,6 +202,46 @@ describe('FeatureEditorComponent', () => {
     });
   });
 
+  describe('form structure', () => {
+    it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+      const { container } = await setup();
+      expect(container.querySelector('form')).toBeNull();
+    });
+
+    it('should accept changes with Enter only when they can be saved', async () => {
+      const user = userEvent.setup();
+      const { saved } = await setup({
+        feature: { name: 'n', value: 'v', setPolicy: 0 },
+      });
+      const [name, value] = screen.getAllByRole('textbox');
+      // pristine: Enter does nothing
+      await user.click(value);
+      await user.keyboard('{Enter}');
+      expect(saved).toEqual([]);
+      // invalid: Enter does nothing
+      await user.clear(name);
+      await user.keyboard('{Enter}');
+      expect(saved).toEqual([]);
+      await user.type(name, 'm{Enter}');
+      expect(saved).toEqual([
+        { name: 'm', value: 'v', setPolicy: FeatureSetPolicy.multiple },
+      ]);
+    });
+
+    it('should not reset the value on the echo of its own save', async () => {
+      const { c, saved } = await setup({
+        featNames: NAMES,
+        featValues: VALUES,
+        feature: { name: 'color', value: 'red', setPolicy: 0 },
+      });
+      c.form.value().value.set('blue');
+      c.save();
+      await wait(DEBOUNCE);
+      expect(saved.at(-1)).toEqual({ name: 'color', value: 'blue', setPolicy: 0 });
+      expect(c.form.value().value()).toBe('blue');
+    });
+  });
+
   describe('closed names and values', () => {
     it('should load a closed value splitting its prefix', async () => {
       const { c, fixture } = await setup({
@@ -210,8 +250,8 @@ describe('FeatureEditorComponent', () => {
         feature: { name: 'color', value: '@2:red', setPolicy: 0 },
       });
       expect(c.nameIds()).toEqual(VALUES['color']);
-      expect(c.valuePrefix.value).toBe('@2:');
-      expect(c.value.value).toBe('red');
+      expect(c.form.valuePrefix().value()).toBe('@2:');
+      expect(c.form.value().value()).toBe('red');
       await fixture.whenStable();
       expect(screen.getByRole('combobox', { name: 'value' })).toHaveTextContent(
         'Red',
@@ -224,8 +264,8 @@ describe('FeatureEditorComponent', () => {
         featValues: VALUES,
         feature: { name: 'color', value: 'red', setPolicy: 0 },
       });
-      expect(c.valuePrefix.value).toBe('');
-      expect(c.value.value).toBe('red');
+      expect(c.form.valuePrefix().value()).toBe('');
+      expect(c.form.value().value()).toBe('red');
     });
 
     it('should save a closed value with its prefix', async () => {
@@ -234,8 +274,8 @@ describe('FeatureEditorComponent', () => {
         featValues: VALUES,
         feature: { name: 'color', value: 'red', setPolicy: 0 },
       });
-      c.valuePrefix.setValue('@1:');
-      c.value.setValue('blue');
+      c.form.valuePrefix().value.set('@1:');
+      c.form.value().value.set('blue');
       c.save();
       expect(saved.at(-1)).toEqual({
         name: 'color',
@@ -250,10 +290,10 @@ describe('FeatureEditorComponent', () => {
         featValues: VALUES,
         feature: { name: 'color', value: 'red', setPolicy: 0 },
       });
-      c.valuePrefix.setValue('@1');
-      expect(c.valuePrefix.errors).toEqual({ noColon: true });
-      c.valuePrefix.setValue('@1:');
-      expect(c.valuePrefix.errors).toBeNull();
+      c.form.valuePrefix().value.set('@1');
+      expect(c.form.valuePrefix().getError('noColon')).toBeTruthy();
+      c.form.valuePrefix().value.set('@1:');
+      expect(c.form.valuePrefix().errors()).toEqual([]);
     });
 
     it('should reset value and apply props when picking a name', async () => {
@@ -264,15 +304,15 @@ describe('FeatureEditorComponent', () => {
         featProps: PROPS,
         feature: { name: 'color', value: '@1:red', setPolicy: 0 },
       });
-      c.name.setValue('note');
+      c.form.name().value.set('note');
       await wait(DEBOUNCE);
-      expect(c.value.value).toBe('');
-      expect(c.valuePrefix.value).toBe('');
+      expect(c.form.value().value()).toBe('');
+      expect(c.form.valuePrefix().value()).toBe('');
       expect(c.nameIds()).toBeUndefined();
-      expect(c.setPolicy.value).toBe(FeatureSetPolicy.single);
-      expect(c.isNegated.value).toBe(true);
-      expect(c.isGlobal.value).toBe(true);
-      expect(c.isShortLived.value).toBe(true);
+      expect(c.form.setPolicy().value()).toBe(FeatureSetPolicy.single);
+      expect(c.form.isNegated().value()).toBe(true);
+      expect(c.form.isGlobal().value()).toBe(true);
+      expect(c.form.isShortLived().value()).toBe(true);
     });
 
     it('should apply only the defined props', async () => {
@@ -281,11 +321,11 @@ describe('FeatureEditorComponent', () => {
         featNames: NAMES,
         featProps: { note: { setPolicy: FeatureSetPolicy.singleFirst } },
       });
-      c.isNegated.setValue(true);
-      c.name.setValue('note');
+      c.form.isNegated().value.set(true);
+      c.form.name().value.set('note');
       await wait(DEBOUNCE);
-      expect(c.setPolicy.value).toBe(FeatureSetPolicy.singleFirst);
-      expect(c.isNegated.value).toBe(true);
+      expect(c.form.setPolicy().value()).toBe(FeatureSetPolicy.singleFirst);
+      expect(c.form.isNegated().value()).toBe(true);
     });
 
     it('should refresh value IDs when re-picking a name after a load', async () => {
@@ -294,7 +334,7 @@ describe('FeatureEditorComponent', () => {
         featValues: VALUES,
       });
       // user picks color
-      c.name.setValue('color');
+      c.form.name().value.set('color');
       await wait(DEBOUNCE);
       expect(c.nameIds()).toEqual(VALUES['color']);
       // programmatic load of another feature
@@ -306,10 +346,28 @@ describe('FeatureEditorComponent', () => {
       await fixture.whenStable();
       expect(c.nameIds()).toEqual(VALUES['r_hints']);
       // user picks color again
-      c.name.setValue('color');
+      c.form.name().value.set('color');
       await wait(DEBOUNCE);
       expect(c.nameIds()).toEqual(VALUES['color']);
-      expect(c.value.value).toBe('');
+      expect(c.form.value().value()).toBe('');
+    });
+
+    it('should handle the user re-picking the loaded name', async () => {
+      const { c } = await setup({
+        isVar: true,
+        featNames: NAMES,
+        featValues: VALUES,
+        featProps: PROPS,
+        feature: { name: 'note', value: 'x', setPolicy: 0 },
+      });
+      c.form.name().value.set('color');
+      await wait(DEBOUNCE);
+      expect(c.nameIds()).toEqual(VALUES['color']);
+      // back to the loaded name: still a user change
+      c.form.name().value.set('note');
+      await wait(DEBOUNCE);
+      expect(c.nameIds()).toBeUndefined();
+      expect(c.form.setPolicy().value()).toBe(FeatureSetPolicy.single);
     });
 
     it('should pick the name from the searchable select', async () => {
@@ -318,7 +376,7 @@ describe('FeatureEditorComponent', () => {
       await user.click(screen.getByRole('combobox', { name: 'name' }));
       await user.click(await screen.findByRole('option', { name: 'Color' }));
       await wait(DEBOUNCE);
-      expect(c.name.value).toBe('color');
+      expect(c.form.name().value()).toBe('color');
       expect(c.nameIds()).toEqual(VALUES['color']);
     });
   });
@@ -334,15 +392,15 @@ describe('FeatureEditorComponent', () => {
       expect(screen.getByText('composite value')).toBeInTheDocument();
       // nothing selected: no-op
       c.addValueToComposite();
-      expect(c.value.value).toBe('');
-      c.selectedValue.setValue('h1');
+      expect(c.form.value().value()).toBe('');
+      c.form.selectedValue().value.set('h1');
       c.addValueToComposite();
-      expect(c.value.value).toBe('h1');
-      expect(c.selectedValue.value).toBe('');
-      c.selectedValue.setValue('h2');
+      expect(c.form.value().value()).toBe('h1');
+      expect(c.form.selectedValue().value()).toBe('');
+      c.form.selectedValue().value.set('h2');
       c.addValueToComposite();
-      expect(c.value.value).toBe('h1 h2');
-      expect(c.value.dirty).toBe(true);
+      expect(c.form.value().value()).toBe('h1 h2');
+      expect(c.form.value().dirty()).toBe(true);
     });
 
     it('should not be multi-valued without IDs', async () => {

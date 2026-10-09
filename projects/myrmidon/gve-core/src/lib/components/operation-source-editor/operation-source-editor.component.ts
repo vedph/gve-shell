@@ -1,19 +1,14 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
   effect,
   input,
+  linkedSignal,
   model,
   output,
+  untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, min, required } from '@angular/forms/signals';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,6 +18,41 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { LabeledId, OperationSource } from '../../models';
+import { softMaxLength } from '../../validators/signal-validators';
+
+/**
+ * The editable shape behind the operation source form.
+ */
+interface OperationSourceControls {
+  id: string;
+  type: string;
+  rank: number | null;
+  note: string;
+}
+
+/**
+ * Bound source -> editable draft.
+ */
+function toDraft(source: OperationSource | undefined): OperationSourceControls {
+  return {
+    id: source?.id ?? '',
+    type: source?.type ?? '',
+    rank: source?.rank || 0,
+    note: source?.note || '',
+  };
+}
+
+/**
+ * Editable draft -> source.
+ */
+function toSource(v: OperationSourceControls): OperationSource {
+  return {
+    id: v.id,
+    type: v.type,
+    rank: v.rank ?? 0,
+    note: v.note || undefined,
+  };
+}
 
 /**
  * 🔑 `gve-operation-source-editor`
@@ -44,14 +74,14 @@ import { LabeledId, OperationSource } from '../../models';
   selector: 'gve-operation-source-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+  ],
   templateUrl: './operation-source-editor.component.html',
   styleUrl: './operation-source-editor.component.css',
 })
@@ -76,65 +106,48 @@ export class OperationSourceEditorComponent {
    */
   public sourceCancel = output();
 
-  public id: FormControl<string>;
-  public type: FormControl<string>;
-  public rank: FormControl<number>;
-  public note: FormControl<string | null>;
-  public form: FormGroup;
+  /**
+   * The editable draft, rebuilt from the bound source whenever it changes
+   * (including the echo of our own save: the source is saved only with an
+   * explicit action).
+   */
+  private readonly _draft = linkedSignal(() => toDraft(this.source()));
 
-  constructor(formBuilder: FormBuilder) {
-    this.id = new FormControl('', {
-      validators: [Validators.required, Validators.maxLength(50)],
-      nonNullable: true,
-    });
-    this.type = new FormControl('', {
-      validators: [Validators.required, Validators.maxLength(50)],
-      nonNullable: true,
-    });
-    this.rank = new FormControl(0, {
-      nonNullable: true,
-    });
-    this.note = new FormControl(null, {
-      validators: [Validators.maxLength(1000)],
-    });
-    this.form = formBuilder.group({
-      id: this.id,
-      type: this.type,
-      rank: this.rank,
-      note: this.note,
-    });
+  public readonly form = form(this._draft, (path) => {
+    required(path.id);
+    softMaxLength(path.id, 50);
+    required(path.type);
+    softMaxLength(path.type, 50);
+    min(path.rank, 0);
+    softMaxLength(path.note, 1000);
+  });
 
-    // when source changes, update form
+  constructor() {
+    // a new bound source means there are no unsaved edits
     effect(() => {
-      this.updateForm(this.source());
+      this.source();
+      untracked(() => this.form().reset());
     });
-  }
-
-  private updateForm(source?: OperationSource): void {
-    if (!source) {
-      this.form.reset();
-      return;
-    }
-    this.id.setValue(source.id);
-    this.type.setValue(source.type);
-    this.rank.setValue(source.rank || 0);
-    this.note.setValue(source.note || null);
-    this.form.markAsPristine();
   }
 
   public cancel(): void {
     this.sourceCancel.emit();
   }
 
+  /**
+   * Handle Enter in a single-line input: accept the changes when valid,
+   * like the implicit form submission this component used to rely on.
+   */
+  public onEnter(event: Event): void {
+    // never let Enter reach an implicit submission of an outer form
+    event.preventDefault();
+    this.save();
+  }
+
   public save(): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       return;
     }
-    this.source.set({
-      id: this.id.value,
-      type: this.type.value,
-      rank: this.rank.value,
-      note: this.note.value || undefined,
-    });
+    this.source.set(toSource(this._draft()));
   }
 }

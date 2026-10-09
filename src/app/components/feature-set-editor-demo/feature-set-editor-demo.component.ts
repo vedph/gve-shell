@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { form, FormField, min } from '@angular/forms/signals';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -14,7 +14,7 @@ import { FeatureMap, FeatureSetEditorComponent } from '@myrmidon/gve-core';
   selector: 'app-feature-set-editor-demo',
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormField,
     MatCardModule,
     MatCheckboxModule,
     MatFormFieldModule,
@@ -26,7 +26,10 @@ import { FeatureMap, FeatureSetEditorComponent } from '@myrmidon/gve-core';
   styleUrl: './feature-set-editor-demo.component.scss',
 })
 export class FeatureSetEditorDemoComponent {
-  public filterThreshold: FormControl<number>;
+  public readonly presets = form(
+    signal({ filterThreshold: 5 as number | null }),
+    (path) => min(path.filterThreshold, -1),
+  );
 
   public readonly featNames = signal<LabeledId[] | undefined>([
     {
@@ -84,10 +87,6 @@ export class FeatureSetEditorDemoComponent {
     },
   ]);
   public readonly multiValuedFeatureIds = signal<string[]>(['clrs']);
-
-  constructor(formBuilder: FormBuilder) {
-    this.filterThreshold = formBuilder.control(5, { nonNullable: true });
-  }
 
   public onFeaturesChange(features: Feature[]): void {
     this.features.set(features);

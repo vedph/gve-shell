@@ -7,35 +7,34 @@
     <div>
       <mat-form-field class="long-text">
         <label>text</label>
-        <textarea matInput [formControl]="text" rows="5"></textarea>
+        <textarea matInput [formField]="form.text" rows="5"></textarea>
       </mat-form-field>
     </div>
 
     <div class="controls-row">
       <mat-form-field class="nr">
         <mat-label>at</mat-label>
-        <input matInput [formControl]="at" type="number" min="0" />
+        <input matInput [formField]="form.at" type="number" />
       </mat-form-field>
 
-      <mat-checkbox [formControl]="atAsIndex">idx</mat-checkbox>
+      <mat-checkbox [formField]="form.atAsIndex">idx</mat-checkbox>
 
       <mat-form-field class="nr">
         <mat-label>run</mat-label>
-        <input matInput [formControl]="run" type="number" min="0" />
+        <input matInput [formField]="form.run" type="number" />
       </mat-form-field>
 
       <mat-form-field class="nr">
         <mat-label>window width</mat-label>
-        <input matInput [formControl]="windowWidth" type="number" min="1" />
+        <input matInput [formField]="form.windowWidth" type="number" />
       </mat-form-field>
 
       <mat-form-field class="nr">
         <mat-label>em size</mat-label>
         <input
           matInput
-          [formControl]="emSize"
+          [formField]="form.emSize"
           type="number"
-          min="0.5"
           step="0.1"
         />
       </mat-form-field>

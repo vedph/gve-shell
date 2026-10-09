@@ -5,8 +5,8 @@
   <mat-card-content>
     <fieldset>
       <legend>presets</legend>
-      <mat-checkbox [formControl]="hasFeatNames">feature names</mat-checkbox>
-      <mat-checkbox [formControl]="hasFeatValues">feature values</mat-checkbox>
+      <mat-checkbox [formField]="presets.hasFeatNames">feature names</mat-checkbox>
+      <mat-checkbox [formField]="presets.hasFeatValues">feature values</mat-checkbox>
     </fieldset>
     <hr />
     <gve-feature-editor

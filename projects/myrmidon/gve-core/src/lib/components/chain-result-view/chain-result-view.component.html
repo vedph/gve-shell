@@ -5,7 +5,7 @@
     @if (versionTags().length) {
     <mat-form-field>
       <mat-label>stage</mat-label>
-      <mat-select [formControl]="versionTag">
+      <mat-select [formField]="form.versionTag">
         <mat-option [value]="null">-</mat-option>
         @for (t of versionTags(); track t) {
         <mat-option [value]="t">{{ t }}</mat-option>
@@ -17,7 +17,7 @@
     @if (tags().length) {
     <mat-form-field>
       <mat-label>tag</mat-label>
-      <mat-select [formControl]="tag">
+      <mat-select [formField]="form.tag">
         @for (t of tags(); track t) {
         <mat-option [value]="t">{{ t }}</mat-option>
         }

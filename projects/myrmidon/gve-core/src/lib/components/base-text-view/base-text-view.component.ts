@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -63,7 +62,6 @@ export interface BaseTextRange {
 @Component({
   selector: 'gve-base-text-view',
   imports: [
-    FormsModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,

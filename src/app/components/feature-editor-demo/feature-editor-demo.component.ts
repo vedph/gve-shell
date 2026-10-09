@@ -1,14 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  computed,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-
-import { Subscription } from 'rxjs';
+import { form, FormField } from '@angular/forms/signals';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -24,7 +21,7 @@ import {
   selector: 'app-feature-editor-demo',
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormField,
     MatCardModule,
     MatCheckboxModule,
     FeatureEditorComponent,
@@ -33,50 +30,28 @@ import {
   templateUrl: './feature-editor-demo.component.html',
   styleUrl: './feature-editor-demo.component.scss',
 })
-export class FeatureEditorDemoComponent implements OnInit, OnDestroy {
-  private _subs: Subscription[];
+export class FeatureEditorDemoComponent {
+  public readonly presets = form(
+    signal({ hasFeatNames: false, hasFeatValues: false }),
+  );
 
-  public hasFeatNames: FormControl;
-  public hasFeatValues: FormControl;
-
-  public readonly featNames = signal<LabeledId[] | undefined>(undefined);
-  public readonly featValues = signal<FeatureMap | undefined>(undefined);
-  public readonly feature = signal<Feature | undefined>(undefined);
-
-  constructor(formBuilder: FormBuilder) {
-    this.hasFeatNames = formBuilder.control(false);
-    this.hasFeatValues = formBuilder.control(false);
-    this.feature.set({
-      name: 'color',
-      value: 'red',
-      setPolicy: 0,
-    });
-    this._subs = [];
-  }
-
-  public ngOnInit(): void {
-    this._subs.push(
-      this.hasFeatNames.valueChanges.subscribe((value: boolean) => {
-        if (value) {
-          this.featNames.set([
-            {
-              id: 'clr',
-              label: 'color',
-            },
-            {
-              id: 'sz',
-              label: 'size',
-            },
-          ]);
-        } else {
-          this.featNames.set(undefined);
-        }
-      })
-    );
-
-    this.hasFeatValues.valueChanges.subscribe((value: boolean) => {
-      if (value) {
-        this.featValues.set({
+  public readonly featNames = computed<LabeledId[] | undefined>(() =>
+    this.presets.hasFeatNames().value()
+      ? [
+          {
+            id: 'clr',
+            label: 'color',
+          },
+          {
+            id: 'sz',
+            label: 'size',
+          },
+        ]
+      : undefined,
+  );
+  public readonly featValues = computed<FeatureMap | undefined>(() =>
+    this.presets.hasFeatValues().value()
+      ? {
           clr: [
             {
               id: 'r',
@@ -91,16 +66,14 @@ export class FeatureEditorDemoComponent implements OnInit, OnDestroy {
               label: 'blue',
             },
           ],
-        });
-      } else {
-        this.featValues.set(undefined);
-      }
-    });
-  }
-
-  public ngOnDestroy(): void {
-    this._subs.forEach((sub: Subscription) => sub.unsubscribe());
-  }
+        }
+      : undefined,
+  );
+  public readonly feature = signal<Feature | undefined>({
+    name: 'color',
+    value: 'red',
+    setPolicy: 0,
+  });
 
   public onFeatureChange(feature?: Feature): void {
     this.feature.set(feature);

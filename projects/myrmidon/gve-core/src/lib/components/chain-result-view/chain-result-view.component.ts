@@ -5,13 +5,12 @@ import {
   computed,
   effect,
   input,
-  OnDestroy,
-  OnInit,
   output,
   signal,
 } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { form, FormField } from '@angular/forms/signals';
+import { distinctUntilChanged, skip } from 'rxjs';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -35,6 +34,7 @@ import {
   CharChainResult,
 } from '../../services/gve-api.service';
 import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
+import { debounceUntilDestroyed } from '../../utils/debounce-until-destroyed';
 import { MatTooltip } from "@angular/material/tooltip";
 
 /**
@@ -53,7 +53,7 @@ import { MatTooltip } from "@angular/material/tooltip";
 @Component({
   selector: 'gve-chain-result-view',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -67,10 +67,7 @@ import { MatTooltip } from "@angular/material/tooltip";
   styleUrl: './chain-result-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChainResultViewComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
-  private _subs?: Subscription[];
+export class ChainResultViewComponent implements AfterViewInit {
   // track if we've already performed step selection
   private _stepSelectionDone = signal(false);
   // track if component view is initialized
@@ -142,16 +139,20 @@ export class ChainResultViewComponent
    */
   public readonly rangePick = output<BaseTextRange>();
 
-  public versionTag: FormControl<string | null>;
-  public tag: FormControl<string | null>;
+  /**
+   * The version pickers: the staged version tag, and the step's tag.
+   */
+  public readonly form = form(
+    signal<{ versionTag: string | null; tag: string | null }>({
+      versionTag: null,
+      tag: null,
+    }),
+  );
 
-  constructor(formBuilder: FormBuilder) {
+  constructor() {
     // bind callback methods
     this.getCharColor = this.getCharColor.bind(this);
     // this.getCharBorderColor = this.getCharBorderColor.bind(this);
-
-    this.versionTag = formBuilder.control<string | null>(null);
-    this.tag = formBuilder.control<string | null>(null);
 
     // when result changes, update the form
     effect(() => {
@@ -174,6 +175,29 @@ export class ChainResultViewComponent
         }
       }
     });
+
+    // Changes of the pickers, like valueChanges: skip(1) drops the initial
+    // value emitted by toObservable, so only actual changes are handled.
+
+    // whenever the staged version tag changes, update the tag
+    toObservable(this.form.versionTag().value)
+      .pipe(skip(1), distinctUntilChanged(), debounceUntilDestroyed(200))
+      .subscribe((value) => {
+        this.form.tag().value.set(this.getTagFromVersion(value) || null);
+      });
+
+    // whenever the tag changes, update the step
+    toObservable(this.form.tag().value)
+      .pipe(skip(1), distinctUntilChanged(), debounceUntilDestroyed(200))
+      .subscribe((value) => {
+        this.selectionFeatures.set([]); // reset selection features
+        this.step.set(
+          this.result()?.steps.find((step) => step.outputTag === value)
+        );
+        if (this.step()) {
+          this.stepPick.emit(this.step()!);
+        }
+      });
   }
 
   private doInitialStepSelection(
@@ -193,33 +217,9 @@ export class ChainResultViewComponent
       // if we have a tag control (which we do based on your code)
       if (targetStep.outputTag) {
         // using the tag control ensures all the necessary updates happen
-        this.tag.setValue(targetStep.outputTag);
+        this.form.tag().value.set(targetStep.outputTag);
       }
     }
-  }
-
-  public ngOnInit(): void {
-    this._subs = [
-      // whenever the staged version tag changes, update the tag
-      this.versionTag.valueChanges
-        .pipe(distinctUntilChanged(), debounceTime(200))
-        .subscribe((value) => {
-          this.tag.setValue(this.getTagFromVersion(value) || null);
-        }),
-
-      // whenever the tag changes, update the step
-      this.tag.valueChanges
-        .pipe(distinctUntilChanged(), debounceTime(200))
-        .subscribe((value) => {
-          this.selectionFeatures.set([]); // reset selection features
-          this.step.set(
-            this.result()?.steps.find((step) => step.outputTag === value)
-          );
-          if (this.step()) {
-            this.stepPick.emit(this.step()!);
-          }
-        }),
-    ];
   }
 
   public ngAfterViewInit(): void {
@@ -250,10 +250,6 @@ export class ChainResultViewComponent
     } else {
       this.step.set(undefined);
     }
-  }
-
-  public ngOnDestroy(): void {
-    this._subs?.forEach((sub) => sub.unsubscribe());
   }
 
   private updateVersionTags(): void {
@@ -362,7 +358,7 @@ export class ChainResultViewComponent
     this.selectionFeatures.set([]);
     if (step) {
       // setting the tag will trigger the step change
-      this.tag.setValue(step.outputTag);
+      this.form.tag().value.set(step.outputTag);
     }
   }
 

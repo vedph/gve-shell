@@ -19,7 +19,7 @@ async function setup(inputs: Record<string, unknown> = {}) {
 describe('OperationSourceEditorComponent', () => {
   it('should start with an empty invalid form', async () => {
     const { c } = await setup();
-    expect(c.form.invalid).toBe(true);
+    expect(c.form().invalid()).toBe(true);
     expect(screen.getByRole('button', { name: 'Accept changes' })).toBeDisabled();
   });
 
@@ -27,24 +27,24 @@ describe('OperationSourceEditorComponent', () => {
     const { c } = await setup({
       source: { id: 'a', type: 't', rank: 2, note: 'n' },
     });
-    expect(c.id.value).toBe('a');
-    expect(c.type.value).toBe('t');
-    expect(c.rank.value).toBe(2);
-    expect(c.note.value).toBe('n');
-    expect(c.form.pristine).toBe(true);
+    expect(c.form.id().value()).toBe('a');
+    expect(c.form.type().value()).toBe('t');
+    expect(c.form.rank().value()).toBe(2);
+    expect(c.form.note().value()).toBe('n');
+    expect(c.form().dirty()).toBe(false);
   });
 
   it('should load defaults for missing rank and note', async () => {
     const { c } = await setup({ source: { id: 'a', type: 't' } });
-    expect(c.rank.value).toBe(0);
-    expect(c.note.value).toBeNull();
+    expect(c.form.rank().value()).toBe(0);
+    expect(c.form.note().value()).toBe('');
   });
 
   it('should reset when the source is cleared', async () => {
     const { c, fixture } = await setup({ source: { id: 'a', type: 't' } });
     fixture.componentRef.setInput('source', undefined);
     await fixture.whenStable();
-    expect(c.id.value).toBe('');
+    expect(c.form.id().value()).toBe('');
   });
 
   it('should save a source typed in free inputs', async () => {
@@ -79,8 +79,8 @@ describe('OperationSourceEditorComponent', () => {
     await user.click(await screen.findByRole('option', { name: 'Alpha' }));
     await user.click(screen.getByRole('combobox', { name: 'type' }));
     await user.click(await screen.findByRole('option', { name: 'Type T' }));
-    expect(c.id.value).toBe('a');
-    expect(c.type.value).toBe('t');
+    expect(c.form.id().value()).toBe('a');
+    expect(c.form.type().value()).toBe('t');
   });
 
   it('should show validation errors', async () => {
@@ -113,6 +113,29 @@ describe('OperationSourceEditorComponent', () => {
     const { cancel } = await setup();
     await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(cancel).toHaveBeenCalled();
+  });
+
+  it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+    const { container } = await setup();
+    expect(container.querySelector('form')).toBeNull();
+  });
+
+  it('should accept changes with Enter in a single-line input', async () => {
+    const user = userEvent.setup();
+    const { saved } = await setup();
+    await user.type(screen.getByRole('textbox', { name: 'id' }), 'a');
+    // invalid (no type): Enter does not save
+    await user.keyboard('{Enter}');
+    expect(saved).toEqual([]);
+    await user.type(screen.getByRole('textbox', { name: 'type' }), 't{Enter}');
+    expect(saved).toEqual([{ id: 'a', type: 't', rank: 0, note: undefined }]);
+  });
+
+  it('should require a non-negative rank', async () => {
+    const { c } = await setup({ source: { id: 'a', type: 't' } });
+    c.form.rank().value.set(-1);
+    expect(c.form.rank().getError('min')).toBeTruthy();
+    expect(c.form().invalid()).toBe(true);
   });
 
   it('should not propagate its form submit to outer forms', async () => {

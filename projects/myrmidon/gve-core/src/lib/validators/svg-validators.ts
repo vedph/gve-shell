@@ -1,47 +1,67 @@
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import {
+  PathKind,
+  SchemaPath,
+  SchemaPathRules,
+  validate,
+} from '@angular/forms/signals';
 
 /**
  * Validators for SVG.
  */
 export class SvgValidators {
   /**
-   * Validator for a valid SVG `g` root element in GVE.
+   * Get the error kind for the specified SVG code, which must be either
+   * empty, or have a single `g` child under its `svg` root element.
+   *
+   * @param svg The SVG code.
+   * @returns `svgInvalid` for malformed XML, `svgInvalidRoot` for an `svg`
+   * root element not having a single `g` child, or null if valid.
    */
-  static rootGValidator(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null => {
-      if (!control.value) {
-        return null;
-      }
-      const parser = new DOMParser();
-      let error = null;
-      let svgRoot;
+  public static getRootGError(
+    svg: string | null | undefined,
+  ): 'svgInvalid' | 'svgInvalidRoot' | null {
+    if (!svg) {
+      return null;
+    }
+    let svgRoot;
 
-      try {
-        const doc = parser.parseFromString(control.value, 'image/svg+xml');
-        // DOMParser does not throw on malformed XML: it returns a document
-        // containing a parsererror element instead
-        if (doc.getElementsByTagName('parsererror').length) {
-          error = { svgInvalid: { value: control.value } };
-        } else {
-          svgRoot =
-            doc.documentElement.nodeName === 'svg'
-              ? doc.documentElement
-              : null;
-        }
-      } catch (e) {
-        error = { svgInvalid: { value: control.value } };
+    try {
+      const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+      // DOMParser does not throw on malformed XML: it returns a document
+      // containing a parsererror element instead
+      if (doc.getElementsByTagName('parsererror').length) {
+        return 'svgInvalid';
       }
+      svgRoot =
+        doc.documentElement.nodeName === 'svg' ? doc.documentElement : null;
+    } catch {
+      return 'svgInvalid';
+    }
 
-      if (!error && svgRoot) {
-        // the svg root must have a single g element child (whitespace
-        // and nested elements inside g are allowed)
-        const children = Array.from(svgRoot.children);
-        if (children.length !== 1 || children[0].nodeName !== 'g') {
-          error = { svgInvalidRoot: { value: control.value } };
-        }
+    if (svgRoot) {
+      // the svg root must have a single g element child (whitespace
+      // and nested elements inside g are allowed)
+      const children = Array.from(svgRoot.children);
+      if (children.length !== 1 || children[0].nodeName !== 'g') {
+        return 'svgInvalidRoot';
       }
+    }
+    return null;
+  }
 
-      return error;
-    };
+  /**
+   * Signal forms rule for a valid SVG `g` root element in GVE. The error
+   * kind is either `svgInvalid` or `svgInvalidRoot`
+   * (see {@link SvgValidators.getRootGError}).
+   *
+   * @param path The path of the string field to validate.
+   */
+  public static rootG<TPathKind extends PathKind = PathKind.Root>(
+    path: SchemaPath<string, SchemaPathRules.Supported, TPathKind>,
+  ): void {
+    validate(path, ({ value }) => {
+      const kind = SvgValidators.getRootGError(value());
+      return kind ? { kind } : undefined;
+    });
   }
 }

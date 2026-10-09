@@ -1,4 +1,4 @@
-<form [formGroup]="form" (submit)="save()">
+<div>
   <!-- tabs -->
   <mat-tab-group [selectedIndex]="tabIndex()">
     <!-- GENERAL -->
@@ -10,7 +10,7 @@
         <!-- type -->
         <mat-form-field>
           <mat-label>type</mat-label>
-          <mat-select [formControl]="type">
+          <mat-select [formField]="form.type">
             <mat-option [value]="7"
               ><mat-icon>edit_note</mat-icon>annotate</mat-option
             >
@@ -36,7 +36,10 @@
               ><mat-icon>compare_arrows</mat-icon>swap</mat-option
             >
           </mat-select>
-          @if ($any(type).errors?.required && (type.dirty || type.touched)) {
+          @if (
+            form.type().getError('required') &&
+            (form.type().dirty() || form.type().touched())
+          ) {
             <mat-error>type required</mat-error>
           }
         </mat-form-field>
@@ -44,23 +47,42 @@
         <!-- at -->
         <mat-form-field class="nr">
           <mat-label>at</mat-label>
-          <input matInput [formControl]="at" type="number" min="0" />
-          @if ($any(at).errors?.required && (at.dirty || at.touched)) {
+          <input
+            matInput
+            [formField]="form.at"
+            type="number"
+            (keydown.enter)="onEnter($event)"
+          />
+          @if (
+            form.at().getError('required') &&
+            (form.at().dirty() || form.at().touched())
+          ) {
             <mat-error>at required</mat-error>
           }
-          @if ($any(at).errors?.min && (at.dirty || at.touched)) {
+          @if (
+            form.at().getError('min') &&
+            (form.at().dirty() || form.at().touched())
+          ) {
             <mat-error>at must be at least 0</mat-error>
           }
         </mat-form-field>
 
         <!-- atAsIndex -->
-        <mat-checkbox [formControl]="atAsIndex">idx</mat-checkbox>
+        <mat-checkbox [formField]="form.atAsIndex">idx</mat-checkbox>
 
         <!-- run -->
         <mat-form-field class="nr">
           <mat-label>run</mat-label>
-          <input matInput [formControl]="run" type="number" min="0" />
-          @if ($any(run).errors?.required && (run.dirty || run.touched)) {
+          <input
+            matInput
+            [formField]="form.run"
+            type="number"
+            (keydown.enter)="onEnter($event)"
+          />
+          @if (
+            form.run().getError('required') &&
+            (form.run().dirty() || form.run().touched())
+          ) {
             <mat-error>run required</mat-error>
           }
         </mat-form-field>
@@ -69,23 +91,37 @@
         @if (hasTo()) {
           <mat-form-field class="nr">
             <mat-label>to</mat-label>
-            <input matInput [formControl]="to" type="number" min="0" />
-            @if ($any(to).errors?.required && (to.dirty || to.touched)) {
+            <input
+            matInput
+            [formField]="form.to"
+            type="number"
+            (keydown.enter)="onEnter($event)"
+          />
+            @if (
+            form.to().getError('required') &&
+            (form.to().dirty() || form.to().touched())
+          ) {
               <mat-error>to required</mat-error>
             }
           </mat-form-field>
 
           <!-- toAsIndex -->
-          <mat-checkbox [formControl]="toAsIndex">idx</mat-checkbox>
+          <mat-checkbox [formField]="form.toAsIndex">idx</mat-checkbox>
 
           <!-- toRun -->
           @if (hasToRun()) {
             <mat-form-field class="nr">
               <mat-label>to run</mat-label>
-              <input matInput [formControl]="toRun" type="number" min="0" />
+              <input
+            matInput
+            [formField]="form.toRun"
+            type="number"
+            (keydown.enter)="onEnter($event)"
+          />
               @if (
-                $any(toRun).errors?.required && (toRun.dirty || toRun.touched)
-              ) {
+            form.toRun().getError('required') &&
+            (form.toRun().dirty() || form.toRun().touched())
+          ) {
                 <mat-error>to run required</mat-error>
               }
             </mat-form-field>
@@ -96,10 +132,15 @@
         @if (hasValue()) {
           <mat-form-field>
             <mat-label>value</mat-label>
-            <input matInput [formControl]="value" />
+            <input
+            matInput
+            [formField]="form.value"
+            (keydown.enter)="onEnter($event)"
+          />
             @if (
-              $any(value).errors?.required && (value.dirty || value.touched)
-            ) {
+            form.value().getError('required') &&
+            (form.value().dirty() || form.value().touched())
+          ) {
               <mat-error>value required</mat-error>
             }
           </mat-form-field>
@@ -119,8 +160,16 @@
         <!-- rank -->
         <mat-form-field class="nr">
           <mat-label>rank</mat-label>
-          <input matInput [formControl]="rank" type="number" min="0" />
-          @if ($any(rank).errors?.required && (rank.dirty || rank.touched)) {
+          <input
+            matInput
+            [formField]="form.rank"
+            type="number"
+            (keydown.enter)="onEnter($event)"
+          />
+          @if (
+            form.rank().getError('required') &&
+            (form.rank().dirty() || form.rank().touched())
+          ) {
             <mat-error>rank required</mat-error>
           }
         </mat-form-field>
@@ -128,9 +177,14 @@
         <!-- groupId -->
         <mat-form-field>
           <mat-label>group ID</mat-label>
-          <input matInput [formControl]="groupId" />
+          <input
+            matInput
+            [formField]="form.groupId"
+            (keydown.enter)="onEnter($event)"
+          />
           @if (
-            $any(groupId).errors?.required && (groupId.dirty || groupId.touched)
+            form.groupId().getError('required') &&
+            (form.groupId().dirty() || form.groupId().touched())
           ) {
             <mat-error>group ID required</mat-error>
           }
@@ -139,14 +193,22 @@
         <!-- inputTag -->
         <mat-form-field>
           <mat-label>input tag</mat-label>
-          <input matInput [formControl]="inputTag" />
+          <input
+            matInput
+            [formField]="form.inputTag"
+            (keydown.enter)="onEnter($event)"
+          />
           <mat-hint>blank=latest</mat-hint>
         </mat-form-field>
 
         <!-- outputTag -->
         <mat-form-field>
           <mat-label>output tag</mat-label>
-          <input matInput [formControl]="outputTag" />
+          <input
+            matInput
+            [formField]="form.outputTag"
+            (keydown.enter)="onEnter($event)"
+          />
           <mat-hint>blank=auto (vN)</mat-hint>
         </mat-form-field>
       </div>
@@ -159,7 +221,7 @@
             [featNames]="$safeNavigationMigration(featureDefs()?.names)"
             [featValues]="$safeNavigationMigration(featureDefs()?.values)"
             [featProps]="$safeNavigationMigration(featureDefs()?.props)"
-            [features]="features.value"
+            [features]="form.features().value()"
             [multiValuedFeatureIds]="multiValuedFeatureIds()"
             (featuresChange)="onFeaturesChange($event)"
           />
@@ -191,7 +253,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of sources.value; track s) {
+          @for (s of form.sources().value(); track s) {
             <tr [class.selected]="$index === editedSourceIndex()">
               <td class="fit-width">
                 <button
@@ -292,15 +354,16 @@
       <mat-icon>skip_next</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       color="primary"
       class="mat-primary"
       mat-flat-button
       matTooltip="Save operation"
-      [disabled]="form.invalid || form.pristine"
+      [disabled]="!canSave()"
+      (click)="save()"
     >
       <mat-icon>check_circle</mat-icon>
       save
     </button>
   </div>
-</form>
+</div>

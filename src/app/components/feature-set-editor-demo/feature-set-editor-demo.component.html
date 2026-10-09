@@ -10,8 +10,7 @@
         <input
           matInput
           type="number"
-          [formControl]="filterThreshold"
-          min="-1"
+          [formField]="presets.filterThreshold"
         />
       </mat-form-field>
     </fieldset>
@@ -19,7 +18,7 @@
     <gve-feature-set-editor
       [featNames]="featNames()"
       [featValues]="featValues()"
-      [filterThreshold]="filterThreshold.value"
+      [filterThreshold]="presets.filterThreshold().value() ?? 5"
       [multiValuedFeatureIds]="multiValuedFeatureIds()"
       [features]="features()"
       (featuresChange)="onFeaturesChange($event)"

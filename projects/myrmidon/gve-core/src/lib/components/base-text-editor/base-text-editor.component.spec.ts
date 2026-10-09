@@ -33,8 +33,8 @@ describe('BaseTextEditorComponent', () => {
   it('should accept a string text', async () => {
     const { c, chars } = await setup('ab');
     expect(c.text()).toEqual(GveBaseTextService.stringToBaseChars('ab'));
-    expect(c.userText.value).toBe('ab');
-    expect(c.userText.pristine).toBe(true);
+    expect(c.form.userText().value()).toBe('ab');
+    expect(c.form.userText().dirty()).toBe(false);
     expect(chars()).toHaveLength(2);
   });
 
@@ -42,13 +42,13 @@ describe('BaseTextEditorComponent', () => {
     const nodes = GveBaseTextService.stringToBaseChars('xyz');
     const { c } = await setup(nodes);
     expect(c.text()).toBe(nodes);
-    expect(c.userText.value).toBe('xyz');
+    expect(c.form.userText().value()).toBe('xyz');
   });
 
   it('should reset for an undefined text', async () => {
     const { c, container } = await setup(undefined);
     expect(c.text()).toBeUndefined();
-    expect(c.userText.value).toBe('');
+    expect(c.form.userText().value()).toBe('');
     expect(container.querySelectorAll('gve-base-text-char')).toHaveLength(0);
   });
 
@@ -89,6 +89,8 @@ describe('BaseTextEditorComponent', () => {
     expect(screen.getByText('text required')).toBeInTheDocument();
     await user.click(input);
     await user.paste('x'.repeat(10001));
+    // errors show once touched (Material's default error state matcher)
+    await user.tab();
     await fixture.whenStable();
     expect(screen.getByText('text too long')).toBeInTheDocument();
   });
@@ -148,7 +150,7 @@ describe('BaseTextEditorComponent', () => {
     fixture.componentRef.setInput('text', 'cd');
     await fixture.whenStable();
     expect(c.selectedChar()).toBeUndefined();
-    expect(c.userText.value).toBe('cd');
+    expect(c.form.userText().value()).toBe('cd');
   });
 
   it('should set the text range', async () => {
@@ -170,5 +172,25 @@ describe('BaseTextEditorComponent', () => {
     await user.type(inputs[1], 'v');
     await user.click(screen.getByRole('button', { name: 'Accept changes' }));
     expect(dialog.confirm).not.toHaveBeenCalled();
+  });
+
+  it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+    const { container } = await setup('ab');
+    expect(container.querySelector('form')).toBeNull();
+  });
+
+  it('should flag a too long text without truncating it', async () => {
+    const user = userEvent.setup();
+    const { c, fixture } = await setup('');
+    const input = screen.getByRole('textbox', { name: 'text' });
+    // no native maxlength: the browser must not cut the pasted text
+    expect(input).not.toHaveAttribute('maxlength');
+    await user.click(input);
+    await user.paste('x'.repeat(10001));
+    // errors show once touched (Material's default error state matcher)
+    await user.tab();
+    await fixture.whenStable();
+    expect(c.form.userText().value()).toHaveLength(10001);
+    expect(screen.getByText('text too long')).toBeInTheDocument();
   });
 });

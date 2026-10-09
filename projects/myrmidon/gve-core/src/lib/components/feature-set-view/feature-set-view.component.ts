@@ -1,15 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  effect,
+  computed,
   input,
-  OnDestroy,
-  OnInit,
-  signal,
+  linkedSignal,
 } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounce, form, FormField } from '@angular/forms/signals';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -46,7 +42,7 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
   selector: 'gve-feature-set-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -56,9 +52,7 @@ import { FeatureMap } from '../feature-editor/feature-editor.component';
   templateUrl: './feature-set-view.component.html',
   styleUrl: './feature-set-view.component.css',
 })
-export class FeatureSetViewComponent implements OnInit, OnDestroy {
-  private _sub?: Subscription;
-
+export class FeatureSetViewComponent {
   /**
    * The features.
    */
@@ -85,40 +79,30 @@ export class FeatureSetViewComponent implements OnInit, OnDestroy {
    */
   public readonly filterThreshold = input(5);
 
-  public readonly filteredFeatures = signal<Feature[] | OperationFeature[]>([]);
+  /**
+   * The features name filter, cleared whenever the features change.
+   */
+  private readonly _filter = linkedSignal({
+    source: this.features,
+    computation: () => '',
+  });
 
-  // filter
-  public filter: FormControl<string | null>;
+  /**
+   * The filter field. User input reaches the filter debounced.
+   */
+  public readonly filter = form(this._filter, (path) => debounce(path, 300));
 
-  constructor(formBuilder: FormBuilder) {
-    this.filter = formBuilder.control(null);
-
-    // when features change, reset the filter and apply it
-    effect(() => {
-      const features = this.features();
-      this.filter.reset();
-      this.applyFeatureFilter();
-    });
-  }
-
-  private applyFeatureFilter(name?: string | null): void {
-    this.filteredFeatures.set(
-      this.features().filter((feature) => {
-        return !name || feature.name.toLowerCase().includes(name.toLowerCase());
-      })
-    );
-  }
-
-  public ngOnInit(): void {
-    this._sub = this.filter.valueChanges
-      .pipe(distinctUntilChanged(), debounceTime(300))
-      .subscribe((value) => {
-        this.applyFeatureFilter(value);
-      });
-    this.applyFeatureFilter();
-  }
-
-  public ngOnDestroy(): void {
-    this._sub?.unsubscribe();
-  }
+  /**
+   * The features matching the filter, if any.
+   */
+  public readonly filteredFeatures = computed<Feature[] | OperationFeature[]>(
+    () => {
+      const name = this._filter().toLowerCase();
+      return name
+        ? this.features().filter((feature) =>
+            feature.name.toLowerCase().includes(name),
+          )
+        : this.features();
+    },
+  );
 }

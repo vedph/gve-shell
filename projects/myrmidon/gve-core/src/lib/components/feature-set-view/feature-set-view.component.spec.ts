@@ -92,12 +92,12 @@ describe('FeatureSetViewComponent', () => {
       inputs: { features: [f('a', '1')], filterThreshold: 0 },
     });
     const c = fixture.componentInstance;
-    c.filter.setValue('zzz');
+    c.filter().value.set('zzz');
     await wait(350);
     expect(c.filteredFeatures()).toHaveLength(0);
     fixture.componentRef.setInput('features', [f('b', '1'), f('c', '2')]);
     await fixture.whenStable();
-    expect(c.filter.value).toBeNull();
+    expect(c.filter().value()).toBe('');
     expect(c.filteredFeatures()).toHaveLength(2);
   });
 });

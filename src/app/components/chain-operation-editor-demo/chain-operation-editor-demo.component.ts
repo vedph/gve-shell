@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -18,7 +17,6 @@ import {
   selector: 'app-chain-operation-editor-demo',
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     MatCardModule,
     MatCheckboxModule,
     MatExpansionModule,

@@ -2,22 +2,26 @@
   @if (dialogRef) {
     <div id="heading">Set Base Text</div>
   }
-  <form [formGroup]="form" (submit)="save()">
+  <div>
     <fieldset>
       <div id="batch-input">
         <div>
           <mat-form-field class="full-width">
             <mat-label>base text</mat-label>
-            <textarea matInput [formControl]="userText" rows="8"></textarea>
+            <textarea
+              matInput
+              [formField]="form.userText"
+              rows="8"
+            ></textarea>
             @if (
-              $any(userText).errors?.required &&
-              (userText.dirty || userText.touched)
+              form.userText().getError('required') &&
+              (form.userText().dirty() || form.userText().touched())
             ) {
               <mat-error>text required</mat-error>
             }
             @if (
-              $any(userText).errors?.maxlength &&
-              (userText.dirty || userText.touched)
+              form.userText().getError('maxLength') &&
+              (form.userText().dirty() || form.userText().touched())
             ) {
               <mat-error>text too long</mat-error>
             }
@@ -41,7 +45,7 @@
           class="mat-primary"
           mat-flat-button
           matTooltip="Copy JSON to clipboard"
-          [disabled]="form.invalid"
+          [disabled]="form().invalid()"
           (click)="copyToClipboard()"
         >
           JSON
@@ -51,12 +55,12 @@
           class="mat-primary"
           mat-flat-button
           matTooltip="Set base text"
-          [disabled]="form.invalid"
+          [disabled]="form().invalid()"
           (click)="save()"
         >
           set
         </button>
       </div>
     </fieldset>
-  </form>
+  </div>
 </div>

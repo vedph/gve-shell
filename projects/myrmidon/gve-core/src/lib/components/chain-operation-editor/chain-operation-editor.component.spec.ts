@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 
@@ -58,8 +59,8 @@ describe('ChainOperationEditorComponent', () => {
   describe('loading', () => {
     it('should reset the form without operation', async () => {
       const { c } = await setup();
-      expect(c.type.value).toBe(OperationType.annotate);
-      expect(c.at.value).toBe(0);
+      expect(c.form.type().value()).toBe(OperationType.annotate);
+      expect(c.form.at().value()).toBe(0);
       expect(c.hasValue()).toBe(false);
     });
 
@@ -82,36 +83,36 @@ describe('ChainOperationEditorComponent', () => {
         }),
       });
       expect(c.id()).toBe('op1');
-      expect(c.type.value).toBe(OperationType.swap);
-      expect(c.at.value).toBe(3);
-      expect(c.atAsIndex.value).toBe(true);
-      expect(c.run.value).toBe(2);
-      expect(c.to.value).toBe(5);
-      expect(c.toAsIndex.value).toBe(true);
-      expect(c.toRun.value).toBe(1);
-      expect(c.rank.value).toBe(1);
-      expect(c.groupId.value).toBe('g');
-      expect(c.inputTag.value).toBe('v1');
-      expect(c.outputTag.value).toBe('v2');
-      expect(c.features.value).toHaveLength(1);
-      expect(c.sources.value).toHaveLength(1);
+      expect(c.form.type().value()).toBe(OperationType.swap);
+      expect(c.form.at().value()).toBe(3);
+      expect(c.form.atAsIndex().value()).toBe(true);
+      expect(c.form.run().value()).toBe(2);
+      expect(c.form.to().value()).toBe(5);
+      expect(c.form.toAsIndex().value()).toBe(true);
+      expect(c.form.toRun().value()).toBe(1);
+      expect(c.form.rank().value()).toBe(1);
+      expect(c.form.groupId().value()).toBe('g');
+      expect(c.form.inputTag().value()).toBe('v1');
+      expect(c.form.outputTag().value()).toBe('v2');
+      expect(c.form.features().value()).toHaveLength(1);
+      expect(c.form.sources().value()).toHaveLength(1);
       expect(c.hasTo()).toBe(true);
       expect(c.hasToRun()).toBe(true);
       expect(c.hasValue()).toBe(false);
-      expect(c.form.pristine).toBe(true);
+      expect(c.form().dirty()).toBe(false);
       expect(screen.getByText('op1')).toBeInTheDocument();
     });
 
     it('should load defaults for missing optional properties', async () => {
       const { c } = await setup({ operation: op() });
-      expect(c.rank.value).toBe(0);
-      expect(c.groupId.value).toBeNull();
-      expect(c.features.value).toEqual([]);
-      expect(c.sources.value).toEqual([]);
-      expect(c.to.value).toBe(0);
-      expect(c.toRun.value).toBe(0);
-      expect(c.inputTag.value).toBeNull();
-      expect(c.value.value).toBeNull();
+      expect(c.form.rank().value()).toBe(0);
+      expect(c.form.groupId().value()).toBe('');
+      expect(c.form.features().value()).toEqual([]);
+      expect(c.form.sources().value()).toEqual([]);
+      expect(c.form.to().value()).toBe(0);
+      expect(c.form.toRun().value()).toBe(0);
+      expect(c.form.inputTag().value()).toBe('');
+      expect(c.form.value().value()).toBe('');
     });
 
     it('should generate an ID when missing', async () => {
@@ -123,7 +124,7 @@ describe('ChainOperationEditorComponent', () => {
       const { c } = await setup({
         operation: op({ type: OperationType.replace, value: 'a\nb' }),
       });
-      expect(c.value.value).toBe('a\\b');
+      expect(c.form.value().value()).toBe('a\\b');
       expect(screen.getByRole('textbox', { name: 'value' })).toHaveValue(
         'a\\b',
       );
@@ -133,7 +134,7 @@ describe('ChainOperationEditorComponent', () => {
       const { c, fixture } = await setup({ operation: op({ at: 9 }) });
       fixture.componentRef.setInput('operation', undefined);
       await fixture.whenStable();
-      expect(c.at.value).toBe(0);
+      expect(c.form.at().value()).toBe(0);
     });
   });
 
@@ -164,36 +165,37 @@ describe('ChainOperationEditorComponent', () => {
       const { c } = await setup({
         operation: op({ type: OperationType.swap, to: 4, toRun: 2 }),
       });
-      c.type.setValue(OperationType.replace);
-      expect(c.to.value).toBe(0);
-      expect(c.toRun.value).toBe(0);
-      c.value.setValue('x');
-      c.type.setValue(OperationType.delete);
-      expect(c.value.value).toBeNull();
+      c.form.type().value.set(OperationType.replace);
+      TestBed.tick();
+      expect(c.form.to().value()).toBe(0);
+      expect(c.form.toRun().value()).toBe(0);
+      c.form.value().value.set('x');
+      c.form.type().value.set(OperationType.delete);
+      TestBed.tick();
+      expect(c.form.value().value()).toBe('');
     });
   });
 
   describe('validation', () => {
     it('should require a value for value-based types', async () => {
       const { c } = await setup({ operation: op() });
-      expect(c.form.valid).toBe(true);
+      expect(c.form().valid()).toBe(true);
       // switching type must re-validate the (empty) value
-      c.type.setValue(OperationType.replace);
-      expect(c.value.errors).toEqual({ required: true });
-      expect(c.form.valid).toBe(false);
-      c.value.setValue('x');
-      expect(c.form.valid).toBe(true);
+      c.form.type().value.set(OperationType.replace);
+      expect(c.form.value().getError('required')).toBeTruthy();
+      expect(c.form().valid()).toBe(false);
+      c.form.value().value.set('x');
+      expect(c.form().valid()).toBe(true);
     });
 
     it('should require a non-negative at, even as index', async () => {
       // the backend rejects negative indexes
       const { c } = await setup({ operation: op({ at: 0 }) });
-      expect(c.at.valid).toBe(true);
-      c.at.setValue(-1);
-      expect(c.at.errors).toHaveProperty('min');
-      c.atAsIndex.setValue(true);
-      c.at.updateValueAndValidity();
-      expect(c.at.errors).toHaveProperty('min');
+      expect(c.form.at().valid()).toBe(true);
+      c.form.at().value.set(-1);
+      expect(c.form.at().getError('min')).toBeTruthy();
+      c.form.atAsIndex().value.set(true);
+      expect(c.form.at().getError('min')).toBeTruthy();
     });
 
     it('should show validation errors', async () => {
@@ -288,8 +290,8 @@ describe('ChainOperationEditorComponent', () => {
         value: undefined,
       });
 
-      c.type.setValue(OperationType.addAfter);
-      c.value.setValue('x\\y');
+      c.form.type().value.set(OperationType.addAfter);
+      c.form.value().value.set('x\\y');
       c.save();
       expect(saved.at(-1)!.value).toBe('x\ny');
     });
@@ -317,15 +319,15 @@ describe('ChainOperationEditorComponent', () => {
       c.onFeaturesChange([
         { name: 'f', value: 'v', setPolicy: FeatureSetPolicy.single },
       ]);
-      expect(c.features.value).toHaveLength(1);
-      expect(c.features.dirty).toBe(true);
+      expect(c.form.features().value()).toHaveLength(1);
+      expect(c.form.features().dirty()).toBe(true);
     });
 
     it('should set diplomatic features', async () => {
       const { c } = await setup({ operation: op() });
       c.onDpFeaturesChange([{ name: 'f', value: 'v', setPolicy: 0 }]);
-      expect(c.dpFeatures.value).toHaveLength(1);
-      expect(c.dpFeatures.dirty).toBe(true);
+      expect(c.form.dpFeatures().value()).toHaveLength(1);
+      expect(c.form.dpFeatures().dirty()).toBe(true);
     });
 
     it('should not save the operation when accepting a feature', async () => {
@@ -342,7 +344,7 @@ describe('ChainOperationEditorComponent', () => {
       await user.click(
         within(editor).getByRole('button', { name: 'Accept changes' }),
       );
-      expect(c.features.value.map((f) => f.name)).toEqual(['n']);
+      expect(c.form.features().value().map((f) => f.name)).toEqual(['n']);
       expect(saved).toEqual([]);
     });
   });
@@ -371,19 +373,19 @@ describe('ChainOperationEditorComponent', () => {
       c.onSourceChange({ id: 'a', type: 't' });
       c.addSource();
       c.onSourceChange({ id: 'b', type: 't' });
-      expect(c.sources.value.map((s) => s.id)).toEqual(['a', 'b']);
+      expect(c.form.sources().value().map((s) => s.id)).toEqual(['a', 'b']);
       expect(c.editedSource()).toBeUndefined();
-      expect(c.sources.dirty).toBe(true);
+      expect(c.form.sources().dirty()).toBe(true);
 
       c.editSource(1);
       expect(c.editedSourceIndex()).toBe(1);
       expect(c.editedSource()).toEqual({ id: 'b', type: 't' });
-      expect(c.editedSource()).not.toBe(c.sources.value[1]);
+      expect(c.editedSource()).not.toBe(c.form.sources().value()[1]);
       c.onSourceChange({ id: 'c', type: 't' });
-      expect(c.sources.value.map((s) => s.id)).toEqual(['a', 'c']);
+      expect(c.form.sources().value().map((s) => s.id)).toEqual(['a', 'c']);
 
       c.deleteSource(0);
-      expect(c.sources.value.map((s) => s.id)).toEqual(['c']);
+      expect(c.form.sources().value().map((s) => s.id)).toEqual(['c']);
     });
 
     it('should keep the edited source index in sync when deleting', async () => {
@@ -399,7 +401,7 @@ describe('ChainOperationEditorComponent', () => {
       c.deleteSource(0);
       expect(c.editedSourceIndex()).toBe(0);
       c.onSourceChange({ id: 'b2', type: 't' });
-      expect(c.sources.value.map((s) => s.id)).toEqual(['b2']);
+      expect(c.form.sources().value().map((s) => s.id)).toEqual(['b2']);
     });
 
     it('should close the source editor when deleting the edited source', async () => {
@@ -430,7 +432,7 @@ describe('ChainOperationEditorComponent', () => {
       await user.click(
         screen.getByRole('button', { name: 'Delete this source' }),
       );
-      expect(c.sources.value).toEqual([]);
+      expect(c.form.sources().value()).toEqual([]);
     });
   });
 
@@ -441,16 +443,16 @@ describe('ChainOperationEditorComponent', () => {
       });
       fixture.componentRef.setInput('rangePatch', { at: 5, run: 3 });
       await fixture.whenStable();
-      expect(c.at.value).toBe(5);
-      expect(c.atAsIndex.value).toBe(false);
-      expect(c.run.value).toBe(3);
-      expect(c.form.dirty).toBe(true);
+      expect(c.form.at().value()).toBe(5);
+      expect(c.form.atAsIndex().value()).toBe(false);
+      expect(c.form.run().value()).toBe(3);
+      expect(c.form().dirty()).toBe(true);
     });
 
     it('should sync the peephole range with at/run/atAsIndex', async () => {
       const { c } = await setup({ operation: op({ at: 2, run: 3 }) });
       expect(c.peepholeRange()).toEqual({ at: 2, run: 3, atAsIndex: false });
-      c.atAsIndex.setValue(true);
+      c.form.atAsIndex().value.set(true);
       expect(c.peepholeRange().atAsIndex).toBe(true);
     });
 
@@ -503,12 +505,52 @@ describe('ChainOperationEditorComponent', () => {
     it('should emit a debounced preview on form changes', async () => {
       const { c, preview } = await setup({ operation: op() });
       preview.mockClear();
-      c.run.setValue(4);
-      c.run.setValue(5);
+      c.form.run().value.set(4);
+      c.form.run().value.set(5);
       expect(preview).not.toHaveBeenCalled();
       await wait(550);
       expect(preview).toHaveBeenCalledTimes(1);
       expect(preview.mock.calls[0][0].run).toBe(5);
+    });
+  });
+
+  describe('form structure', () => {
+    it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+      const { container } = await setup({ operation: op() });
+      expect(container.querySelector('form')).toBeNull();
+    });
+
+    it('should save with Enter only when it can be saved', async () => {
+      const user = userEvent.setup();
+      const { saved } = await setup({ operation: op() });
+      const run = screen.getByRole('spinbutton', { name: 'run' });
+      // pristine: Enter does nothing
+      await user.click(run);
+      await user.keyboard('{Enter}');
+      expect(saved).toEqual([]);
+      await user.clear(run);
+      await user.type(run, '4{Enter}');
+      expect(saved.at(-1)!.run).toBe(4);
+    });
+
+    it('should not save a negative run, or a value-less replace', async () => {
+      const { c, saved } = await setup({ operation: op() });
+      c.form.run().value.set(-1);
+      c.form().markAsDirty();
+      expect(c.canSave()).toBe(false);
+      c.form.run().value.set(1);
+      c.form.type().value.set(OperationType.replace);
+      expect(c.canSave()).toBe(false);
+      c.save();
+      expect(saved).toEqual([]);
+    });
+
+    it('should not adopt the bound features objects', async () => {
+      const features = [{ name: 'f', value: 'v', setPolicy: 0 }];
+      const { c } = await setup({ operation: op({ features }) });
+      expect(c.form.features().value()[0]).not.toBe(features[0]);
+      // FieldTree tags adopted items with a hidden identity symbol
+      expect(Object.getOwnPropertySymbols(features[0])).toEqual([]);
     });
   });
 
@@ -565,8 +607,8 @@ describe('ChainOperationEditorComponent', () => {
         operationOrdinal: 2,
         operationCount: 3,
       });
-      c.run.setValue(9);
-      c.form.markAsDirty();
+      c.form.run().value.set(9);
+      c.form().markAsDirty();
       dialog.confirm.mockReturnValue(of(false));
       c.editNextOperation();
       expect(dialog.confirm).toHaveBeenCalled();

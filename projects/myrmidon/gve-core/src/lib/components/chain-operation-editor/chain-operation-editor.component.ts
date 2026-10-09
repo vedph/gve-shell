@@ -4,21 +4,14 @@ import {
   computed,
   effect,
   input,
+  linkedSignal,
   model,
-  OnDestroy,
-  OnInit,
   output,
   signal,
+  untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { combineLatest, Subscription } from 'rxjs';
-import { debounceTime, filter, startWith } from 'rxjs/operators';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { form, FormField, min, required } from '@angular/forms/signals';
 
 // material
 import { ClipboardModule } from '@angular/cdk/clipboard';
@@ -37,7 +30,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { customAlphabet } from 'nanoid';
 
 // myrmidon
-import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 // local
@@ -64,6 +57,133 @@ import {
   OpTextRange,
 } from '../text-peephole/text-peephole.component';
 import { GveBaseTextService } from '../../services/gve-base-text.service';
+import { debounceUntilDestroyed } from '../../utils/debounce-until-destroyed';
+
+/**
+ * The editable shape behind the operation form.
+ */
+interface OperationControls {
+  // general
+  rank: number | null;
+  groupId: string;
+  features: OperationFeature[];
+  sources: OperationSource[];
+  type: OperationType;
+  at: number | null;
+  atAsIndex: boolean;
+  to: number | null;
+  toAsIndex: boolean;
+  inputTag: string;
+  outputTag: string;
+  run: number | null;
+  toRun: number | null;
+  value: string;
+  // svg
+  svg: string;
+  // elements
+  elementFeatures: Record<string, Feature[]>;
+  // diplomatic
+  newTextHidden: boolean;
+  dpFeatures: Feature[];
+}
+
+/**
+ * Get which arguments are used by the specified operation type.
+ */
+function getOperationArgs(type: OperationType): {
+  to: boolean;
+  toRun: boolean;
+  value: boolean;
+} {
+  switch (type) {
+    case OperationType.moveAfter:
+    case OperationType.moveBefore:
+      return { to: true, toRun: false, value: false };
+    case OperationType.swap:
+      return { to: true, toRun: true, value: false };
+    case OperationType.addAfter:
+    case OperationType.addBefore:
+    case OperationType.replace:
+      return { to: false, toRun: false, value: true };
+    default:
+      return { to: false, toRun: false, value: false };
+  }
+}
+
+/**
+ * Toggle the escape of line feeds in the specified text. As the value
+ * is edited in a single-line input, LF characters are represented
+ * there by backslashes.
+ *
+ * @param text The text.
+ * @param on True to escape LF (LF to backslash), false to unescape it
+ * (backslash to LF).
+ * @returns The text.
+ */
+function toggleLfEscape(
+  text: string | null | undefined,
+  on: boolean,
+): string | null | undefined {
+  if (!text) return text;
+  return on ? text.replace(/\n/g, '\\') : text.replace(/\\/g, '\n');
+}
+
+/**
+ * Bound operation -> editable draft. The arguments not used by the
+ * operation's type are reset. Features and sources are deep-copied, so that
+ * the form never tags the caller's objects with its identity symbols.
+ */
+function toDraft(operation: CharChainOperation | undefined): OperationControls {
+  const type = operation?.type ?? OperationType.annotate;
+  const args = getOperationArgs(type);
+  return {
+    rank: operation?.rank || 0,
+    groupId: operation?.groupId || '',
+    features: structuredClone(operation?.features || []),
+    sources: structuredClone(operation?.sources || []),
+    type,
+    at: operation?.at ?? 0,
+    atAsIndex: operation?.atAsIndex || false,
+    to: args.to ? operation?.to || 0 : 0,
+    toAsIndex: operation?.toAsIndex || false,
+    inputTag: operation?.inputTag || '',
+    outputTag: operation?.outputTag || '',
+    run: operation?.run ?? 0,
+    toRun: args.toRun ? operation?.toRun || 0 : 0,
+    // escape line feeds in value for editing
+    value: args.value ? toggleLfEscape(operation?.value, true) || '' : '',
+    svg: '',
+    elementFeatures: {},
+    newTextHidden: false,
+    dpFeatures: [],
+  };
+}
+
+/**
+ * Editable draft -> operation. Features and sources are deep-copied:
+ * structuredClone drops the identity symbols the form tags array items with,
+ * which an object spread would copy.
+ */
+function toOperation(v: OperationControls, id: string): CharChainOperation {
+  return {
+    rank: v.rank || undefined,
+    groupId: v.groupId || undefined,
+    features: v.features.length ? structuredClone(v.features) : undefined,
+    sources: v.sources.length ? structuredClone(v.sources) : undefined,
+    id,
+    type: v.type,
+    at: v.at!,
+    atAsIndex: v.atAsIndex || undefined,
+    to: v.to || undefined,
+    toAsIndex: v.toAsIndex || undefined,
+    inputTag: v.inputTag || undefined,
+    outputTag: v.outputTag || undefined,
+    run: v.run!,
+    toRun: v.toRun || undefined,
+    // un-escape line feeds in value for storage
+    value: toggleLfEscape(v.value, false) || undefined,
+  };
+}
 
 /**
  * Definitions for features, including names and values.
@@ -155,7 +275,7 @@ export interface FeatureDefinitions {
   selector: 'gve-chain-operation-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     ClipboardModule,
     MatBadgeModule,
     MatButtonModule,
@@ -175,8 +295,7 @@ export interface FeatureDefinitions {
   templateUrl: './chain-operation-editor.component.html',
   styleUrl: './chain-operation-editor.component.css',
 })
-export class ChainOperationEditorComponent implements OnInit, OnDestroy {
-  private readonly _subs: Subscription[];
+export class ChainOperationEditorComponent {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
 
   /**
@@ -264,10 +383,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly operationOrdinalRequest = output<number>();
 
   public readonly tabIndex = signal<number>(0);
-  public readonly id = signal<string | undefined>(undefined);
-  public readonly hasTo = signal<boolean>(false);
-  public readonly hasToRun = signal<boolean>(false);
-  public readonly hasValue = signal<boolean>(false);
   // elements parsed from SVG and having an id attribute;
   // we can attach features to each of these elements
   public readonly elements = signal<SVGElement[]>([]);
@@ -277,14 +392,6 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   public readonly editedSourceIndex = signal<number>(-1);
 
   public readonly peepholeWindowWidth = input<number>(15);
-
-  // peephole preview of the operation's input text, tracking the
-  // at/run/atAsIndex form values
-  public readonly peepholeRange = signal<OpTextRange>({
-    at: 0,
-    run: 0,
-    atAsIndex: false,
-  });
 
   /**
    * The text to feed the at/run peephole preview: the preceding text
@@ -305,118 +412,75 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       : GveBaseTextService.stringToBaseChars(snapshot.text);
   });
 
-  // general
-  public rank: FormControl<number>;
-  public groupId: FormControl<string | null>;
-  public features: FormControl<Feature[]>;
-  public sources: FormControl<OperationSource[]>;
-  public type: FormControl<OperationType>;
-  public at: FormControl<number>;
-  public atAsIndex: FormControl<boolean>;
-  public to: FormControl<number>;
-  public toAsIndex: FormControl<boolean>;
-  public inputTag: FormControl<string | null>;
-  public outputTag: FormControl<string | null>;
-  public run: FormControl<number>;
-  public toRun: FormControl<number>;
-  public value: FormControl<string | null>;
-  // svg
-  public svg: FormControl<string>;
-  // elements
-  public elementFeatures: FormControl<Record<string, Feature[]>>;
-  // diplomatic
-  public newTextHidden: FormControl<boolean>;
-  public dpFeatures: FormControl<Feature[]>;
-  // root
-  public form: FormGroup;
+  /**
+   * The ID of the edited operation: the bound operation's ID, or a newly
+   * generated one when it has none. Kept when the operation is cleared.
+   */
+  public readonly id = linkedSignal<
+    CharChainOperation | undefined,
+    string | undefined
+  >({
+    source: this.operation,
+    computation: (operation, previous) =>
+      operation ? operation.id || this._nanoid() : previous?.value,
+  });
 
-  constructor(
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService,
-  ) {
-    this._subs = [];
-    // general
-    this.rank = formBuilder.control<number>(0, { nonNullable: true });
-    this.groupId = formBuilder.control<string | null>(null);
-    this.features = formBuilder.control<Feature[]>([], { nonNullable: true });
-    this.sources = formBuilder.control<OperationSource[]>([], {
-      nonNullable: true,
-    });
-    this.type = formBuilder.control<OperationType>(OperationType.annotate, {
-      validators: Validators.required,
-      nonNullable: true,
-    });
-    this.at = formBuilder.control<number>(0, {
-      validators: [
-        Validators.required,
-        NgxToolsValidators.conditionalValidator(
-          () => !this.atAsIndex.value,
-          Validators.min(0),
-        ),
-      ],
-      nonNullable: true,
-    });
-    this.atAsIndex = formBuilder.control<boolean>(false, { nonNullable: true });
-    this.to = formBuilder.control<number>(0, {
-      nonNullable: true,
-    });
-    this.toAsIndex = formBuilder.control<boolean>(false, { nonNullable: true });
-    this.inputTag = formBuilder.control<string | null>(null);
-    this.outputTag = formBuilder.control<string | null>(null);
-    this.run = formBuilder.control<number>(0, {
-      validators: Validators.required,
-      nonNullable: true,
-    });
-    this.toRun = formBuilder.control<number>(0, { nonNullable: true });
-    this.value = formBuilder.control<string | null>(null, {
-      validators: NgxToolsValidators.conditionalValidator(
-        () =>
-          this.type.value === OperationType.addBefore ||
-          this.type.value === OperationType.addAfter ||
-          this.type.value === OperationType.replace,
-        Validators.required,
-      ),
-      nonNullable: true,
-    });
+  /**
+   * The editable draft, rebuilt from the bound operation whenever it
+   * changes (including the echo of our own save: the operation is saved
+   * only with an explicit action).
+   */
+  private readonly _draft = linkedSignal(() => toDraft(this.operation()));
 
-    // svg
-    this.svg = formBuilder.control<string>('', {
-      validators: [SvgValidators.rootGValidator()],
-      nonNullable: true,
+  public readonly form = form(this._draft, (path) => {
+    required(path.type);
+    // the backend rejects negative values, even for indexes
+    required(path.at);
+    min(path.at, 0);
+    required(path.run);
+    min(path.run, 0);
+    min(path.to, 0);
+    min(path.toRun, 0);
+    min(path.rank, 0);
+    // value's required validation depends on type
+    required(path.value, {
+      when: ({ valueOf }) => getOperationArgs(valueOf(path.type)).value,
     });
-    this.elementFeatures = formBuilder.control<Record<string, Feature[]>>(
-      {},
-      { nonNullable: true },
-    );
-    this.newTextHidden = formBuilder.control<boolean>(false, {
-      nonNullable: true,
-    });
-    this.dpFeatures = formBuilder.control<Feature[]>([], { nonNullable: true });
+    SvgValidators.rootG(path.svg);
+  });
 
-    this.form = formBuilder.group({
-      rank: this.rank,
-      groupId: this.groupId,
-      features: this.features,
-      sources: this.sources,
-      type: this.type,
-      at: this.at,
-      atAsIndex: this.atAsIndex,
-      to: this.to,
-      toAsIndex: this.toAsIndex,
-      inputTag: this.inputTag,
-      outputTag: this.outputTag,
-      run: this.run,
-      toRun: this.toRun,
-      value: this.value,
-      svg: this.svg,
-      elementFeatures: this.elementFeatures,
-      newTextHidden: this.newTextHidden,
-      dpFeatures: this.dpFeatures,
-    });
+  /**
+   * The arguments used by the edited operation's type.
+   */
+  private readonly _args = computed(() =>
+    getOperationArgs(this.form.type().value()),
+  );
+  public readonly hasTo = computed(() => this._args().to);
+  public readonly hasToRun = computed(() => this._args().toRun);
+  public readonly hasValue = computed(() => this._args().value);
 
-    // when operation changes, update form
+  /**
+   * True when the edited operation can be saved.
+   */
+  public readonly canSave = computed(
+    () => !this.form().invalid() && this.form().dirty(),
+  );
+
+  /**
+   * The peephole preview of the operation's input text, tracking the
+   * at/run/atAsIndex form values.
+   */
+  public readonly peepholeRange = computed<OpTextRange>(() => ({
+    at: this.form.at().value() ?? 0,
+    run: this.form.run().value() ?? 0,
+    atAsIndex: this.form.atAsIndex().value(),
+  }));
+
+  constructor(private _dialogService: DialogService) {
+    // a new bound operation means there are no unsaved edits
     effect(() => {
-      this.updateForm(this.operation());
+      this.operation();
+      untracked(() => this.form().reset());
     });
 
     // diagnostic logging for multiValuedFeatureIds
@@ -427,91 +491,60 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       );
     });
 
+    // whenever the type changes, reset the arguments it does not use
+    // (toDraft already does this for a newly bound operation)
+    effect(() => {
+      const args = this._args();
+      untracked(() => {
+        if (!args.to && this.form.to().value() !== 0) {
+          this.form.to().reset(0);
+        }
+        if (!args.toRun && this.form.toRun().value() !== 0) {
+          this.form.toRun().reset(0);
+        }
+        if (!args.value && this.form.value().value() !== '') {
+          this.form.value().reset('');
+        }
+      });
+    });
+
     // when rangePatch changes, patch operation range (at and run,
     // resetting atAsIndex to false)
     effect(() => {
       const range = this.rangePatch();
 
       if (range) {
-        console.log('patching range', range);
+        untracked(() => {
+          console.log('patching range', range);
 
-        this.at.setValue(range.at);
-        this.at.markAsDirty();
-        this.at.updateValueAndValidity();
+          this.form.at().value.set(range.at);
+          this.form.at().markAsDirty();
 
-        this.atAsIndex.setValue(false);
-        this.atAsIndex.markAsDirty();
-        this.atAsIndex.updateValueAndValidity();
+          this.form.atAsIndex().value.set(false);
+          this.form.atAsIndex().markAsDirty();
 
-        this.run.setValue(range.run);
-        this.run.markAsDirty();
-        this.run.updateValueAndValidity();
+          this.form.run().value.set(range.run);
+          this.form.run().markAsDirty();
+        });
       }
     });
-  }
 
-  public ngOnInit(): void {
-    // whenever svg or base change, update preview
-    this._subs.push(
-      this.form.valueChanges
-        .pipe(
-          filter((changes) => 'svg' in changes || 'snapshot' in changes),
-          debounceTime(500),
-        )
-        .subscribe(() => {
-          this.requestPreview();
-        }),
-    );
-
-    // whenever type changes, update args UI
-    this._subs.push(
-      this.type.valueChanges.subscribe(() => this.updateArgsUI()),
-    );
-
-    // keep the peephole selection in sync with at/run/atAsIndex
-    this._subs.push(
-      combineLatest([
-        this.at.valueChanges.pipe(startWith(this.at.value)),
-        this.run.valueChanges.pipe(startWith(this.run.value)),
-        this.atAsIndex.valueChanges.pipe(startWith(this.atAsIndex.value)),
-      ]).subscribe(([at, run, atAsIndex]) => {
-        this.peepholeRange.set({ at, run, atAsIndex });
-      }),
-    );
-  }
-
-  public ngOnDestroy(): void {
-    for (const sub of this._subs) {
-      sub.unsubscribe();
-    }
-  }
-
-  /**
-   * Toggle the escape of line feeds in the specified text. As the value
-   * is edited in a single-line input, LF characters are represented
-   * there by backslashes.
-   *
-   * @param text The text.
-   * @param on True to escape LF (LF to backslash), false to unescape it
-   * (backslash to LF).
-   * @returns The text.
-   */
-  private toggleLfEscape(
-    text: string | null | undefined,
-    on: boolean,
-  ): string | null | undefined {
-    if (!text) return text;
-    return on ? text.replace(/\n/g, '\\') : text.replace(/\\/g, '\n');
+    // whenever the draft changes, update preview
+    toObservable(this._draft)
+      .pipe(debounceUntilDestroyed(500))
+      .subscribe(() => {
+        this.requestPreview();
+      });
   }
 
   public onFeaturesChange(features: OperationFeature[]): void {
-    this.features.setValue(features);
-    this.features.markAsDirty();
+    this.form.features().value.set(features);
+    this.form.features().markAsDirty();
   }
 
   public onDpFeaturesChange(features: Feature[]): void {
-    this.dpFeatures.setValue(features);
-    this.dpFeatures.markAsDirty();
+    this.form.dpFeatures().value.set(features);
+    this.form.dpFeatures().markAsDirty();
   }
 
   // #region sources
@@ -525,7 +558,9 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
 
   public editSource(index: number): void {
     this.editedSourceIndex.set(index);
-    this.editedSource.set(structuredClone(this.sources.value[index]));
+    this.editedSource.set(
+      structuredClone(this.form.sources().value()[index]),
+    );
   }
 
   public closeSource(): void {
@@ -534,97 +569,24 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
   }
 
   public onSourceChange(source: OperationSource): void {
-    const sources = [...this.sources.value];
+    const sources = [...this.form.sources().value()];
     if (this.editedSourceIndex() === -1) {
       sources.push(source);
     } else {
       sources[this.editedSourceIndex()] = source;
     }
-    this.sources.setValue(sources);
-    this.sources.updateValueAndValidity();
-    this.sources.markAsDirty();
+    this.form.sources().value.set(sources);
+    this.form.sources().markAsDirty();
     this.closeSource();
   }
   // #endregion
-
-  private updateArgsUI(): void {
-    let to = false,
-      toRun = false,
-      value = false;
-    switch (this.type.value) {
-      case OperationType.moveAfter:
-      case OperationType.moveBefore:
-        to = true;
-        break;
-      case OperationType.swap:
-        to = true;
-        toRun = true;
-        break;
-      case OperationType.addAfter:
-      case OperationType.addBefore:
-      case OperationType.replace:
-        value = true;
-        break;
-    }
-    this.hasTo.set(to);
-    this.hasToRun.set(toRun);
-    this.hasValue.set(value);
-
-    if (!to) {
-      this.to.reset();
-    }
-    if (!toRun) {
-      this.toRun.reset();
-    }
-    if (!value) {
-      this.value.reset();
-    }
-    // value's required validation depends on type
-    this.value.updateValueAndValidity();
-  }
-
-  private updateForm(operation?: CharChainOperation | null): void {
-    if (!operation) {
-      this.form.reset();
-      this.updateArgsUI();
-      return;
-    }
-
-    // get or generate ID
-    if (operation.id) {
-      this.id.set(operation.id);
-    } else {
-      this.id.set(this._nanoid());
-    }
-
-    this.rank.setValue(operation.rank || 0);
-    this.groupId.setValue(operation.groupId || null);
-    this.features.setValue(operation.features || []);
-    this.sources.setValue(operation.sources || []);
-
-    this.type.setValue(operation.type);
-    this.at.setValue(operation.at);
-    this.atAsIndex.setValue(operation.atAsIndex || false);
-    this.to.setValue(operation.to || 0);
-    this.toAsIndex.setValue(operation.toAsIndex || false);
-    this.inputTag.setValue(operation.inputTag || null);
-    this.outputTag.setValue(operation.outputTag || null);
-    this.run.setValue(operation.run);
-    this.toRun.setValue(operation.toRun || 0);
-    // escape line feeds in value for editing
-    this.value.setValue(this.toggleLfEscape(operation.value, true) || null);
-
-    this.form.markAsPristine();
-
-    this.updateArgsUI();
-  }
 
   public cancel(): void {
     this.operationCancel.emit();
   }
 
   private requestOperationOrdinal(ordinal: number): void {
-    if (this.form.dirty) {
+    if (this.form().dirty()) {
       this._dialogService
         .confirm('Confirm', 'Discard unsaved changes to this operation?')
         .subscribe((yes: boolean) => {
@@ -654,29 +616,8 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
     this.requestOperationOrdinal(ordinal + 1);
   }
 
-  private getOperation(): CharChainOperation {
-    return {
-      rank: this.rank.value || undefined,
-      groupId: this.groupId.value || undefined,
-      features: this.features.value?.length ? this.features.value : undefined,
-      sources: this.sources.value?.length ? this.sources.value : undefined,
-      id: this.id()!,
-      type: this.type.value,
-      at: this.at.value,
-      atAsIndex: this.atAsIndex.value || undefined,
-      to: this.to.value || undefined,
-      toAsIndex: this.toAsIndex.value || undefined,
-      inputTag: this.inputTag.value || undefined,
-      outputTag: this.outputTag.value || undefined,
-      run: this.run.value,
-      toRun: this.toRun.value || undefined,
-      // un-escape line feeds in value for storage
-      value: this.toggleLfEscape(this.value.value, false) || undefined,
-    };
-  }
-
   public deleteSource(index: number): void {
-    const sources = [...this.sources.value];
+    const sources = [...this.form.sources().value()];
     sources.splice(index, 1);
 
     // keep the edited source index in sync with the list
@@ -687,20 +628,31 @@ export class ChainOperationEditorComponent implements OnInit, OnDestroy {
       this.editedSourceIndex.set(editedIndex - 1);
     }
 
-    this.sources.setValue(sources);
-    this.sources.updateValueAndValidity();
-    this.sources.markAsDirty();
+    this.form.sources().value.set(sources);
+    this.form.sources().markAsDirty();
   }
 
   public requestPreview(): void {
-    this.operationPreview.emit(this.getOperation());
+    this.operationPreview.emit(toOperation(this._draft(), this.id()!));
+  }
+
+  /**
+   * Handle Enter in a single-line input: save when possible, like the
+   * implicit form submission this component used to rely on.
+   */
+  public onEnter(event: Event): void {
+    // never let Enter reach an implicit submission of an outer form
+    event.preventDefault();
+    if (this.canSave()) {
+      this.save();
+    }
   }
 
   public save(): void {
-    if (!this.form.valid) {
+    if (!this.form().valid()) {
       return;
     }
 
-    this.operation.set(this.getOperation());
+    this.operation.set(toOperation(this._draft(), this.id()!));
   }
 }

@@ -1,16 +1,19 @@
-<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
+<div>
   <div class="form-row">
     <!-- id -->
     <!-- id (bound) -->
     @if (ids()?.length) {
     <mat-form-field>
       <mat-label>id</mat-label>
-      <mat-select [formControl]="id">
+      <mat-select [formField]="form.id">
         @for (i of ids(); track i.id) {
         <mat-option [value]="i.id">{{ i.label }}</mat-option>
         }
       </mat-select>
-      @if ($any(id.errors)?.required && (id.dirty || id.touched)) {
+      @if (
+        form.id().getError('required') &&
+        (form.id().dirty() || form.id().touched())
+      ) {
       <mat-error>ID required</mat-error>
       }
     </mat-form-field>
@@ -18,10 +21,20 @@
     <!-- id (free) -->
     <mat-form-field>
       <mat-label>id</mat-label>
-      <input matInput [formControl]="id" />
-      @if ($any(id.errors)?.required && (id.dirty || id.touched)) {
+      <input
+        matInput
+        [formField]="form.id"
+        (keydown.enter)="onEnter($event)"
+      />
+      @if (
+        form.id().getError('required') &&
+        (form.id().dirty() || form.id().touched())
+      ) {
       <mat-error>ID required</mat-error>
-      } @if ($any(id.errors)?.maxlength && (id.dirty || id.touched)) {
+      } @if (
+        form.id().getError('maxLength') &&
+        (form.id().dirty() || form.id().touched())
+      ) {
       <mat-error>id too long</mat-error>
       }
     </mat-form-field>
@@ -31,12 +44,15 @@
     @if (types()?.length) {
     <mat-form-field>
       <mat-label>type</mat-label>
-      <mat-select [formControl]="type">
+      <mat-select [formField]="form.type">
         @for (i of types(); track i.id) {
         <mat-option [value]="i.id">{{ i.label }}</mat-option>
         }
       </mat-select>
-      @if ($any(type.errors)?.required && (type.dirty || type.touched)) {
+      @if (
+        form.type().getError('required') &&
+        (form.type().dirty() || form.type().touched())
+      ) {
       <mat-error>type required</mat-error>
       }
     </mat-form-field>
@@ -44,10 +60,20 @@
     <!-- type (free) -->
     <mat-form-field>
       <mat-label>type</mat-label>
-      <input matInput [formControl]="type" />
-      @if ($any(type.errors)?.required && (type.dirty || type.touched)) {
+      <input
+        matInput
+        [formField]="form.type"
+        (keydown.enter)="onEnter($event)"
+      />
+      @if (
+        form.type().getError('required') &&
+        (form.type().dirty() || form.type().touched())
+      ) {
       <mat-error>type required</mat-error>
-      } @if ($any(type.errors)?.maxlength && (type.dirty || type.touched)) {
+      } @if (
+        form.type().getError('maxLength') &&
+        (form.type().dirty() || form.type().touched())
+      ) {
       <mat-error>type too long</mat-error>
       }
     </mat-form-field>
@@ -56,14 +82,23 @@
     <!-- rank -->
     <mat-form-field class="nr">
       <mat-label>rank</mat-label>
-      <input matInput [formControl]="rank" type="number" min="0" />
+      <input
+        matInput
+        [formField]="form.rank"
+        type="number"
+        (keydown.enter)="onEnter($event)"
+      />
     </mat-form-field>
   </div>
   <!-- note -->
   <div>
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
-      <textarea matInput [formControl]="note" class="long-text"></textarea>
+      <textarea
+        matInput
+        [formField]="form.note"
+        class="long-text"
+      ></textarea>
     </mat-form-field>
   </div>
 
@@ -80,14 +115,15 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       color="primary"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="form.invalid"
+      [disabled]="form().invalid()"
+      (click)="save()"
       aria-label="Accept changes"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>

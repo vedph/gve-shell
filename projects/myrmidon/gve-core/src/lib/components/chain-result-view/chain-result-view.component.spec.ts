@@ -119,7 +119,7 @@ describe('ChainResultViewComponent', () => {
     });
     expect(c.step()).toBe(result.steps[1]);
     await settle();
-    expect(c.tag.value).toBe('v2');
+    expect(c.form.tag().value()).toBe('v2');
     expect(stepPick).toHaveBeenCalledWith(result.steps[1]);
   });
 
@@ -128,7 +128,7 @@ describe('ChainResultViewComponent', () => {
     const { c, settle } = await setup({ result, initialStepIndex: 0 });
     await settle();
     expect(c.step()).toBe(result.steps[0]);
-    expect(c.tag.value).toBe('v1');
+    expect(c.form.tag().value()).toBe('v1');
   });
 
   it('should select the last step from the map without initial index', async () => {
@@ -186,7 +186,7 @@ describe('ChainResultViewComponent', () => {
     const result = getResult();
     const { c, stepPick, settle } = await setup({ result });
     await settle();
-    c.tag.setValue('v1');
+    c.form.tag().value.set('v1');
     await settle();
     expect(c.step()).toBe(result.steps[0]);
     expect(stepPick).toHaveBeenCalledWith(result.steps[0]);
@@ -196,24 +196,24 @@ describe('ChainResultViewComponent', () => {
     const result = getResult();
     const { c, settle } = await setup({ result });
     await settle();
-    c.versionTag.setValue('draft');
+    c.form.versionTag().value.set('draft');
     await settle();
     await settle();
-    expect(c.tag.value).toBe('v1');
+    expect(c.form.tag().value()).toBe('v1');
     expect(c.step()).toBe(result.steps[0]);
-    c.versionTag.setValue(null);
+    c.form.versionTag().value.set(null);
     await settle();
     await settle();
-    expect(c.tag.value).toBeNull();
+    expect(c.form.tag().value()).toBeNull();
     expect(c.step()).toBeUndefined();
   });
 
   it('should ignore an unknown staged version', async () => {
     const { c, settle } = await setup({ result: getResult() });
     await settle();
-    c.versionTag.setValue('nope');
+    c.form.versionTag().value.set('nope');
     await settle();
-    expect(c.tag.value).toBeNull();
+    expect(c.form.tag().value()).toBeNull();
   });
 
   it('should pick a step from the steps map', async () => {
@@ -228,7 +228,7 @@ describe('ChainResultViewComponent', () => {
     expect(c.step()).toBe(result.steps[0]);
     // an undefined step is ignored
     c.onStepChange(undefined);
-    expect(c.tag.value).toBe('v1');
+    expect(c.form.tag().value()).toBe('v1');
   });
 
   it('should color chars with segment features', async () => {
@@ -280,7 +280,7 @@ describe('ChainResultViewComponent', () => {
       initialStepIndex: -1,
     });
     // tag control not yet set (before the view init timeout)
-    expect(c.tag.value).toBeNull();
+    expect(c.form.tag().value()).toBeNull();
     c.onTextRangePick({ at: 1, run: 2 });
     expect(c.selectionFeatures()).toEqual([feat('f'), feat('h')]);
   });

@@ -54,16 +54,33 @@ describe('SnapshotTextEditorComponent', () => {
       '  ab  {Enter} c ',
     );
     await user.click(screen.getByRole('button', { name: 'set' }));
-    expect(c.userText.value).toBe('ab\nc');
+    expect(c.form.userText().value()).toBe('ab\nc');
     expect(changes.at(-1)).toEqual(GveBaseTextService.stringToBaseChars('ab\nc'));
   });
 
   it('should not set invalid or blank text', async () => {
     const { c, changes } = await setup();
     c.save();
-    c.userText.setValue('   ');
+    c.form.userText().value.set('   ');
     c.save();
     expect(changes).toEqual([]);
+  });
+
+  it('should keep the required error visible when a blank text is trimmed', async () => {
+    const user = userEvent.setup();
+    const { c, changes, fixture } = await setup();
+    const input = screen.getByRole('textbox', { name: 'base text' });
+    await user.type(input, '   ');
+    await user.click(screen.getByRole('button', { name: 'set' }));
+    await fixture.whenStable();
+    expect(changes).toEqual([]);
+    expect(c.form.userText().value()).toBe('');
+    expect(screen.getByText('text required')).toBeInTheDocument();
+  });
+
+  it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+    const { container } = await setup();
+    expect(container.querySelector('form')).toBeNull();
   });
 
   it('should show validation errors', async () => {

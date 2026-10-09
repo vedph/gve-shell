@@ -9,7 +9,7 @@
         <textarea
           class="code"
           matInput
-          [formControl]="text"
+          [formField]="form.inputOps"
           rows="8"
           spellcheck="false"
         ></textarea>
@@ -37,8 +37,8 @@
       class="mat-primary"
       mat-flat-button
       matTooltip="Parse text into operations"
-      [disabled]="!text.value || busy()"
-      (click)="parseOperations(text.value!)"
+      [disabled]="!form.inputOps().value() || busy()"
+      (click)="parseOperations(form.inputOps().value())"
     >
       batch add
     </button>

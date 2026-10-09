@@ -5,23 +5,16 @@ import {
   effect,
   ElementRef,
   input,
+  linkedSignal,
   model,
-  OnDestroy,
-  OnInit,
   output,
-  signal,
   untracked,
   viewChild,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { form, FormField, required, validate } from '@angular/forms/signals';
 
-import { Subscription, debounceTime } from 'rxjs';
+import { filter, map, pairwise } from 'rxjs';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +32,8 @@ import {
   OperationFeature,
 } from '../../models';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
+import { softMaxLength } from '../../validators/signal-validators';
+import { debounceUntilDestroyed } from '../../utils/debounce-until-destroyed';
 
 /**
  * Features map. This is used for features from closed sets,
@@ -62,6 +57,82 @@ export interface FeaturePropMap {
     isNegated?: boolean;
     isGlobal?: boolean;
     isShortLived?: boolean;
+  };
+}
+
+/**
+ * The editable shape behind the feature form.
+ */
+interface FeatureControls {
+  name: string;
+  value: string;
+  valuePrefix: string;
+  selectedValue: string;
+  setPolicy: FeatureSetPolicy;
+  // var feature controls
+  isNegated: boolean;
+  isGlobal: boolean;
+  isShortLived: boolean;
+}
+
+/**
+ * Get the allowed value IDs for the feature with the specified name.
+ */
+function getLabeledIdsFor(
+  id?: string,
+  featValues?: FeatureMap,
+): LabeledId[] | undefined {
+  if (!id) {
+    return undefined;
+  }
+  return featValues ? featValues[id] : undefined;
+}
+
+/**
+ * Bound feature -> editable draft.
+ *
+ * @param feature The feature.
+ * @param featValues The feature values map, used to tell whether the value
+ * belongs to a closed set, so that its prefix must be split from it.
+ */
+function toDraft(
+  feature: OperationFeature | undefined,
+  featValues: FeatureMap | undefined,
+): FeatureControls {
+  if (!feature) {
+    return {
+      name: '',
+      value: '',
+      valuePrefix: '',
+      selectedValue: '',
+      setPolicy: FeatureSetPolicy.multiple,
+      isNegated: false,
+      isGlobal: false,
+      isShortLived: false,
+    };
+  }
+
+  // for closed value sets, split the stored value into prefix (up to and
+  // including the first ':') and the base value after it
+  let valuePrefix = '';
+  let value = feature.value;
+  if (getLabeledIdsFor(feature.name, featValues)?.length) {
+    const colonIdx = feature.value.indexOf(':');
+    if (colonIdx >= 0) {
+      valuePrefix = feature.value.substring(0, colonIdx + 1);
+      value = feature.value.substring(colonIdx + 1);
+    }
+  }
+
+  return {
+    name: feature.name,
+    value,
+    valuePrefix,
+    selectedValue: '',
+    setPolicy: feature.setPolicy || FeatureSetPolicy.multiple,
+    isNegated: feature.isNegated || false,
+    isGlobal: feature.isGlobal || false,
+    isShortLived: feature.isShortLived || false,
   };
 }
 
@@ -93,7 +164,7 @@ export interface FeaturePropMap {
   selector: 'gve-feature-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatCheckboxModule,
     MatFormFieldModule,
@@ -106,9 +177,7 @@ export interface FeaturePropMap {
   templateUrl: './feature-editor.component.html',
   styleUrl: './feature-editor.component.css',
 })
-export class FeatureEditorComponent implements OnInit, OnDestroy {
-  private _sub?: Subscription;
-
+export class FeatureEditorComponent {
   public readonly nameControl = viewChild<
     SearchableSelectComponent | ElementRef<HTMLInputElement>
   >('nameCtl');
@@ -161,28 +230,54 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
 
   /**
    * The allowed value IDs for the currently selected feature name.
-   * Set synchronously in updateForm (on feature load) and in the
-   * name.valueChanges subscription (on user interaction).
+   * Derived from a newly bound feature, and set after a user-initiated
+   * name change. featValues is read untracked, so that its changes alone
+   * do not alter the controls of a feature being edited.
    */
-  public readonly nameIds = signal<LabeledId[] | undefined>(undefined);
+  public readonly nameIds = linkedSignal<LabeledId[] | undefined>(() =>
+    getLabeledIdsFor(
+      this.feature()?.name,
+      untracked(() => this.featValues()),
+    ),
+  );
 
   /**
-   * Tracks the current feature name. Updated synchronously in updateForm
-   * and in the name.valueChanges subscription so that isMultiValued stays
-   * in sync regardless of whether the change was programmatic or user-driven.
+   * The current feature name, derived from a newly bound feature, and set
+   * after a user-initiated name change, so that isMultiValued stays in sync
+   * regardless of whether the change was programmatic or user-driven.
    */
-  private readonly _currentName = signal<string>('');
+  private readonly _currentName = linkedSignal(
+    () => this.feature()?.name ?? '',
+  );
 
-  public name: FormControl<string>;
-  public value: FormControl<string>;
-  public valuePrefix: FormControl<string>;
-  public selectedValue: FormControl<string>;
-  public setPolicy: FormControl<FeatureSetPolicy>;
-  // var feature controls
-  public isNegated: FormControl<boolean>;
-  public isGlobal: FormControl<boolean>;
-  public isShortLived: FormControl<boolean>;
-  public form: FormGroup;
+  /**
+   * The editable draft, rebuilt from the bound feature whenever it changes
+   * (including the echo of our own save: the feature is saved only with an
+   * explicit action). featValues is read untracked so that its changes
+   * alone do not overwrite in-progress user edits.
+   */
+  private readonly _draft = linkedSignal(() =>
+    toDraft(
+      this.feature(),
+      untracked(() => this.featValues()),
+    ),
+  );
+
+  public readonly form = form(this._draft, (path) => {
+    required(path.name);
+    softMaxLength(path.name, 50);
+    softMaxLength(path.value, 5000);
+    validate(path.valuePrefix, ({ value }) =>
+      value() && !value().endsWith(':') ? { kind: 'noColon' } : undefined,
+    );
+  });
+
+  /**
+   * True when the edited feature can be saved.
+   */
+  public readonly canSave = computed(
+    () => this.form().valid() && this.form().dirty(),
+  );
 
   /**
    * Computed signal that determines if the current feature is multi-valued.
@@ -195,90 +290,65 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     return !!ids && !!name && ids.includes(name);
   });
 
-  constructor(formBuilder: FormBuilder) {
-    this.name = formBuilder.control<string>('', {
-      validators: [Validators.required, Validators.maxLength(50)],
-      nonNullable: true,
-    });
-    this.value = formBuilder.control('', {
-      validators: [Validators.maxLength(5000)],
-      nonNullable: true,
-    });
-    this.valuePrefix = formBuilder.control('', {
-      validators: [(c) => (c.value && !c.value.endsWith(':') ? { noColon: true } : null)],
-      nonNullable: true,
-    });
-    this.selectedValue = formBuilder.control('', {
-      nonNullable: true,
-    });
-    this.setPolicy = formBuilder.control(FeatureSetPolicy.multiple, {
-      nonNullable: true,
-    });
-    this.isNegated = formBuilder.control(false, { nonNullable: true });
-    this.isGlobal = formBuilder.control(false, { nonNullable: true });
-    this.isShortLived = formBuilder.control(false, { nonNullable: true });
-    this.form = formBuilder.group({
-      name: this.name,
-      value: this.value,
-      valuePrefix: this.valuePrefix,
-      selectedValue: this.selectedValue,
-      setPolicy: this.setPolicy,
-      isNegated: this.isNegated,
-      isGlobal: this.isGlobal,
-      isShortLived: this.isShortLived,
-    });
-
-    // When the feature input changes, repopulate the form atomically.
-    // featValues is read via untracked() so changes to it do not retrigger
-    // this effect and accidentally overwrite in-progress user edits.
+  constructor() {
+    // When the feature input changes, the draft is rebuilt from it:
+    // reset the interaction state and focus the name.
     effect(() => {
-      this.updateForm(this.feature());
+      this.feature();
+      untracked(() => this.form().reset());
       // nameCtl may still point at the just-unmounted branch's element
       // for one tick after an unrelated input (e.g. featNames) flips
       // which branch is rendered, so guard the call, not just the ref.
       setTimeout(() => this.focusName(), 0);
     });
+
+    // Respond to user-initiated name changes only. Each name is paired
+    // with the feature bound at that time: when the feature changed too,
+    // the name comes from loading a feature (or from the echo of our own
+    // save), and must not reset the just-loaded value. No
+    // distinctUntilChanged here: the user re-picking the last picked name
+    // after a load must still refresh the value IDs.
+    toObservable(
+      computed(() => ({
+        name: this.form.name().value(),
+        feature: this.feature(),
+      })),
+    )
+      .pipe(
+        pairwise(),
+        filter(([prev, curr]) => prev.feature === curr.feature),
+        map(([, curr]) => curr.name),
+        debounceUntilDestroyed(300),
+      )
+      .subscribe((name) => this.onUserNameChange(name));
   }
 
-  public ngOnInit(): void {
-    // Respond to user-initiated name changes only.
-    // updateForm uses { emitEvent: false } so programmatic loads never
-    // reach this subscription, eliminating the race that caused value.reset()
-    // to fire after a 300 ms debounce and wipe the just-loaded value.
-    // No distinctUntilChanged here: programmatic loads do not emit, so the
-    // last emitted name may be stale, and the user re-picking it after a
-    // load must still refresh the value IDs.
-    this._sub = this.name.valueChanges
-      .pipe(debounceTime(300))
-      .subscribe((name) => {
-        this._currentName.set(name);
-        this.nameIds.set(this.getLabeledIdsFor(name, this.featValues()));
-        // Reset value only when preset names are in use; for free-text names
-        // the value is independent and must not be cleared.
-        if (this.featNames()?.length) {
-          this.value.reset();
-          this.valuePrefix.reset();
-          // Apply featProps presets for the selected name if available.
-          const props = this.featProps();
-          if (props && name && props[name]) {
-            const preset = props[name];
-            this.setPolicy.setValue(preset.setPolicy);
-            if (preset.isNegated !== undefined) {
-              this.isNegated.setValue(preset.isNegated);
-            }
-            if (preset.isGlobal !== undefined) {
-              this.isGlobal.setValue(preset.isGlobal);
-            }
-            if (preset.isShortLived !== undefined) {
-              this.isShortLived.setValue(preset.isShortLived);
-            }
-          }
-        }
-      });
-  }
+  private onUserNameChange(name: string): void {
+    this._currentName.set(name);
+    this.nameIds.set(getLabeledIdsFor(name, this.featValues()));
 
-  public ngOnDestroy(): void {
-    this._sub?.unsubscribe();
+    // Reset value only when preset names are in use; for free-text names
+    // the value is independent and must not be cleared.
+    if (!this.featNames()?.length) {
+      return;
+    }
+    this.form.value().reset('');
+    this.form.valuePrefix().reset('');
+
+    // Apply featProps presets for the selected name if available.
+    const preset = name ? this.featProps()?.[name] : undefined;
+    if (preset) {
+      this.form.setPolicy().value.set(preset.setPolicy);
+      if (preset.isNegated !== undefined) {
+        this.form.isNegated().value.set(preset.isNegated);
+      }
+      if (preset.isGlobal !== undefined) {
+        this.form.isGlobal().value.set(preset.isGlobal);
+      }
+      if (preset.isShortLived !== undefined) {
+        this.form.isShortLived().value.set(preset.isShortLived);
+      }
+    }
   }
 
   private focusName(): void {
@@ -290,99 +360,58 @@ export class FeatureEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getLabeledIdsFor(
-    id?: string,
-    featValues?: FeatureMap,
-  ): LabeledId[] | undefined {
-    if (!id) {
-      return undefined;
-    }
-    return featValues ? featValues[id] : undefined;
-  }
-
-  private updateForm(feature?: OperationFeature): void {
-    if (!feature) {
-      this._currentName.set('');
-      this.nameIds.set(undefined);
-      this.form.reset();
-    } else {
-      // Read featValues outside the reactive context so that changes to
-      // featValues alone do not re-trigger the parent effect and overwrite
-      // any in-progress user edits.
-      const featValues = untracked(() => this.featValues());
-
-      // Update derived signals first so the template can resolve the correct
-      // control type (select vs text) before Angular renders.
-      this._currentName.set(feature.name);
-      this.nameIds.set(this.getLabeledIdsFor(feature.name, featValues));
-
-      // Use emitEvent: false to suppress valueChanges events.
-      // This prevents the name.valueChanges subscription (which resets the
-      // value control) from firing during a programmatic load.
-      this.name.setValue(feature.name, { emitEvent: false });
-
-      // For closed value sets, split the stored value into prefix (up to and
-      // including the first ':') and the base value after it.
-      const ids = this.getLabeledIdsFor(feature.name, featValues);
-      if (ids?.length) {
-        const colonIdx = feature.value.indexOf(':');
-        if (colonIdx >= 0) {
-          this.valuePrefix.setValue(feature.value.substring(0, colonIdx + 1), { emitEvent: false });
-          this.value.setValue(feature.value.substring(colonIdx + 1), { emitEvent: false });
-        } else {
-          this.valuePrefix.setValue('', { emitEvent: false });
-          this.value.setValue(feature.value, { emitEvent: false });
-        }
-      } else {
-        this.valuePrefix.setValue('', { emitEvent: false });
-        this.value.setValue(feature.value, { emitEvent: false });
-      }
-      this.setPolicy.setValue(feature.setPolicy || FeatureSetPolicy.multiple);
-      this.isNegated.setValue(feature.isNegated || false);
-      this.isGlobal.setValue(feature.isGlobal || false);
-      this.isShortLived.setValue(feature.isShortLived || false);
-    }
-  }
-
   public addValueToComposite(): void {
-    if (!this.selectedValue.value) {
+    const selectedValue = this.form.selectedValue().value();
+    if (!selectedValue) {
       return;
     }
-    const currentValue = this.value.value.trim();
-    const newValue = this.selectedValue.value.trim();
-    if (currentValue) {
-      this.value.setValue(currentValue + ' ' + newValue);
-    } else {
-      this.value.setValue(newValue);
-    }
-    this.selectedValue.reset();
-    this.value.markAsDirty();
+    const currentValue = this.form.value().value().trim();
+    const newValue = selectedValue.trim();
+    this.form
+      .value()
+      .value.set(currentValue ? currentValue + ' ' + newValue : newValue);
+    this.form.selectedValue().reset('');
+    this.form.value().markAsDirty();
   }
 
   public cancel(): void {
     this.featureCancel.emit();
   }
 
+  /**
+   * Handle Enter in a single-line input: accept the changes when they can
+   * be saved, like the implicit form submission this component used to
+   * rely on.
+   */
+  public onEnter(event: Event): void {
+    // never let Enter reach an implicit submission of an outer form
+    event.preventDefault();
+    if (this.canSave()) {
+      this.save();
+    }
+  }
+
   public save(): void {
-    if (!this.form.valid) {
+    if (!this.form().valid()) {
       return;
     }
-    const prefix = this.nameIds()?.length ? this.valuePrefix.value.trim() : '';
-    const value = prefix + this.value.value.trim();
+    const v = this._draft();
+    const prefix = this.nameIds()?.length ? v.valuePrefix.trim() : '';
+    const value = prefix + v.value.trim();
     this.feature.set(
       this.isVar()
         ? {
-            name: this.name.value.trim(),
+            name: v.name.trim(),
             value,
-            setPolicy: this.setPolicy.value,
-            isNegated: this.isNegated.value,
-            isGlobal: this.isGlobal.value,
-            isShortLived: this.isShortLived.value,
+            setPolicy: v.setPolicy,
+            isNegated: v.isNegated,
+            isGlobal: v.isGlobal,
+            isShortLived: v.isShortLived,
           }
         : {
-            name: this.name.value.trim(),
+            name: v.name.trim(),
             value,
-            setPolicy: this.setPolicy.value,
+            setPolicy: v.setPolicy,
           },
     );
   }

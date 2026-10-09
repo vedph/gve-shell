@@ -4,13 +4,13 @@
     @if (filterThreshold() === 0 || workingFeatures().length >= filterThreshold()) {
       <mat-form-field>
         <mat-label>filter</mat-label>
-        <input matInput [formControl]="filter" />
+        <input matInput [formField]="filter" />
         <button
           type="button"
           mat-icon-button
           matSuffix
-          (click)="filter.reset()"
-          [disabled]="!filter.value"
+          (click)="filter().value.set('')"
+          [disabled]="!filter().controlValue()"
           [attr.aria-label]="'Reset filter'"
         >
           <mat-icon color="warn" class="mat-warn">cancel</mat-icon>

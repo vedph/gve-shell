@@ -5,13 +5,13 @@
       <div class="form-row">
         <mat-form-field id="filter">
           <mat-label>filter</mat-label>
-          <input matInput [formControl]="filter" />
+          <input matInput [formField]="filter" />
           <button
             type="button"
             mat-icon-button
             matSuffix
-            (click)="filter.reset()"
-            [disabled]="!filter.value"
+            (click)="filter().value.set('')"
+            [disabled]="!filter().controlValue()"
             [attr.aria-label]="'Reset filter'"
           >
             <mat-icon color="warn" class="mat-warn">cancel</mat-icon>

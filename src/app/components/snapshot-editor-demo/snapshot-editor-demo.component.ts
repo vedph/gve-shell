@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { form, FormField } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -33,8 +33,7 @@ import { AssetService } from '../../services/asset.service';
   selector: 'app-snapshot-editor-demo',
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -336,9 +335,7 @@ export class SnapshotEditorDemoComponent implements OnInit {
     },
   });
 
-  public debug: FormControl<boolean> = new FormControl(true, {
-    nonNullable: true,
-  });
+  public readonly options = form(signal({ debug: true }));
 
   constructor(private _asset: AssetService) {}
 

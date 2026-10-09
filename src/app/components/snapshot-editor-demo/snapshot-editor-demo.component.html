@@ -5,7 +5,7 @@
 
   <mat-card-content>
     <gve-snapshot-editor
-      [debug]="debug.value"
+      [debug]="options.debug().value()"
       [renditionSettings]="settings()"
       [snapshot]="snapshot()"
       [featureDefs]="featureDefs()"
@@ -20,7 +20,7 @@
         <mat-panel-title>result</mat-panel-title>
       </mat-expansion-panel-header>
       <div>
-        <mat-checkbox [formControl]="debug">debug mode</mat-checkbox>
+        <mat-checkbox [formField]="options.debug">debug mode</mat-checkbox>
       </div>
       <code>
         <pre>{{ snapshot() | json }}</pre>

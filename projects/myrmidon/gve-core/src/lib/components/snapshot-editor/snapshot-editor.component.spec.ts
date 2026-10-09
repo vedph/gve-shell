@@ -21,6 +21,9 @@ import {
 import { GveBaseTextService } from '../../services/gve-base-text.service';
 
 const wait = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+// the form tags the objects in its own draft arrays with a hidden identity
+// symbol: compare draft values through a JSON round-trip
+const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 const op = (
   id: string,
@@ -130,26 +133,67 @@ describe('SnapshotEditorComponent', () => {
     operations: [op('o1'), op('o2'), op('o3')],
   });
 
+  describe('form structure', () => {
+    it('should render no <form> element, so it stays valid at any nesting depth', async () => {
+      const { container } = await setup({ snapshot: SNAPSHOT() });
+      expect(container.querySelector('form')).toBeNull();
+    });
+
+    it('should not save when pressing Enter in a nested search box', async () => {
+      const user = userEvent.setup();
+      const { saved } = await setup({ snapshot: SNAPSHOT() });
+      const [search] = screen.getAllByPlaceholderText('search');
+      await user.type(search, 'a{Enter}');
+      expect(saved).toEqual([]);
+    });
+
+    it('should save clean copies, never tagging the bound objects', async () => {
+      const snapshot: Snapshot = {
+        text: GveBaseTextService.stringToBaseChars('ab'),
+        operations: [op('o1', { features: [{ name: 'f', value: 'v', setPolicy: 0 }] })],
+      };
+      const { c, saved } = await setup({ snapshot });
+      c.duplicateOperation(0);
+      c.save();
+      const symbols = (o: object) => Object.getOwnPropertySymbols(o).length;
+      for (const o of [
+        ...(snapshot.text as object[]),
+        ...snapshot.operations,
+        ...(saved.at(-1)!.text as object[]),
+        ...saved.at(-1)!.operations,
+        ...saved.at(-1)!.operations.flatMap((o) => o.features || []),
+      ]) {
+        expect(symbols(o)).toBe(0);
+      }
+    });
+  });
+
   describe('loading', () => {
     it('should load a string snapshot and run its operations', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      expect(c.baseText.value).toEqual(
+      expect(plain(c.form.baseText().value())).toEqual(
         GveBaseTextService.stringToBaseChars('ab\nc'),
       );
       expect(c.lineCount()).toBe(2);
-      expect(c.operations.value.map((o) => o.id)).toEqual(['o1', 'o2', 'o3']);
+      expect(c.form.operations().value().map((o) => o.id)).toEqual([
+        'o1',
+        'o2',
+        'o3',
+      ]);
       expect(api.runOperations).toHaveBeenCalledTimes(1);
       expect(c.result()!.steps).toHaveLength(3);
       expect(c.resultOperationId()).toBe('o3');
       expect(c.initialStepIndex()).toBe(2);
       expect(c.busy()).toBe(false);
-      expect(c.form.pristine).toBe(true);
+      expect(c.form().dirty()).toBe(false);
     });
 
     it('should load a nodes snapshot', async () => {
       const nodes = GveBaseTextService.stringToBaseChars('xy');
       const { c } = await setup({ snapshot: { text: nodes, operations: [] } });
-      expect(c.baseText.value).toBe(nodes);
+      // a copy: the form must not tag the caller's nodes
+      expect(plain(c.form.baseText().value())).toEqual(nodes);
+      expect(c.form.baseText().value()).not.toBe(nodes);
       expect(c.lineCount()).toBe(1);
       // no operations: nothing to run
       expect(api.runOperations).not.toHaveBeenCalled();
@@ -158,9 +202,9 @@ describe('SnapshotEditorComponent', () => {
 
     it('should reset without snapshot', async () => {
       const { c } = await setup();
-      expect(c.baseText.value).toEqual([]);
+      expect(c.form.baseText().value()).toEqual([]);
       expect(c.lineCount()).toBe(0);
-      expect(c.operations.value).toEqual([]);
+      expect(c.form.operations().value()).toEqual([]);
     });
 
     it('should list operations', async () => {
@@ -269,8 +313,8 @@ describe('SnapshotEditorComponent', () => {
       );
       await fixture.whenStable();
       expect(c.editedOpIndex()).toBe(1);
-      expect(c.editedOp()).toEqual(c.operations.value[1]);
-      expect(c.editedOp()).not.toBe(c.operations.value[1]);
+      expect(c.editedOp()).toEqual(plain(c.form.operations().value()[1]));
+      expect(c.editedOp()).not.toBe(c.form.operations().value()[1]);
       expect(
         fixture.nativeElement.querySelector('gve-chain-operation-editor'),
       ).not.toBeNull();
@@ -280,8 +324,8 @@ describe('SnapshotEditorComponent', () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.editOperation(1);
       c.onOperationChange(op('o2', { at: 9 }));
-      expect(c.operations.value[1].at).toBe(9);
-      expect(c.operations.dirty).toBe(true);
+      expect(c.form.operations().value()[1].at).toBe(9);
+      expect(c.form.operations().dirty()).toBe(true);
       expect(c.editedOp()).toBeUndefined();
       // auto-run is off
       expect(api.runOperations).toHaveBeenCalledTimes(1);
@@ -289,10 +333,10 @@ describe('SnapshotEditorComponent', () => {
 
     it('should append a new operation and auto-run to it', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      c.autoRun.setValue(true);
+      c.options.autoRun().value.set(true);
       c.editNewOperation();
       c.onOperationChange(op('o4'));
-      expect(c.operations.value.map((o) => o.id)).toEqual([
+      expect(c.form.operations().value().map((o) => o.id)).toEqual([
         'o1',
         'o2',
         'o3',
@@ -305,7 +349,7 @@ describe('SnapshotEditorComponent', () => {
     it('should ignore a null operation change', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.onOperationChange(null);
-      expect(c.operations.value).toHaveLength(3);
+      expect(c.form.operations().value()).toHaveLength(3);
     });
 
     it('should cancel operation editing', async () => {
@@ -334,7 +378,7 @@ describe('SnapshotEditorComponent', () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.deleteOperation(2);
       expect(dialog.confirm).toHaveBeenCalled();
-      expect(c.operations.value.map((o) => o.id)).toEqual(['o1', 'o2']);
+      expect(c.form.operations().value().map((o) => o.id)).toEqual(['o1', 'o2']);
       // the result operation was deleted
       expect(c.resultOperationId()).toBeUndefined();
       await wait();
@@ -346,7 +390,7 @@ describe('SnapshotEditorComponent', () => {
       dialog.confirm.mockReturnValue(of(false));
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.deleteOperation(0);
-      expect(c.operations.value).toHaveLength(3);
+      expect(c.form.operations().value()).toHaveLength(3);
     });
 
     it('should close the edited operation when deleting it', async () => {
@@ -362,7 +406,7 @@ describe('SnapshotEditorComponent', () => {
       c.deleteOperation(0);
       expect(c.editedOpIndex()).toBe(1);
       c.onOperationChange(op('o3', { at: 9 }));
-      expect(c.operations.value.map((o) => [o.id, o.at])).toEqual([
+      expect(c.form.operations().value().map((o) => [o.id, o.at])).toEqual([
         ['o2', 1],
         ['o3', 9],
       ]);
@@ -372,18 +416,20 @@ describe('SnapshotEditorComponent', () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.editOperation(2);
       c.duplicateOperation(0);
-      const ops = c.operations.value;
+      const ops = c.form.operations().value();
       expect(ops).toHaveLength(4);
       expect(ops[1].id).not.toBe('o1');
-      expect({ ...ops[1], id: 'o1' }).toEqual(ops[0]);
+      expect(plain({ ...ops[1], id: 'o1' })).toEqual(plain(ops[0]));
       expect(c.editedOpIndex()).toBe(3);
       c.onOperationChange(op('o3', { at: 9 }));
-      expect(c.operations.value[3]).toEqual(op('o3', { at: 9 }));
+      expect(plain(c.form.operations().value()[3])).toEqual(
+        op('o3', { at: 9 }),
+      );
     });
 
     it('should move operations keeping the edited index in sync', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      const ids = () => c.operations.value.map((o) => o.id);
+      const ids = () => c.form.operations().value().map((o) => o.id);
       c.editOperation(0);
       c.moveOperationDown(0);
       expect(ids()).toEqual(['o2', 'o1', 'o3']);
@@ -395,7 +441,7 @@ describe('SnapshotEditorComponent', () => {
       expect(ids()).toEqual(['o2', 'o1', 'o3']);
       expect(c.editedOpIndex()).toBe(1);
       c.onOperationChange(op('o1', { at: 9 }));
-      expect(c.operations.value[1]).toEqual(op('o1', { at: 9 }));
+      expect(c.form.operations().value()[1]).toEqual(op('o1', { at: 9 }));
       // out of bounds moves are ignored
       c.moveOperationUp(0);
       c.moveOperationDown(2);
@@ -406,7 +452,7 @@ describe('SnapshotEditorComponent', () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.editOperation(0);
       c.clearOperations();
-      expect(c.operations.value).toEqual([]);
+      expect(c.form.operations().value()).toEqual([]);
       expect(c.editedOp()).toBeUndefined();
       expect(c.result()).toBeUndefined();
       expect(c.resultOperationId()).toBeUndefined();
@@ -416,7 +462,7 @@ describe('SnapshotEditorComponent', () => {
       dialog.confirm.mockReturnValue(of(false));
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.clearOperations();
-      expect(c.operations.value).toHaveLength(3);
+      expect(c.form.operations().value()).toHaveLength(3);
     });
 
     it('should build sources tooltips', async () => {
@@ -441,18 +487,18 @@ describe('SnapshotEditorComponent', () => {
         { name: 'a', value: '1', setPolicy: 0 },
       ];
       const { c } = await setup({ snapshot });
-      c.editFeatsRange.setValue('1, 3');
+      c.editFeatsForm.editFeatsRange().value.set('1, 3');
       c.editOperationsFeats();
       expect(c.batchOpNumbers()).toEqual([1, 3]);
       expect(c.batchRangeLabel()).toBe('1,3');
       expect(c.operationFeats()).toEqual([]);
 
       c.saveOperationsFeats([{ name: 'b', value: '2', setPolicy: 0 }]);
-      const ops = c.operations.value;
+      const ops = c.form.operations().value();
       expect(ops[0].features!.map((f) => f.name)).toEqual(['a', 'b']);
       expect(ops[1].features).toBeUndefined();
       expect(ops[2].features!.map((f) => f.name)).toEqual(['b']);
-      expect(c.operations.dirty).toBe(true);
+      expect(c.form.operations().dirty()).toBe(true);
       expect(c.batchOpNumbers()).toBeUndefined();
       expect(c.operationFeats()).toBeUndefined();
       // the input snapshot was not mutated
@@ -463,12 +509,12 @@ describe('SnapshotEditorComponent', () => {
     it('should add a source to the operations in range', async () => {
       const snapshot = SNAPSHOT();
       const { c } = await setup({ snapshot });
-      c.editFeatsRange.setValue('2-3');
+      c.editFeatsForm.editFeatsRange().value.set('2-3');
       c.editOperationSources();
       expect(c.batchForSource()).toBe(true);
       expect(c.batchOpNumbers()).toEqual([2, 3]);
       c.saveOperationSources({ id: 's', type: 't' });
-      const ops = c.operations.value;
+      const ops = c.form.operations().value();
       expect(ops[0].sources).toBeUndefined();
       expect(ops[1].sources).toEqual([{ id: 's', type: 't' }]);
       expect(ops[2].sources).toEqual([{ id: 's', type: 't' }]);
@@ -481,7 +527,7 @@ describe('SnapshotEditorComponent', () => {
       c.saveOperationsFeats([{ name: 'b', value: '2', setPolicy: 0 }]);
       c.saveOperationSources({ id: 's', type: 't' });
       c.saveOperationSources(undefined);
-      expect(c.operations.value.every((o) => !o.features && !o.sources)).toBe(
+      expect(c.form.operations().value().every((o) => !o.features && !o.sources)).toBe(
         true,
       );
     });
@@ -490,7 +536,7 @@ describe('SnapshotEditorComponent', () => {
       'should reject the range %j',
       async (range) => {
         const { c } = await setup({ snapshot: SNAPSHOT() });
-        c.editFeatsRange.setValue(range);
+        c.editFeatsForm.editFeatsRange().value.set(range);
         c.editOperationsFeats();
         c.editOperationSources();
         expect(c.batchOpNumbers()).toBeUndefined();
@@ -499,14 +545,14 @@ describe('SnapshotEditorComponent', () => {
 
     it('should merge overlapping ranges', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      c.editFeatsRange.setValue('3, 1-2, 2');
+      c.editFeatsForm.editFeatsRange().value.set('3, 1-2, 2');
       c.editOperationsFeats();
       expect(c.batchOpNumbers()).toEqual([1, 2, 3]);
     });
 
     it('should close the batch editors', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      c.editFeatsRange.setValue('1');
+      c.editFeatsForm.editFeatsRange().value.set('1');
       c.editOperationsFeats();
       c.closeOperationFeats();
       expect(c.batchOpNumbers()).toBeUndefined();
@@ -531,6 +577,21 @@ describe('SnapshotEditorComponent', () => {
       );
       await fixture.whenStable();
       expect(c.batchOpNumbers()).toEqual([1]);
+      expect(saved).toEqual([]);
+    });
+
+    it('should edit features for the range with Enter', async () => {
+      const user = userEvent.setup();
+      const { c, saved, fixture, showOperations } = await setup({
+        snapshot: SNAPSHOT(),
+      });
+      await showOperations();
+      await user.type(
+        screen.getByRole('textbox', { name: /operations \(e\.g\./ }),
+        '2-3{Enter}',
+      );
+      await fixture.whenStable();
+      expect(c.batchOpNumbers()).toEqual([2, 3]);
       expect(saved).toEqual([]);
     });
 
@@ -600,10 +661,10 @@ describe('SnapshotEditorComponent', () => {
       c.onRangePick({ at: 1, run: 1 });
       c.inputBaseText();
       expect(matDialog.open.mock.calls[0][1].data.payload.text).toHaveLength(4);
-      expect(c.baseText.value).toBe(nodes);
+      expect(c.form.baseText().value()).toBe(nodes);
       expect(c.lineCount()).toBe(3);
       expect(c.textRange()).toBeUndefined();
-      expect(c.operations.value).toEqual([]);
+      expect(c.form.operations().value()).toEqual([]);
       expect(c.result()).toBeUndefined();
     });
 
@@ -611,7 +672,7 @@ describe('SnapshotEditorComponent', () => {
       matDialog.open.mockReturnValue({ afterClosed: () => of(undefined) });
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.inputBaseText();
-      expect(c.operations.value).toHaveLength(3);
+      expect(c.form.operations().value()).toHaveLength(3);
     });
 
     it('should append parsed operations and rerun', async () => {
@@ -620,7 +681,7 @@ describe('SnapshotEditorComponent', () => {
       });
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.parseOperations();
-      expect(c.operations.value.map((o) => o.id)).toEqual([
+      expect(c.form.operations().value().map((o) => o.id)).toEqual([
         'o1',
         'o2',
         'o3',
@@ -635,7 +696,7 @@ describe('SnapshotEditorComponent', () => {
       matDialog.open.mockReturnValue({ afterClosed: () => of(undefined) });
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.parseOperations();
-      expect(c.operations.value).toHaveLength(3);
+      expect(c.form.operations().value()).toHaveLength(3);
     });
 
     it('should not open dialogs while busy', async () => {
@@ -700,7 +761,7 @@ describe('SnapshotEditorComponent', () => {
       await wait();
       expect(api.runOperations).toHaveBeenCalledTimes(1);
 
-      c.autoRun.setValue(true);
+      c.options.autoRun().value.set(true);
       c.onOperationPreview(op('o2', { at: 5 }));
       // multiple previews are ignored
       c.onOperationPreview(op('o2', { at: 6 }));
@@ -715,7 +776,7 @@ describe('SnapshotEditorComponent', () => {
 
     it('should not preview a new operation', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
-      c.autoRun.setValue(true);
+      c.options.autoRun().value.set(true);
       c.editNewOperation();
       c.onOperationPreview(op('new'));
       await wait();
@@ -802,7 +863,7 @@ describe('SnapshotEditorComponent', () => {
     it('should use v0 for a new operation in an empty chain', async () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       // simulate a result still available while operations were removed
-      c.operations.setValue([]);
+      c.form.operations().value.set([]);
       c.editNewOperation();
       expect(c.editedOpPrecedingText()!.map((n) => n.id)).toEqual([1, 2, 3]);
     });
