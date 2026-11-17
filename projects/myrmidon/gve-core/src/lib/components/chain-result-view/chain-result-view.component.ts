@@ -36,6 +36,7 @@ import {
 } from '../../services/gve-api.service';
 import { BaseTextCharEvent } from '../base-text-char/base-text-char.component';
 import { debounceUntilDestroyed } from '../../utils/debounce-until-destroyed';
+import { getUnknownInputStepIndexes } from '../../utils/step-tags';
 import { MatTooltip } from "@angular/material/tooltip";
 
 /**
@@ -48,6 +49,8 @@ import { MatTooltip } from "@angular/material/tooltip";
  * Used by the `gve-snapshot-editor` component.
  *
  * - ▶️ `result` (`CharChainResult`): the result to display.
+ * - ▶️ `textMaxHeight` (`string`): the maximum height of the step's text
+ * (default 45vh), scrolling when longer.
  * - 🔥 `stepPick` (`ChainOperationContextStep`): emitted when a
  * result's step is picked by the user.
  */
@@ -117,6 +120,27 @@ export class ChainResultViewComponent implements AfterViewInit {
     const nodeMap = new Map(result.nodes.map((n) => [n.id, n]));
     return ids.map((id) => nodeMap.get(id)!).filter(Boolean);
   });
+
+  /**
+   * True when the current step's input version does not exist at its point
+   * of the chain, so that its output is empty.
+   */
+  public readonly stepInputUnknown = computed<boolean>(() => {
+    const result = this.result();
+    const step = this.step();
+    if (!result || !step) {
+      return false;
+    }
+    return getUnknownInputStepIndexes(result.steps).has(
+      result.steps.indexOf(step),
+    );
+  });
+
+  /**
+   * The maximum height of the step's text, which scrolls when longer.
+   * Any CSS height; empty for no limit.
+   */
+  public readonly textMaxHeight = input<string | undefined>('45vh');
 
   /**
    * Global features for the current step's output version.
@@ -194,13 +218,31 @@ export class ChainResultViewComponent implements AfterViewInit {
       .pipe(skip(1), distinctUntilChanged(), debounceUntilDestroyed(200))
       .subscribe((value) => {
         this.selectionFeatures.set([]); // reset selection features
-        this.step.set(
-          this.result()?.steps.find((step) => step.outputTag === value)
-        );
-        if (this.step()) {
-          this.stepPick.emit(this.step()!);
+        const step = this.findStep(value);
+        this.step.set(step);
+        if (step) {
+          this.stepPick.emit(step);
         }
       });
+  }
+
+  /**
+   * Find the step of the current result with the specified output tag.
+   * Output tags are not unique across steps (e.g. an operation whose input
+   * tag points to an earlier version outputs to that version again), so
+   * the current step is kept when it has this tag, rather than switching to
+   * the first step with the same tag.
+   */
+  private findStep(tag: string | null): ChainOperationContextStep | undefined {
+    const steps = this.result()?.steps;
+    if (!steps || !tag) {
+      return undefined;
+    }
+    const current = this.step();
+    if (current?.outputTag === tag && steps.includes(current)) {
+      return current;
+    }
+    return steps.find((s) => s.outputTag === tag);
   }
 
   private doInitialStepSelection(
@@ -359,8 +401,22 @@ export class ChainResultViewComponent implements AfterViewInit {
 
   public onStepChange(step?: ChainOperationContextStep): void {
     this.selectionFeatures.set([]);
-    if (step) {
-      // setting the tag will trigger the step change
+    // ignore steps not belonging to the current result (e.g. a selection
+    // left over from a previous result)
+    if (!step || !this.result()?.steps.includes(step)) {
+      return;
+    }
+    // select the step itself: its tag might be shared by other steps, so
+    // that resolving the step from the tag might pick another one
+    const previous = this.step();
+    this.step.set(step);
+    if (this.form.tag().value() === step.outputTag) {
+      // the tag control will not notify a change
+      if (step !== previous) {
+        this.stepPick.emit(step);
+      }
+    } else {
+      // syncing the tag control also emits stepPick, keeping this step
       this.form.tag().value.set(step.outputTag);
     }
   }

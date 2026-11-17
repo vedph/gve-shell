@@ -19,6 +19,7 @@ import { form, FormField, pattern, required } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MatExpansionPanel,
+  MatExpansionPanelDescription,
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
@@ -80,6 +81,11 @@ import { GveBaseTextService } from '../../services/gve-base-text.service';
 import { MatBadge } from '@angular/material/badge';
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
 import { requiredArray } from '../../validators/signal-validators';
+import { getUnknownInputStepIndexes } from '../../utils/step-tags';
+import {
+  GVE_SHORTCUTS,
+  isGveShortcut,
+} from '../../utils/keyboard-shortcuts';
 
 // default snapshot view title
 const VIEW_TITLE = 'preview';
@@ -113,6 +119,23 @@ function toDraft(snapshot: Snapshot | undefined): SnapshotControls {
 }
 
 /**
+ * Get the ordinal numbers of the operations whose value or feature values
+ * include line feeds, which the operations DSL cannot represent.
+ */
+export function getOperationsWithLineFeeds(
+  operations: CharChainOperation[],
+): number[] {
+  const hasLf = (s?: string) => !!s && /[\r\n]/.test(s);
+  const numbers: number[] = [];
+  operations.forEach((op, i) => {
+    if (hasLf(op.value) || op.features?.some((f) => hasLf(f.value))) {
+      numbers.push(i + 1);
+    }
+  });
+  return numbers;
+}
+
+/**
  * Count the lines of the specified text.
  */
 function countLines(text: CharNode[]): number {
@@ -135,7 +158,10 @@ function countLines(text: CharNode[]): number {
  * - ▶️ `sourceIds` (`LabeledId[]`): the list of source IDs when it's a closed set. Passed down to the operation source editor, which will show a dropdown to select from these IDs. When not specified, the source ID can be freely typed in the source editor.
  * - ▶️ `sourceTypes` (`LabeledId[]`): the list of source types when it's a closed set. Passed down to the operation source editor, which will show a dropdown to select from these types. When not specified, the source type can be freely typed in the source editor.
  * - ▶️ `renditionSettings` (`GveRenditionSettings`): settings for rendering the snapshot. These are passed to the snapshot rendition component.
- * - ▶️ `opListMaxHeight` (`string`): optional maximum height for the operations list. When set, the operations list will have a vertical scrollbar if its content exceeds this height.
+ * - ▶️ `opListMaxHeight` (`string`): maximum height for the operations list (default 50vh), which scrolls vertically when longer.
+ * - ▶️ `textMaxHeight` (`string`): maximum height for the base text in the text tab (default 50vh), which scrolls vertically when longer.
+ *
+ * Keyboard shortcuts: Alt+Shift+N adds a new operation (unless one is being edited), Alt+Shift+R runs all the operations.
  * - 🔥 `snapshotChange` (`Snapshot`): emitted when the user saves the edited snapshot.
  * - 🔥 `snapshotCancel` (`void`): emitted when the user cancels the snapshot editing.
  */
@@ -145,6 +171,7 @@ function countLines(text: CharNode[]): number {
     MatButton,
     MatIconButton,
     MatExpansionPanel,
+    MatExpansionPanelDescription,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
     MatFormField,
@@ -170,12 +197,18 @@ function countLines(text: CharNode[]): number {
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown)': 'onDocumentKeydown($event)',
+  },
   templateUrl: './snapshot-editor.component.html',
   styleUrl: './snapshot-editor.component.css',
 })
 export class SnapshotEditorComponent {
   private readonly _nanoid = customAlphabet('1234567890abcdef', 10);
   private _previewing?: boolean;
+  // true when the current result comes from a preview of the unsaved edits
+  // of the edited operation
+  private _previewRan = false;
   private _stepPickFrozen?: boolean;
   private _currentRunSubscription?: Subscription;
 
@@ -258,11 +291,19 @@ export class SnapshotEditorComponent {
     input<GveRenditionSettings>(DEFAULT_SETTINGS);
 
   /**
-   * Optional maximum height for the operations list. When set, the operations
-   * list will have a vertical scrollbar if its content exceeds this height.
-   * The value should be a valid CSS height value (e.g., '300px', '50vh').
+   * Maximum height for the operations list (default 50vh). The operations
+   * list gets a vertical scrollbar when its content exceeds this height,
+   * so that what is below it stays visible. The value should be a valid
+   * CSS height value (e.g., '300px', '50vh'); empty for no limit.
    */
-  public readonly opListMaxHeight = input<string | undefined>(undefined);
+  public readonly opListMaxHeight = input<string | undefined>('50vh');
+
+  /**
+   * Maximum height for the base text in the text tab (default 50vh). The
+   * text gets a vertical scrollbar when it exceeds this height. The value
+   * should be a valid CSS height value; empty for no limit.
+   */
+  public readonly textMaxHeight = input<string | undefined>('50vh');
 
   /**
    * Emitted when the user cancels the snapshot editing.
@@ -288,6 +329,20 @@ export class SnapshotEditorComponent {
   );
 
   public readonly chain = signal<CharChain | undefined>(undefined);
+
+  /**
+   * True when the base text panel is expanded. It starts expanded when the
+   * bound snapshot has no base text, as entering it is the first thing to
+   * do for a new snapshot.
+   */
+  public readonly baseTextExpanded = linkedSignal(
+    () => !this.snapshot()?.text?.length,
+  );
+
+  /**
+   * The keyboard shortcuts, for their labels in the UI.
+   */
+  public readonly shortcuts = GVE_SHORTCUTS;
 
   // the currently picked base text range
   public readonly textRange = signal<BaseTextRange | undefined>(undefined);
@@ -389,11 +444,12 @@ export class SnapshotEditorComponent {
     // form and run all operations. untracked prevents busy() and the draft
     // (read inside runToLast → runTo) from being tracked as dependencies,
     // which would cause re-runs each time the API call completes and resets
-    // busy to false.
+    // busy to false. The initial step index is not set here, but together
+    // with the result once it arrives (see runTo).
     effect(() => {
       this.snapshot();
       untracked(() => {
-        this.initialStepIndex.set(-1);
+        this._previewRan = false;
         this.form().reset();
         this.runToLast();
       });
@@ -463,11 +519,7 @@ export class SnapshotEditorComponent {
     // This call recovers from that missed push once the element is actually live.
     const result = this.result();
     if (result) {
-      // untracked: the base text must not become a dependency of the
-      // effect calling this method
-      const r = { ...result, text: untracked(this.form.baseText().value) };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      rendition.data = r as any;
+      this.pushRenditionData(rendition, result);
     }
 
     // listen to version change events
@@ -503,13 +555,27 @@ export class SnapshotEditorComponent {
     if (rendition && result) {
       // update settings with latest rendition settings
       this.applyRenditionSettings();
-      // supply the base text (not returned by API, must be provided by caller)
-      result.text = this.form.baseText().value();
-      // gve-snapshot-rendition@0.0.8 still types data with the old
-      // CharChainResult (taggedNodes). Cast until the package is updated.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      rendition.data = result as any;
+      this.pushRenditionData(rendition, result);
     }
+  }
+
+  /**
+   * Set the rendition data from the specified result, supplying the base
+   * text (not returned by the API, must be provided by the caller). The
+   * result is copied rather than mutated, as it is the same object held by
+   * the result signal and shared with the result view.
+   */
+  private pushRenditionData(
+    rendition: GveSnapshotRendition,
+    result: CharChainResult,
+  ): void {
+    // untracked: the base text must not become a dependency of an
+    // effect calling this method
+    const data = { ...result, text: untracked(this.form.baseText().value) };
+    // gve-snapshot-rendition still types data with the old CharChainResult
+    // (taggedNodes). Cast until the package is updated.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rendition.data = data as any;
   }
 
   /**
@@ -553,6 +619,81 @@ export class SnapshotEditorComponent {
   }
 
   /**
+   * Copy the base text, as plain text, to the clipboard.
+   */
+  public copyBaseText(): void {
+    const text = this.form
+      .baseText()
+      .value()
+      .map((c) => c.data)
+      .join('');
+    if (!text) {
+      return;
+    }
+    navigator.clipboard.writeText(text).then(
+      () =>
+        this._snackbar.open('Base text copied to clipboard', 'OK', {
+          duration: 3000,
+        }),
+      () => this._snackbar.open('Error copying base text to clipboard', 'OK'),
+    );
+  }
+
+  /**
+   * Handle the keyboard shortcuts of this editor. They are ignored while
+   * a dialog is open (e.g. the base text editor), and when they would not
+   * be available from the UI.
+   */
+  public onDocumentKeydown(event: KeyboardEvent): void {
+    if (this._dialog.openDialogs?.length) {
+      return;
+    }
+    if (isGveShortcut(event, GVE_SHORTCUTS.newOperation)) {
+      event.preventDefault();
+      // as its button, but never replacing an operation being edited,
+      // which would silently lose its unsaved changes
+      if (
+        !this.busy() &&
+        this.form.baseText().value().length &&
+        !this.editedOp()
+      ) {
+        this.editNewOperation();
+      }
+    } else if (isGveShortcut(event, GVE_SHORTCUTS.runAll)) {
+      event.preventDefault();
+      if (this.form.operations().value().length) {
+        this.runToLast();
+      }
+    }
+  }
+
+  /**
+   * Warn the user about the steps of the specified result whose input tag
+   * refers to a version which does not exist at their point of the chain:
+   * their output is empty, which might otherwise look like a glitch.
+   */
+  private warnUnknownInputTags(result?: CharChainResult): void {
+    if (!result) {
+      return;
+    }
+    const indexes = [...getUnknownInputStepIndexes(result.steps)];
+    if (!indexes.length) {
+      return;
+    }
+    const list = indexes
+      .map((i) => {
+        const step = result.steps[i];
+        return `${i + 1}. ${step.operation.id} (${step.inputTag})`;
+      })
+      .join(', ');
+    this._snackbar.open(
+      `Unknown input version in operation(s) ${list}: their output is ` +
+        'empty. Check their input tags.',
+      'OK',
+    );
+  }
+
+  /**
    * Handle the event fired by the base text editor to pick a text range.
    * @param range The picked range.
    * @param applyToOp True to also apply the picked range to the edited operation.
@@ -571,6 +712,8 @@ export class SnapshotEditorComponent {
    * Edit a new operation.
    */
   public editNewOperation() {
+    this.discardPreview();
+
     // create a new operation and edit it, using as the initial range
     // the base text range if any
     const range = this.textRange();
@@ -589,6 +732,9 @@ export class SnapshotEditorComponent {
    * @param index The operation index.
    */
   public editOperation(index: number) {
+    if (index !== this.editedOpIndex()) {
+      this.discardPreview();
+    }
     this.editedOpIndex.set(index);
     this.editedOp.set(structuredClone(this.form.operations().value()[index]));
   }
@@ -731,10 +877,42 @@ export class SnapshotEditorComponent {
   }
 
   /**
+   * Run all the operations, selecting the step of the operation at the
+   * specified index in the result view. So, the result view shows the
+   * operation of interest, while both the result view and the rendition
+   * get the whole chain.
+   * @param index The index of the operation whose step is to be selected.
+   */
+  private runAllSelecting(index: number): void {
+    const count = this.form.operations().value().length;
+    if (count) {
+      this.runTo(count - 1, undefined, index);
+    }
+  }
+
+  /**
+   * If the current result comes from a preview of the unsaved edits of the
+   * edited operation, run the saved operations again, so that the result
+   * view and the rendition do not keep showing edits which were not saved.
+   * Call this before leaving the edited operation.
+   */
+  private discardPreview(): void {
+    if (!this._previewRan) {
+      return;
+    }
+    this._previewRan = false;
+    const index = this.editedOpIndex();
+    if (index > -1 && index < this.form.operations().value().length) {
+      this.runAllSelecting(index);
+    }
+  }
+
+  /**
    * Handle the event fired by the operation editor to cancel
    * the current operation edits.
    */
   public onOperationCancel() {
+    this.discardPreview();
     this.closeEditedOperation();
   }
 
@@ -763,9 +941,13 @@ export class SnapshotEditorComponent {
     // update the operations form control
     this.setOperations(operations);
 
-    // run to the edited operation if auto-run is enabled
-    if (this.options.autoRun().value()) {
-      this.runTo(i);
+    // run all the operations, selecting the edited one, if auto-run is
+    // enabled, or if the current result comes from a preview (auto-run
+    // might have been disabled after it): the result must reflect the saved
+    // operation. All the operations are run, so that the result view and the
+    // rendition get the whole chain, including the operations after it.
+    if (this.options.autoRun().value() || this._previewRan) {
+      this.runAllSelecting(i);
     }
 
     // close the edited operation
@@ -886,14 +1068,30 @@ export class SnapshotEditorComponent {
     if (!this.form.operations().value().length || this.busy()) {
       return;
     }
-    this._api.getDsl(this.form.operations().value()).subscribe({
+    const operations = this.form.operations().value();
+    this._api.getDsl(operations).subscribe({
       next: (dsl: ResultWrapper<string[]>) => {
         if (dsl.result) {
-          navigator.clipboard.writeText(dsl.result.join('\n')).then(() => {
-            this._snackbar.open('Operations DSL copied to clipboard', 'OK', {
-              duration: 3000,
-            });
-          });
+          // the DSL has 1 operation per line, and it has no escape for line
+          // feeds: values including them cannot be pasted back as a batch
+          const withLf = getOperationsWithLineFeeds(operations);
+          navigator.clipboard.writeText(dsl.result.join('\n')).then(
+            () => {
+              if (withLf.length) {
+                this._snackbar.open(
+                  `Operations DSL copied, but operation(s) ${withLf.join(', ')} ` +
+                    'have values with line feeds: the DSL cannot represent ' +
+                    'them, so they would not parse back.',
+                  'OK',
+                );
+              } else {
+                this._snackbar.open('Operations DSL copied to clipboard', 'OK', {
+                  duration: 3000,
+                });
+              }
+            },
+            () => this._snackbar.open('Error copying DSL to clipboard', 'OK'),
+          );
         }
       },
       error: (error) => {
@@ -912,8 +1110,9 @@ export class SnapshotEditorComponent {
       return;
     }
 
+    // the dialog expects its data in a payload
     const dialogRef = this._dialog.open(BatchOperationEditorComponent, {
-      data: { preset: this.batchOps },
+      data: { payload: { preset: this.batchOps() } },
       minWidth: '600px',
     });
 
@@ -942,6 +1141,7 @@ export class SnapshotEditorComponent {
    * Remove all the operations, close the edited operation and update the view data.
    */
   private removeAllOperations(): void {
+    this._previewRan = false;
     this.resultOperationId.set(undefined);
     this.closeEditedOperation();
     this.setOperations([]);
@@ -1156,9 +1356,23 @@ export class SnapshotEditorComponent {
    * @param lastOperation The operation to use in place of the existing
    * operation in the snapshot at index. This is used when previewing
    * the edited operation from within the operation editor.
-   * @returns A promise that resolves to the execution result.
+   * @param stepIndex The index of the step to select in the result view
+   * once the result arrives. Default is index, i.e. the last executed
+   * operation; it is clamped to 0-index.
    */
-  public runTo(index: number, lastOperation?: CharChainOperation): void {
+  public runTo(
+    index: number,
+    lastOperation?: CharChainOperation,
+    stepIndex = index,
+  ): void {
+    // an invalid index must not cancel a valid in-flight run (nor throw
+    // after cancelling it)
+    const count = this.form.operations().value().length;
+    if (index < 0 || index >= count) {
+      console.warn(`runTo: invalid operation index ${index} (count ${count})`);
+      return;
+    }
+
     // Cancel any in-flight run so new data always wins over stale requests.
     // The old busy() guard silently dropped new requests while the API was
     // still responding, causing the component to freeze on rapid edits.
@@ -1168,6 +1382,10 @@ export class SnapshotEditorComponent {
       this.busy.set(false);
     }
     console.log('run to: ' + index);
+
+    // a preview run replaces the edited operation with its unsaved
+    // version; any other run shows saved operations only
+    this._previewRan = !!lastOperation;
 
     // get the snapshot to run operations on
     const snapshot = this.getSnapshot();
@@ -1185,12 +1403,15 @@ export class SnapshotEditorComponent {
       snapshot.operations = snapshot.operations.slice(0, index + 1);
     }
 
-    // update result operation ID
-    this.resultOperationId.set(snapshot.operations[index].id);
+    // update result operation ID: the operation of the step to select
+    stepIndex = Math.max(0, Math.min(stepIndex, index));
+    this.resultOperationId.set(snapshot.operations[stepIndex].id);
 
-    // run the operations
+    // run the operations. The initial step index is set only together with
+    // the result it refers to: setting it now would make the result view
+    // select the step at this index in the previous result while the request
+    // is pending (or forever, if it fails), showing a wrong or empty text.
     this.busy.set(true);
-    this.initialStepIndex.set(index);
     this._currentRunSubscription = this._api
       .runOperations(snapshot.text as CharNode[], snapshot.operations)
       .subscribe({
@@ -1201,9 +1422,11 @@ export class SnapshotEditorComponent {
             return;
           }
 
-          // set the result
+          // set the result, and the step to select in it
           console.log('result:', wrapper.result);
+          this.initialStepIndex.set(stepIndex);
           this.result.set(wrapper.result);
+          this.warnUnknownInputTags(wrapper.result);
 
           // update the rendition component; note that when result() transitions
           // from undefined→truthy the @if element may not yet be in the DOM
@@ -1212,22 +1435,21 @@ export class SnapshotEditorComponent {
           this.updateRendition();
 
           // supply the last operation output tag from its result step if not set
-          if (!lastOperation.outputTag) {
-            const step = wrapper.result!.steps.find(
+          // (on the local copy only: a previewed operation is not stored)
+          const outputTag =
+            lastOperation.outputTag ||
+            wrapper.result!.steps.find(
               (s) => s.operation.id === lastOperation.id,
-            );
-            lastOperation.outputTag = step!.outputTag;
+            )?.outputTag;
+          if (!outputTag) {
+            return;
           }
 
           // update the snapshot text nodes with those introduced by operations
-          this.supplyOpNodes(
-            snapshot,
-            wrapper.result!,
-            lastOperation.outputTag,
-          );
+          this.supplyOpNodes(snapshot, wrapper.result!, outputTag);
 
           // update the view data
-          this.setViewData(snapshot, lastOperation!.outputTag);
+          this.setViewData(snapshot, outputTag);
         },
         error: (error) => {
           console.error(error);
@@ -1251,6 +1473,7 @@ export class SnapshotEditorComponent {
     if (this.form.operations().value().length) {
       this.runTo(this.form.operations().value().length - 1);
     } else {
+      this._previewRan = false;
       this.setViewData();
       this.result.set(undefined);
     }
@@ -1267,10 +1490,21 @@ export class SnapshotEditorComponent {
     if (this._previewing || this.editedOpIndex() < 0 || !this.options.autoRun().value()) {
       return;
     }
+    // capture the edited operation at request time: by the time the
+    // deferred run starts, the user might have saved or cancelled it, or
+    // moved to another operation; the preview would then run with index
+    // -1, or replace another operation with this one
+    const index = this.editedOpIndex();
     this._previewing = true;
     setTimeout(() => {
-      this.runTo(this.editedOpIndex(), operation);
       this._previewing = false;
+      if (
+        this.editedOpIndex() !== index ||
+        this.editedOp()?.id !== operation.id
+      ) {
+        return;
+      }
+      this.runTo(index, operation);
     }, 0);
   }
   // #endregion

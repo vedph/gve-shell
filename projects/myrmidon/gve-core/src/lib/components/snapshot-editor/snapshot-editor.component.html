@@ -5,9 +5,16 @@
       <ng-template mat-tab-label>
         <mat-icon>article</mat-icon> <span class="label">text</span>
       </ng-template>
-      <mat-expansion-panel>
+      <mat-expansion-panel
+        [expanded]="baseTextExpanded()"
+        (opened)="baseTextExpanded.set(true)"
+        (closed)="baseTextExpanded.set(false)"
+      >
         <mat-expansion-panel-header>
           <mat-panel-title> base text </mat-panel-title>
+          @if (!form.baseText().value().length) {
+            <mat-panel-description>empty: enter it to start</mat-panel-description>
+          }
         </mat-expansion-panel-header>
         <!-- base text -->
         <div class="form-row">
@@ -21,6 +28,17 @@
           >
             <mat-icon>edit</mat-icon> base text
           </button>
+          <!-- copy base text -->
+          <button
+            type="button"
+            mat-icon-button
+            matTooltip="Copy base text to clipboard"
+            aria-label="Copy base text to clipboard"
+            [disabled]="!form.baseText().value().length"
+            (click)="copyBaseText()"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
 
           @if (textRange()) {
             <span id="text-range"
@@ -33,6 +51,7 @@
         <gve-base-text-view
           [text]="form.baseText().value()"
           [hasLineNumber]="true"
+          [maxHeight]="textMaxHeight()"
           (rangePick)="onRangePick($event)"
         />
       </mat-expansion-panel>
@@ -159,14 +178,27 @@
                 </mat-form-field>
               </div>
 
+              <!-- run all ops -->
+              <button
+                type="button"
+                mat-stroked-button
+                [disabled]="!form.operations().value().length"
+                (click)="runToLast()"
+                [matTooltip]="'Run all operations (' + shortcuts.runAll.label + ')'"
+                [attr.aria-keyshortcuts]="shortcuts.runAll.label"
+              >
+                <mat-icon>play_arrow</mat-icon> run
+              </button>
+
               <!-- add op -->
               <button
                 type="button"
                 mat-flat-button
                 class="mat-primary"
-                [disabled]="busy() || !form.baseText().value()"
+                [disabled]="busy() || !form.baseText().value().length"
                 (click)="editNewOperation()"
-                matTooltip="Add a new operation"
+                [matTooltip]="'Add a new operation (' + shortcuts.newOperation.label + ')'"
+                [attr.aria-keyshortcuts]="shortcuts.newOperation.label"
               >
                 <mat-icon>add_circle</mat-icon> operation
               </button>

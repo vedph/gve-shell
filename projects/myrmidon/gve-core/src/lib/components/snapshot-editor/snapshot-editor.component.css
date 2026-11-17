@@ -49,8 +49,9 @@ div#visual-info {
   margin: 8px;
 }
 #result {
-  max-height: 800px;
-  overflow: auto;
+  /* no height limit here: the result view limits its own scrolling parts
+  (step text and steps map), avoiding nested scrollbars */
+  min-width: 0;
 }
 #snapshot-container {
   margin-top: 6px;
@@ -59,8 +60,21 @@ div#visual-info {
 #list {
   margin: 8px 0;
 }
+#ops {
+  /* the vertical limit is set by opListMaxHeight; the table can be wider
+  than narrow screens */
+  overflow-x: auto;
+}
+#list thead th {
+  /* keep the header visible while scrolling the operations */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
 #list th,
-td {
+#list td {
   border-right: 1px solid var(--mat-sys-outline-variant);
   padding: 0 4px;
 }
@@ -171,7 +185,7 @@ div#chain-view {
 .rendition {
   display: block;
   width: 100%;
-  min-height: 600px;
+  min-height: min(600px, 70vh);
   max-height: 80vh;
   border: 1px solid var(--mat-sys-on-surface-variant);
   overflow: auto;

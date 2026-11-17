@@ -48,7 +48,7 @@ describe('StepsMapComponent', () => {
   it('should render nothing without steps', async () => {
     const { container, c } = await setup();
     expect(container.querySelectorAll('.step')).toHaveLength(0);
-    expect(c.lines()).toEqual({});
+    expect(c.lines()).toEqual([]);
   });
 
   it('should render steps with their text lines', async () => {
@@ -63,12 +63,12 @@ describe('StepsMapComponent', () => {
     expect((steps[0].querySelector('.text') as HTMLElement).style.fontSize).toBe(
       '2em',
     );
-    expect(c.lines()).toEqual({ v1: ['ab', 'cd'], v2: ['xy'] });
+    expect(c.lines()).toEqual([['ab', 'cd'], ['xy']]);
   });
 
   it('should use no lines for steps without result', async () => {
     const { c } = await setup({ steps: [step('v0', 'v1')] });
-    expect(c.lines()).toEqual({ v1: [] });
+    expect(c.lines()).toEqual([[]]);
   });
 
   it('should auto-select the last step after view init', async () => {
@@ -107,16 +107,73 @@ describe('StepsMapComponent', () => {
     const newSteps = [step('v0', 'v1', 'q')];
     fixture.componentRef.setInput('steps', newSteps);
     await fixture.whenStable();
-    expect(c.lines()).toEqual({ v1: ['q'] });
+    expect(c.lines()).toEqual([['q']]);
     // the current selection (v2) is not valid anymore
     expect(c.selectedStep()).toBe(newSteps[0]);
+  });
+
+  it('should show the text of each step even when output tags repeat', async () => {
+    // an operation whose input is an earlier version outputs to it again
+    const steps = [
+      step('v0', 'A', 'aXc'),
+      step('v0', 'v1', 'Zabc'),
+      { ...step('A', 'A', 'aXcW'), operation: { ...step('A', 'A').operation, id: 'o3' } },
+    ];
+    const { c, container } = await setup({ steps });
+    const texts = Array.from(container.querySelectorAll('.step .text')).map(
+      (e) => e.textContent!.trim(),
+    );
+    expect(texts).toEqual(['aXc', 'Zabc', 'aXcW']);
+    expect(c.lines()).toEqual([['aXc'], ['Zabc'], ['aXcW']]);
+  });
+
+  it('should highlight the clicked step among steps with the same tag', async () => {
+    const steps = [
+      step('v0', 'A', 'aXc'),
+      { ...step('A', 'A', 'aXcW'), operation: { ...step('A', 'A').operation, id: 'o2' } },
+    ];
+    const { container, fixture } = await setup({ steps });
+    await userEvent.click(container.querySelectorAll('.step')[0]);
+    await fixture.whenStable();
+    const selected = Array.from(container.querySelectorAll('.step')).map((e) =>
+      e.classList.contains('selected'),
+    );
+    expect(selected).toEqual([true, false]);
+  });
+
+  it('should map a selection from previous steps to the current ones', async () => {
+    const { c, fixture } = await setup({ steps: STEPS });
+    await wait();
+    // the selection comes from a former result: same tags, new objects
+    fixture.componentRef.setInput('selectedStep', STEPS[0]);
+    const newSteps = [step('v0', 'v1', 'q'), step('v1', 'v2', 'r')];
+    fixture.componentRef.setInput('steps', newSteps);
+    await fixture.whenStable();
+    expect(c.selectedStep()).toBe(newSteps[0]);
+  });
+
+  it('should flag the steps with an unknown input version', async () => {
+    const steps = [
+      step('v0', 'v1', 'ab'),
+      step('nope', 'nope', ''),
+      step('v1', 'v2', 'abc'),
+    ];
+    const { c, container } = await setup({ steps });
+    expect([...c.unknownInput()]).toEqual([1]);
+    const rows = container.querySelectorAll('.step');
+    expect(rows[1]).toHaveClass('invalid');
+    expect(rows[0]).not.toHaveClass('invalid');
+    expect(rows[2]).not.toHaveClass('invalid');
+    expect(
+      screen.getByRole('img', { name: 'Unknown input version nope' }),
+    ).toBeInTheDocument();
   });
 
   it('should clear lines when steps are cleared', async () => {
     const { c, fixture } = await setup({ steps: STEPS });
     fixture.componentRef.setInput('steps', []);
     await fixture.whenStable();
-    expect(c.lines()).toEqual({});
+    expect(c.lines()).toEqual([]);
   });
 
   it('should copy step text without selecting the step', async () => {

@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   effect,
+  inject,
   input,
   model,
   output,
@@ -11,6 +12,7 @@ import {
 import { debounce, form, FormField } from '@angular/forms/signals';
 
 import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
 import {
   MatExpansionPanel,
   MatExpansionPanelHeader,
@@ -23,6 +25,7 @@ import {
 } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
@@ -38,6 +41,11 @@ import {
   FeatureMap,
   FeaturePropMap,
 } from '../feature-editor/feature-editor.component';
+import {
+  featuresToClipboardText,
+  mergePastedFeatures,
+  parseClipboardFeatures,
+} from '../../utils/feature-clipboard';
 
 /**
  * 🔑 `gve-feature-set-editor`
@@ -65,7 +73,17 @@ import {
  * - ▶️ `batchMode`: true to enable batch mode, where users edit features
  * without the component firing change events until they click the "Save" button,
  * and close the editor without saving by clicking the "Close" button.
+ * - ▶️ `addFeatureShortcut`: the label of the keyboard shortcut handled by
+ * the parent component to add a new feature, if any, shown in the add button
+ * tooltip.
  * - 🔥 `close`: emitted when the user clicks the close button.
+ *
+ * Features are listed sorted by name, as they are an unordered set. Users can
+ * select features and copy them to the clipboard, and paste features copied
+ * in this way: each pasted feature is added according to its set policy
+ * (multiple: appended; single: replacing all the features with its name;
+ * single first: the first pasted with a name replaces all the features with
+ * that name, the next ones are appended).
  * - 🔥 `featuresChange` (`Feature[]`): emitted when features have changed.
  */
 @Component({
@@ -75,6 +93,7 @@ import {
     FormField,
     MatButton,
     MatIconButton,
+    MatCheckbox,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
@@ -146,6 +165,12 @@ export class FeatureSetEditorComponent {
   public readonly batchMode = input(false);
 
   /**
+   * The label of the keyboard shortcut handled by the parent component to
+   * add a new feature, if any. This is just shown in the add button tooltip.
+   */
+  public readonly addFeatureShortcut = input<string | undefined>();
+
+  /**
    * Emitted when the user clicks the close button.
    */
   public readonly close = output();
@@ -182,19 +207,53 @@ export class FeatureSetEditorComponent {
   public readonly filter = form(this._filter, (path) => debounce(path, 300));
 
   /**
-   * The working features matching the filter, if any.
+   * The working features matching the filter, if any, sorted by name
+   * (features are an unordered set). The sort is stable, so features with
+   * the same name keep their relative order.
    */
-  public readonly filteredFeatures = computed<Feature[] | OperationFeature[]>(
+  public readonly filteredFeatures = computed<(Feature | OperationFeature)[]>(
     () => {
       const name = this._filter().toLowerCase();
-      const features = this.workingFeatures();
-      return name
-        ? features.filter((feature) =>
-            feature.name.toLowerCase().includes(name),
-          )
-        : features;
+      const features: (Feature | OperationFeature)[] = this.workingFeatures();
+      return (
+        name
+          ? features.filter((feature) =>
+              feature.name.toLowerCase().includes(name),
+            )
+          : [...features]
+      ).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      );
     },
   );
+
+  // the features selected for copy, by reference
+  private readonly _selected = signal<ReadonlySet<Feature | OperationFeature>>(
+    new Set(),
+  );
+
+  /**
+   * The selected features still in the working features, in their order.
+   */
+  public readonly selectedFeatures = computed<(Feature | OperationFeature)[]>(
+    () => {
+      const selected = this._selected();
+      return (this.workingFeatures() as (Feature | OperationFeature)[]).filter(
+        (f) => selected.has(f),
+      );
+    },
+  );
+
+  /**
+   * True when all the listed features are selected.
+   */
+  public readonly allSelected = computed(() => {
+    const listed = this.filteredFeatures();
+    const selected = this._selected();
+    return listed.length > 0 && listed.every((f) => selected.has(f));
+  });
+
+  private readonly _snackbar = inject(MatSnackBar);
 
   constructor() {
     // Sync draft from the model input whenever features or batchMode changes.
@@ -241,6 +300,112 @@ export class FeatureSetEditorComponent {
     } else {
       this.features.set(features);
     }
+  }
+
+  /**
+   * True if the specified feature is selected for copy.
+   */
+  public isSelected(feature: Feature | OperationFeature): boolean {
+    return this._selected().has(feature);
+  }
+
+  /**
+   * Toggle the selection of the specified feature.
+   */
+  public toggleSelected(feature: Feature | OperationFeature): void {
+    const selected = new Set(this._selected());
+    if (!selected.delete(feature)) {
+      selected.add(feature);
+    }
+    this._selected.set(selected);
+  }
+
+  /**
+   * Select all the listed features, or deselect them when all are selected.
+   */
+  public toggleAllSelected(): void {
+    const selected = new Set(this._selected());
+    const listed = this.filteredFeatures();
+    if (this.allSelected()) {
+      listed.forEach((f) => selected.delete(f));
+    } else {
+      listed.forEach((f) => selected.add(f));
+    }
+    this._selected.set(selected);
+  }
+
+  /**
+   * Copy the selected features to the clipboard.
+   */
+  public async copySelected(): Promise<void> {
+    const features = this.selectedFeatures();
+    if (!features.length) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(
+        featuresToClipboardText(structuredClone(features)),
+      );
+      this._snackbar.open(
+        features.length === 1
+          ? '1 feature copied'
+          : `${features.length} features copied`,
+        'OK',
+        { duration: 3000 },
+      );
+    } catch (error) {
+      console.error('Error copying features', error);
+      this._snackbar.open('Error copying features', 'OK');
+    }
+  }
+
+  /**
+   * Paste the features copied to the clipboard, merging them with the
+   * existing features according to their set policy.
+   */
+  public async paste(): Promise<void> {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch (error) {
+      console.error('Error reading clipboard', error);
+      this._snackbar.open('Error reading features from clipboard', 'OK');
+      return;
+    }
+    const pasted = parseClipboardFeatures(text, this.isVar());
+    if (!pasted) {
+      this._snackbar.open('No copied features found in clipboard', 'OK', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    const working = this.workingFeatures() as (Feature | OperationFeature)[];
+    const merged = mergePastedFeatures(working, pasted);
+
+    // keep the edited feature index in sync, if it is still there
+    const editedIndex = this.editedFeatureIndex();
+    if (editedIndex > -1) {
+      const index = merged.indexOf(working[editedIndex]);
+      if (index > -1) {
+        this.editedFeatureIndex.set(index);
+      } else {
+        this.onFeatureCancel();
+      }
+    }
+
+    if (this.batchMode()) {
+      this.draftFeatures.set(merged);
+    } else {
+      this.features.set(merged);
+    }
+    this._snackbar.open(
+      pasted.length === 1
+        ? '1 feature pasted'
+        : `${pasted.length} features pasted`,
+      'OK',
+      { duration: 3000 },
+    );
   }
 
   public isFeatureMultiValued(feature?: Feature | OperationFeature): boolean {

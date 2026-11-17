@@ -57,6 +57,7 @@ The only library is `gve-core`; its only downstream is the app.
    - Tests assert that neither bound nor saved objects carry Symbols.
    - Specs that compare draft internals use a JSON round-trip.
 7. **The operation editor's auto-preview fires on every change.** The original's `valueChanges` filter (`'svg' in changes`) is always true. Measured on the original (from `HEAD`) and the migrated component: both emit 1 `operationPreview` after the initial load and 1 after a reload.
+   - Changed later (2026-11-17): the preview is requested only when the form is dirty, so binding an operation no longer emits it (see CHANGELOG).
 8. Material's `mat-error` shows only once the control is touched (default error state matcher), as before.
 
 ## Browser verification (headless Chrome over CDP)

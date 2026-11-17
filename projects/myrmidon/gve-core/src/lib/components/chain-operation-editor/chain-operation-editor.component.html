@@ -1,6 +1,9 @@
 <div>
   <!-- tabs -->
-  <mat-tab-group [selectedIndex]="tabIndex()">
+  <mat-tab-group
+    [selectedIndex]="tabIndex()"
+    (selectedIndexChange)="tabIndex.set($event)"
+  >
     <!-- GENERAL -->
     <mat-tab label="general">
       <div class="form-row">
@@ -223,6 +226,7 @@
             [featProps]="$safeNavigationMigration(featureDefs()?.props)"
             [features]="form.features().value()"
             [multiValuedFeatureIds]="multiValuedFeatureIds()"
+            [addFeatureShortcut]="shortcuts.newFeature.label"
             (featuresChange)="onFeaturesChange($event)"
           />
         </fieldset>
@@ -238,6 +242,8 @@
           color="primary"
           class="mat-primary"
           (click)="addSource()"
+          [matTooltip]="'Add a new source (' + shortcuts.newSource.label + ')'"
+          [attr.aria-keyshortcuts]="shortcuts.newSource.label"
         >
           <mat-icon>add_circle</mat-icon>
           source

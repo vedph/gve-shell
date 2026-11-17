@@ -1,5 +1,32 @@
 # History
 
+- 2026-11-17: improvements (each covered by tests):
+  - `SnapshotEditorComponent`:
+    - with auto-run, saving an edited operation (or leaving a previewed one) now runs *all* the operations, selecting the edited one in the result view, rather than running only up to it: the result view and the rendition get the whole chain. `runTo` has a new optional `stepIndex` parameter for the step to select.
+    - warning (snackbar) when operations have an input tag referring to a version which does not exist at their point of the chain, so that their output is empty. The steps map and the result view flag them too (new `getUnknownInputStepIndexes` utility).
+    - the base text panel starts expanded when the snapshot has no base text.
+    - new button to copy the base text.
+    - new `run` button to run all the operations.
+    - keyboard shortcuts: `Alt+Shift+N` adds a new operation (ignored while editing one), `Alt+Shift+R` runs all the operations. They are ignored while a dialog is open (`GVE_SHORTCUTS`, `isGveShortcut`).
+    - layout: the operations list (`opListMaxHeight`, now 50vh by default) and the base text (new `textMaxHeight`, 50vh) scroll rather than pushing the rest of the editor off screen; the list header is sticky, and the list scrolls horizontally on narrow screens. The result fieldset has no height limit any more, as its parts scroll by themselves (no nested scrollbars).
+    - copying the operations DSL warns when some operations have values with line feeds, which the DSL cannot represent, so that they would not parse back via batch. Quotes and backslashes instead round-trip (verified against the backend).
+    - 🐛 the `batchOps` preset never reached the batch dialog (wrong data shape, and the signal was passed instead of its value).
+    - 🐛 the add operation button was not disabled without base text (it tested an array for falsiness).
+  - `ChainOperationEditorComponent`: keyboard shortcuts `Alt+Shift+F` adds a new feature (switching to the general tab; ignored while editing a feature) and `Alt+Shift+S` adds a new source (ignored while editing one). The tab group selection is now synced both ways, so that switching tabs programmatically works after the user changed tab.
+  - `ChainResultViewComponent`: warning for a step with an unknown input version; the step text scrolls (new `textMaxHeight`, 45vh), as does the steps map (CSS `--gve-steps-map-max-height`, 70vh). On narrow screens the map is stacked below the step rather than hidden.
+  - `StepsMapComponent`: flags steps with an unknown input version; stronger highlight of the selected step.
+  - `BaseTextViewComponent`: clicking a character while search matches are highlighted clears the search and selects the character (before, the selection was hidden by the search highlight). New `maxHeight` input.
+  - `FeatureSetEditorComponent`: features are listed sorted by name; features can be selected (also all at once) and copied to the clipboard, and pasted back into any feature set according to the set policy of each pasted feature (`mergePastedFeatures`); new `addFeatureShortcut` input for the add button hint.
+  - `FeatureEditorComponent`: the prefix field has no placeholder, which overlapped its label; the example is in its tooltip.
+- 2026-11-17: 🐛 fixes in the data flow from `SnapshotEditorComponent` to the result view and the rendition (each covered by new tests, verified to fail before the fix):
+  - `SnapshotEditorComponent`:
+    - `initialStepIndex` was set when a run started, rather than together with its result. While the request was pending, the result view selected the step at the new index in the *previous* result: an empty text (when that result had no such step) or the text of a wrong step. If the run failed, this state persisted. The index is now set only when the result arrives.
+    - a deferred preview (auto-run) read the edited operation index only when it ran. If the user saved, cancelled or moved to another operation in the meantime, it either ran with index -1 (throwing *after* cancelling the in-flight run of the save, so that the result and rendition were left stale) or replaced another operation with the previewed one. The index is now captured at request time, and the preview is dropped when the edited operation changed. `runTo` also ignores invalid indexes without cancelling the pending run.
+    - after previewing unsaved edits of an operation (auto-run), cancelling them or leaving the operation kept showing the unsaved edits in the result view and in the rendition. The saved operations are now run again; the same happens when saving after auto-run was turned off.
+    - the result pushed to the rendition was mutated (`text`) while being the same object held by the `result` signal and shared with the result view. It is now copied.
+  - `StepsMapComponent`: steps were tracked and their text lines keyed by output tag, which is not unique across steps (an operation whose input tag points to an earlier version outputs to it again). Earlier steps showed the text of later ones with the same tag, and duplicate `@for` keys confused DOM reuse. Steps are now tracked by position. A selection coming from a previous result is mapped to its counterpart among the new steps.
+  - `ChainResultViewComponent`: picking a step resolved it again from its output tag, so that picking one of several steps with the same tag selected the first one; a step left over from a previous result (as emitted by the map) could become the current step. The picked step is now selected as such, and steps not in the current result are ignored.
+  - `ChainOperationEditorComponent`: the debounced auto-preview is requested only for user edits (dirty form), not when an operation is bound. This changes the original behaviour (which previewed on load too): with auto-run on, merely opening or browsing operations ran the chain truncated at the opened operation.
 - 2026-11-13: updated Angular and packages.
 
 ## 8.0.0

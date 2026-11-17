@@ -51,7 +51,12 @@
         color="primary"
         class="mat-primary"
         mat-flat-button
-        matTooltip="Add a new feature"
+        [matTooltip]="
+          addFeatureShortcut()
+            ? 'Add a new feature (' + addFeatureShortcut() + ')'
+            : 'Add a new feature'
+        "
+        [attr.aria-keyshortcuts]="addFeatureShortcut() || null"
         (click)="addFeature()"
         [class.in-row-button]="
           filterThreshold() === 0 || workingFeatures()!.length >= filterThreshold()
@@ -59,6 +64,36 @@
       >
         <mat-icon>add</mat-icon>
         feature
+      </button>
+      <!-- copy selected features -->
+      <button
+        type="button"
+        mat-stroked-button
+        matTooltip="Copy the selected features to the clipboard"
+        [disabled]="!selectedFeatures().length"
+        (click)="copySelected()"
+        [class.in-row-button]="
+          filterThreshold() === 0 || workingFeatures()!.length >= filterThreshold()
+        "
+      >
+        <mat-icon>content_copy</mat-icon>
+        copy
+        @if (selectedFeatures().length) {
+          ({{ selectedFeatures().length }})
+        }
+      </button>
+      <!-- paste features -->
+      <button
+        type="button"
+        mat-stroked-button
+        matTooltip="Paste the features copied to the clipboard"
+        (click)="paste()"
+        [class.in-row-button]="
+          filterThreshold() === 0 || workingFeatures()!.length >= filterThreshold()
+        "
+      >
+        <mat-icon>content_paste</mat-icon>
+        paste
       </button>
     </div>
   </div>
@@ -68,6 +103,15 @@
     <table>
       <thead>
         <tr>
+          <th class="fit-width">
+            <mat-checkbox
+              [checked]="allSelected()"
+              [indeterminate]="!allSelected() && selectedFeatures().length > 0"
+              (change)="toggleAllSelected()"
+              aria-label="Select all the listed features"
+              matTooltip="Select all the listed features"
+            />
+          </th>
           <th></th>
           <th>feature</th>
           <th>value</th>
@@ -80,6 +124,14 @@
       <tbody>
         @for (feature of filteredFeatures(); track $index) {
           <tr [class.selected]="isEdited(feature)">
+            <td class="fit-width">
+              <!-- select for copy -->
+              <mat-checkbox
+                [checked]="isSelected(feature)"
+                (change)="toggleSelected(feature)"
+                [aria-label]="'Select feature ' + feature.name + ' for copy'"
+              />
+            </td>
             <td class="fit-width">
               <!-- edit -->
               <button

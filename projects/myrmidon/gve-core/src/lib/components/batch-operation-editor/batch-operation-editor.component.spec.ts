@@ -57,6 +57,29 @@ describe('BatchOperationEditorComponent', () => {
     expect(c.busy()).toBe(false);
   });
 
+  it('should send pasted DSL verbatim, with its escapes', async () => {
+    // as copied by the snapshot editor's "copy operations as DSL": quotes
+    // in quoted values are escaped as \" and backslashes as \\
+    const dsl = [
+      '1×1: [note="say \\"hi\\" now"]',
+      '1×1: [path="a\\\\b c" n:=plain]',
+      '2×1="a \\"b\\""',
+    ].join('\n');
+    const user = userEvent.setup();
+    await setup();
+    await user.click(screen.getByRole('textbox', { name: 'operations' }));
+    await user.paste(dsl);
+    await user.click(screen.getByRole('button', { name: 'batch add' }));
+    expect(api.parseOperations).toHaveBeenCalledWith(dsl);
+  });
+
+  it('should parse a preset from the dialog payload', async () => {
+    const close = vi.fn();
+    await setup({}, { ref: { close }, data: { payload: { preset: 'p' } } });
+    expect(api.parseOperations).toHaveBeenCalledWith('p');
+    expect(close).toHaveBeenCalledWith(OPS);
+  });
+
   it('should emit an empty array for a missing result', async () => {
     api.parseOperations.mockReturnValue(of({}));
     const { c, operationsChange } = await setup();

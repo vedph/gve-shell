@@ -53,6 +53,8 @@ export interface BaseTextRange {
  * - ▶️ `selectionColor` (`string`): the color for the selected text.
  * - ▶️ `hasLineNumber` (`boolean`): true if line numbers should be displayed next
  * to each line.
+ * - ▶️ `maxHeight` (`string`): the optional maximum height (any CSS height) of
+ * the text, which scrolls vertically when longer.
  * - a toolbar button lets users toggle between showing each character's node
  * ID or its 0-based index, tracked by the `showIndex` signal.
  * - ▶️ `text` (`string` | `CharNode[]`): the text to display.
@@ -107,6 +109,13 @@ export class BaseTextViewComponent implements OnInit {
    * True if line numbers should be displayed next to each line.
    */
   public readonly hasLineNumber = input(false);
+
+  /**
+   * The maximum height of the text (any CSS height). When the text is
+   * longer, it scrolls vertically, while the toolbar stays visible. When
+   * not set, the text has no height limit.
+   */
+  public readonly maxHeight = input<string | undefined>();
 
   /**
    * The search query entered in the toolbar.
@@ -309,6 +318,13 @@ export class BaseTextViewComponent implements OnInit {
     const clickedPosition = this.findCharPosition(event.char.id);
     if (clickedPosition === -1) {
       return; // character not found
+    }
+
+    // search highlights take priority over the selection highlight, so
+    // that the selection would not be visible: picking a character ends
+    // the search
+    if (this.searchMatches().length || this.searchQuery()) {
+      this.clearSearch();
     }
 
     // calculate selection state

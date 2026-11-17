@@ -297,6 +297,160 @@ describe('ChainResultViewComponent', () => {
     expect(c.selectionFeatures()).toEqual([]);
   });
 
+  describe('unknown input versions', () => {
+    /**
+     * A result whose second step has an unknown input tag, as returned by
+     * the backend: output to that tag, with an empty text.
+     */
+    function getBadResult(): CharChainResult {
+      const result = getResult();
+      result.steps[1] = {
+        ...result.steps[1],
+        inputTag: 'nope',
+        outputTag: 'nope',
+        result: '',
+      };
+      result.chainTags = ['v0', 'v1'];
+      delete result.versionNodeIds['v2'];
+      return result;
+    }
+
+    it('should warn when the current step has an unknown input version', async () => {
+      const { c, container, settle } = await setup({
+        result: getBadResult(),
+        initialStepIndex: -1,
+      });
+      await settle();
+      expect(c.stepInputUnknown()).toBe(true);
+      const warning = container.querySelector('#step .warning');
+      expect(warning).toHaveTextContent('nope');
+      expect(warning).toHaveTextContent('o2');
+      // the step is also flagged in the map
+      const steps = container.querySelectorAll('gve-steps-map .step');
+      expect(steps[0]).not.toHaveClass('invalid');
+      expect(steps[1]).toHaveClass('invalid');
+    });
+
+    it('should not warn for a valid step', async () => {
+      const { c, container, settle } = await setup({
+        result: getBadResult(),
+        initialStepIndex: 0,
+      });
+      await settle();
+      expect(c.stepInputUnknown()).toBe(false);
+      expect(container.querySelector('#step .warning')).toBeNull();
+    });
+  });
+
+  it('should limit the height of the step text', async () => {
+    const { container, fixture, settle } = await setup({
+      result: getResult(),
+      initialStepIndex: -1,
+    });
+    await settle();
+    const text = () =>
+      container.querySelector('gve-base-text-view #text') as HTMLElement;
+    expect(text().style.maxHeight).toBe('45vh');
+    fixture.componentRef.setInput('textMaxHeight', '');
+    await fixture.whenStable();
+    expect(text().style.maxHeight).toBe('');
+  });
+
+  describe('re-runs', () => {
+    /**
+     * A result like getResult, with the same tags but new objects and a
+     * different text for v2 (X replaced by Y, ID 5).
+     */
+    function getRerunResult(): CharChainResult {
+      const result = getResult();
+      result.steps[1].result = 'aYc';
+      result.nodes.push({ id: 5, label: 'Y', data: 'Y', sourceTag: 'v2' });
+      result.versionNodeIds['v2'] = [1, 5, 3];
+      return result;
+    }
+
+    const labels = (container: Element) =>
+      Array.from(container.querySelectorAll('#text #c-label'))
+        .map((e) => e.textContent!.trim())
+        .join('');
+    const mapTexts = (container: Element) =>
+      Array.from(container.querySelectorAll('gve-steps-map .step .text')).map(
+        (e) => e.textContent!.trim(),
+      );
+    const mapSelection = (container: Element) =>
+      Array.from(container.querySelectorAll('gve-steps-map .step')).findIndex(
+        (e) => e.classList.contains('selected'),
+      );
+
+    it('should follow a new result after a step was picked in the map', async () => {
+      const { c, container, fixture, settle } = await setup({
+        result: getResult(),
+        initialStepIndex: -1,
+      });
+      await settle();
+      await userEvent.click(container.querySelectorAll('.step')[0]);
+      await settle();
+      expect(labels(container)).toBe('aXc');
+
+      const result2 = getRerunResult();
+      fixture.componentRef.setInput('result', result2);
+      await settle();
+      await settle();
+      expect(c.step()).toBe(result2.steps[1]);
+      expect(labels(container)).toBe('aYc');
+      expect(mapTexts(container)).toEqual(['aXc', 'aYc']);
+      expect(mapSelection(container)).toBe(1);
+    });
+
+    it('should ignore map selections of steps from another result', async () => {
+      const old = getResult();
+      const { c, fixture, settle } = await setup({
+        result: old,
+        initialStepIndex: -1,
+      });
+      await settle();
+      const result2 = getRerunResult();
+      fixture.componentRef.setInput('result', result2);
+      await settle();
+      c.onStepChange(old.steps[0]);
+      await settle();
+      expect(c.step()).toBe(result2.steps[1]);
+    });
+
+    it('should pick the right step among steps with the same output tag', async () => {
+      // o3 has input tag v1, so it outputs to v1 again
+      const result = getResult();
+      result.steps.push({
+        operation: { id: 'o3', type: OperationType.annotate, at: 1, run: 1 },
+        inputTag: 'v1',
+        outputTag: 'v1',
+        result: 'aXc!',
+        refNodeIds: [],
+      });
+      const { c, container, stepPick, settle } = await setup({
+        result,
+        initialStepIndex: -1,
+      });
+      await settle();
+      expect(c.step()).toBe(result.steps[2]);
+      expect(mapTexts(container)).toEqual(['aXc', 'aXc', 'aXc!']);
+
+      // pick the first v1 step, while the current (last) step is v1 too
+      stepPick.mockClear();
+      await userEvent.click(container.querySelectorAll('.step')[0]);
+      await settle();
+      expect(c.step()).toBe(result.steps[0]);
+      expect(stepPick).toHaveBeenCalledWith(result.steps[0]);
+      expect(mapSelection(container)).toBe(0);
+
+      // and back to the last v1 step
+      await userEvent.click(container.querySelectorAll('.step')[2]);
+      await settle();
+      expect(c.step()).toBe(result.steps[2]);
+      expect(mapSelection(container)).toBe(2);
+    });
+  });
+
   it('should emit the picked range when enabled', async () => {
     const user = userEvent.setup();
     const { c, rangePick, fixture, settle } = await setup({

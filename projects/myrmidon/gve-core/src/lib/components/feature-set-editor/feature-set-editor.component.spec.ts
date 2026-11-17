@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { FeatureSetEditorComponent } from './feature-set-editor.component';
 import { Feature, FeatureSetPolicy, OperationFeature } from '../../models';
@@ -13,18 +15,24 @@ const f = (
   setPolicy = FeatureSetPolicy.multiple,
 ): Feature => ({ name, value, setPolicy });
 
+let snackBar: { open: ReturnType<typeof vi.fn> };
+beforeEach(() => {
+  snackBar = { open: vi.fn() };
+});
+
 async function setup(inputs: Record<string, unknown> = {}) {
   const close = vi.fn();
   const result = await render(FeatureSetEditorComponent, {
     inputs,
     on: { close },
+    providers: [{ provide: MatSnackBar, useValue: snackBar }],
   });
   const changes: (Feature[] | OperationFeature[])[] = [];
   result.fixture.componentInstance.features.subscribe((v) => changes.push(v));
   const rows = () =>
     Array.from(result.container.querySelectorAll('tbody tr')).map((tr) =>
       Array.from(tr.querySelectorAll('td'))
-        .slice(1, 4)
+        .slice(2, 5)
         .map((td) => td.textContent!.trim()),
     );
   return { ...result, c: result.fixture.componentInstance, changes, close, rows };
@@ -45,14 +53,14 @@ describe('FeatureSetEditorComponent', () => {
       ['c', '3', 'SF'],
     ]);
     const flags = Array.from(container.querySelectorAll('tbody tr')).map(
-      (tr) => tr.querySelectorAll('td')[4].textContent!.trim(),
+      (tr) => tr.querySelectorAll('td')[5].textContent!.trim(),
     );
     expect(flags).toEqual(['', 'remove_circle', 'publictimer']);
   });
 
   it('should hide flags when not var', async () => {
     const { container } = await setup({ features: [f('a', '1')], isVar: false });
-    expect(container.querySelectorAll('thead th')).toHaveLength(4);
+    expect(container.querySelectorAll('thead th')).toHaveLength(5);
   });
 
   it('should look up names and values', async () => {
@@ -289,5 +297,201 @@ describe('FeatureSetEditorComponent', () => {
       await setup();
       expect(screen.queryByRole('button', { name: /OK/ })).toBeNull();
     });
+  });
+
+  describe('sorting', () => {
+    it('should list features sorted by name, keeping the order of equal names', async () => {
+      const { rows } = await setup({
+        features: [f('c', '1'), f('A', '1'), f('b', '1'), f('a', '2')],
+      });
+      expect(rows().map((r) => r[0] + r[1])).toEqual(['A1', 'a2', 'b1', 'c1']);
+    });
+
+    it('should edit and delete the right feature when sorted', async () => {
+      const { c, changes } = await setup({
+        features: [f('z', '1'), f('a', '1')],
+      });
+      // first listed row is "a", the second feature
+      const user = userEvent.setup();
+      await user.click(screen.getAllByRole('button', { name: 'Edit this feature' })[0]);
+      expect(c.editedFeatureIndex()).toBe(1);
+      await user.click(screen.getAllByRole('button', { name: 'Delete this feature' })[0]);
+      expect(changes.at(-1)).toEqual([f('z', '1')]);
+    });
+  });
+
+  describe('copy and paste', () => {
+    const clipboard = () =>
+      navigator.clipboard as unknown as {
+        writeText: ReturnType<typeof vi.fn>;
+        readText: ReturnType<typeof vi.fn>;
+      };
+    const copyButton = () => screen.getByRole('button', { name: /copy/ });
+    const pasteButton = () => screen.getByRole('button', { name: /paste/ });
+
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    it('should copy the selected features', async () => {
+      const user = userEvent.setup();
+      const write = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+      const features = [f('b', '2'), f('a', '1', FeatureSetPolicy.single), f('c', '3')];
+      const { c } = await setup({ features });
+      expect(copyButton()).toBeDisabled();
+
+      // rows are sorted: a, b, c
+      await user.click(screen.getByRole('checkbox', { name: 'Select feature a for copy' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Select feature c for copy' }));
+      expect(c.selectedFeatures()).toEqual([features[1], features[2]]);
+      expect(copyButton()).toHaveTextContent('(2)');
+
+      await user.click(copyButton());
+      expect(JSON.parse(write.mock.calls.at(-1)![0])).toEqual([
+        f('a', '1', FeatureSetPolicy.single),
+        f('c', '3'),
+      ]);
+      expect(snackBar.open).toHaveBeenCalledWith('2 features copied', 'OK', {
+        duration: 3000,
+      });
+    });
+
+    it('should select and deselect all the listed features', async () => {
+      const user = userEvent.setup();
+      const features = [f('a', '1'), f('b', '2')];
+      const { c } = await setup({ features });
+      const all = screen.getByRole('checkbox', { name: 'Select all the listed features' });
+      await user.click(all);
+      expect(c.selectedFeatures()).toEqual(features);
+      expect(c.allSelected()).toBe(true);
+      await user.click(all);
+      expect(c.selectedFeatures()).toEqual([]);
+    });
+
+    it('should drop deleted features from the selection', async () => {
+      const features = [f('a', '1'), f('b', '2')];
+      const { c } = await setup({ features });
+      c.toggleSelected(features[0]);
+      c.deleteFeature(features[0]);
+      expect(c.selectedFeatures()).toEqual([]);
+    });
+
+    it('should report copy errors', async () => {
+      vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+      const features = [f('a', '1')];
+      const { c } = await setup({ features });
+      c.toggleSelected(features[0]);
+      await c.copySelected();
+      expect(snackBar.open).toHaveBeenCalledWith('Error copying features', 'OK');
+    });
+
+    it('should paste features according to their set policy', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue(
+        JSON.stringify([
+          f('m', 'new'),
+          f('s', 'new', FeatureSetPolicy.single),
+          f('sf', 'new1', FeatureSetPolicy.singleFirst),
+          f('sf', 'new2', FeatureSetPolicy.singleFirst),
+        ]),
+      );
+      const { changes } = await setup({
+        features: [f('m', 'old'), f('s', 'old1'), f('s', 'old2'), f('sf', 'old')],
+      });
+      await user.click(pasteButton());
+      expect(changes.at(-1)).toEqual([
+        f('m', 'old'),
+        f('m', 'new'),
+        f('s', 'new', FeatureSetPolicy.single),
+        f('sf', 'new1', FeatureSetPolicy.singleFirst),
+        f('sf', 'new2', FeatureSetPolicy.singleFirst),
+      ]);
+      expect(snackBar.open).toHaveBeenCalledWith('4 features pasted', 'OK', {
+        duration: 3000,
+      });
+    });
+
+    it('should round-trip copied features through paste', async () => {
+      let clip = '';
+      vi.spyOn(navigator.clipboard, 'writeText').mockImplementation(async (t) => {
+        clip = t;
+      });
+      vi.spyOn(navigator.clipboard, 'readText').mockImplementation(async () => clip);
+      const features: OperationFeature[] = [
+        { ...f('a', 'say "hi"'), isGlobal: true },
+      ];
+      const { c, changes } = await setup({ features });
+      c.toggleSelected(features[0]);
+      await c.copySelected();
+      await c.paste();
+      expect(changes.at(-1)).toEqual([features[0], features[0]]);
+    });
+
+    it('should drop variant flags when pasting into plain features', async () => {
+      vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue(
+        JSON.stringify([{ ...f('a', '1'), isNegated: true }]),
+      );
+      const { c, changes } = await setup({ features: [], isVar: false });
+      await c.paste();
+      expect(changes.at(-1)).toEqual([f('a', '1')]);
+    });
+
+    it('should report a clipboard without features', async () => {
+      vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue('hello');
+      const { c, changes } = await setup({ features: [f('a', '1')] });
+      await c.paste();
+      expect(changes).toEqual([]);
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'No copied features found in clipboard',
+        'OK',
+        { duration: 3000 },
+      );
+    });
+
+    it('should report clipboard read errors', async () => {
+      vi.spyOn(navigator.clipboard, 'readText').mockRejectedValue(new Error('denied'));
+      const { c } = await setup({ features: [] });
+      await c.paste();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Error reading features from clipboard',
+        'OK',
+      );
+    });
+
+    it('should paste into the draft in batch mode', async () => {
+      vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue(
+        JSON.stringify([f('b', '2')]),
+      );
+      const { c, changes } = await setup({ features: [f('a', '1')], batchMode: true });
+      await c.paste();
+      expect(changes).toEqual([]);
+      expect(c.draftFeatures()).toEqual([f('a', '1'), f('b', '2')]);
+    });
+
+    it('should keep editing the edited feature after a paste', async () => {
+      vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue(
+        JSON.stringify([f('a', '9', FeatureSetPolicy.single)]),
+      );
+      const features = [f('a', '1'), f('b', '2')];
+      const { c } = await setup({ features });
+      // b keeps being edited, at its new index
+      c.editFeature(features[1]);
+      await c.paste();
+      expect(c.editedFeatureIndex()).toBe(0);
+      expect(c.workingFeatures()[0]).toBe(features[1]);
+
+      // a is replaced: its editing is closed
+      c.editFeature(c.workingFeatures()[1]);
+      await c.paste();
+      expect(c.editedFeature()).toBeUndefined();
+    });
+  });
+
+  it('should show the shortcut of the add button', async () => {
+    await setup({ addFeatureShortcut: 'Alt+Shift+F' });
+    expect(screen.getByRole('button', { name: /^feature$/ })).toHaveAttribute(
+      'aria-keyshortcuts',
+      'Alt+Shift+F',
+    );
   });
 });

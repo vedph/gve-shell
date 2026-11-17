@@ -7,7 +7,11 @@ import { Observable, Subject, of, throwError } from 'rxjs';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { DEFAULT_SETTINGS } from '@myrmidon/gve-snapshot-rendition';
 
+import { ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+
 import { SnapshotEditorComponent } from './snapshot-editor.component';
+import { ChainResultViewComponent } from '../chain-result-view/chain-result-view.component';
 import {
   CharChainResult,
   GveApiService,
@@ -666,6 +670,49 @@ describe('SnapshotEditorComponent', () => {
       expect(write).toHaveBeenLastCalledWith('a\nb');
     });
 
+    it('should confirm a DSL copy which can be pasted back', async () => {
+      vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.copyOperationsDsl();
+      await wait();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Operations DSL copied to clipboard',
+        'OK',
+        { duration: 3000 },
+      );
+    });
+
+    it('should warn when the copied DSL cannot represent line feeds', async () => {
+      vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+      const { c } = await setup({
+        snapshot: {
+          text: 'abc',
+          operations: [
+            op('o1', { type: OperationType.replace, value: 'x\ny' }),
+            op('o2', { features: [{ name: 'f', value: 'a "b"', setPolicy: 0 }] }),
+            op('o3', { features: [{ name: 'f', value: 'a\r\nb', setPolicy: 0 }] }),
+          ],
+        },
+      });
+      c.copyOperationsDsl();
+      await wait();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        expect.stringContaining('operation(s) 1, 3 have values with line feeds'),
+        'OK',
+      );
+    });
+
+    it('should report clipboard errors when copying DSL', async () => {
+      vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('x'));
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.copyOperationsDsl();
+      await wait();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Error copying DSL to clipboard',
+        'OK',
+      );
+    });
+
     it('should report DSL errors', async () => {
       api.getDsl.mockReturnValue(throwError(() => new Error('x')));
       const { c } = await setup({ snapshot: SNAPSHOT() });
@@ -704,6 +751,18 @@ describe('SnapshotEditorComponent', () => {
       const { c } = await setup({ snapshot: SNAPSHOT() });
       c.inputBaseText();
       expect(c.form.operations().value()).toHaveLength(3);
+    });
+
+    it('should pass the batch operations preset to the batch dialog', async () => {
+      matDialog.open.mockReturnValue({ afterClosed: () => of(undefined) });
+      const { c } = await setup({
+        snapshot: SNAPSHOT(),
+        batchOps: '1×1: [f="say \\"hi\\""]',
+      });
+      c.parseOperations();
+      expect(matDialog.open.mock.calls.at(-1)![1].data).toEqual({
+        payload: { preset: '1×1: [f="say \\"hi\\""]' },
+      });
     });
 
     it('should append parsed operations and rerun', async () => {
@@ -897,6 +956,380 @@ describe('SnapshotEditorComponent', () => {
       c.form.operations().value.set([]);
       c.editNewOperation();
       expect(c.editedOpPrecedingText()!.map((n) => n.id)).toEqual([1, 2, 3]);
+    });
+  });
+
+  // regressions in the data flow from the editor to the result view and the
+  // rendition, with an asynchronous API like the real one
+  describe('data flow', () => {
+    /**
+     * Make the API respond asynchronously, via a subject for each call.
+     */
+    function asyncApi(): Subject<ResultWrapper<CharChainResult>>[] {
+      const calls: Subject<ResultWrapper<CharChainResult>>[] = [];
+      api.runOperations.mockImplementation(() => {
+        const s = new Subject<ResultWrapper<CharChainResult>>();
+        calls.push(s);
+        return s;
+      });
+      return calls;
+    }
+    const respond = (
+      s: Subject<ResultWrapper<CharChainResult>>,
+      w: ResultWrapper<CharChainResult>,
+    ) => {
+      s.next(w);
+      s.complete();
+    };
+    const lastOps = () =>
+      (api.runOperations.mock.calls.at(-1)![1] as CharChainOperation[]).map(
+        (o) => [o.id, o.at],
+      );
+    const resultView = (fixture: ComponentFixture<SnapshotEditorComponent>) =>
+      fixture.debugElement.query(By.directive(ChainResultViewComponent))
+        .componentInstance as ChainResultViewComponent;
+
+    it('should keep the result view consistent while a run is pending', async () => {
+      const { c, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await wait(300);
+      await fixture.whenStable();
+      const view = resultView(fixture);
+      const oldResult = c.result()!;
+      expect(view.step()).toBe(oldResult.steps[2]);
+
+      // run to the first operation: the request is pending
+      const calls = asyncApi();
+      c.runTo(0);
+      await wait(300);
+      await fixture.whenStable();
+      // the view keeps showing the step of the current result, rather than
+      // jumping to the step at the new index in the old result
+      expect(c.initialStepIndex()).toBe(2);
+      expect(view.step()).toBe(oldResult.steps[2]);
+
+      const newResult = fakeResult([op('o1')]);
+      respond(calls[0], { result: newResult });
+      await wait(300);
+      await fixture.whenStable();
+      expect(c.initialStepIndex()).toBe(0);
+      expect(view.step()).toBe(newResult.steps[0]);
+      expect(view.stepNodes().length).toBeGreaterThan(0);
+    });
+
+    it('should keep the result view consistent when a run fails', async () => {
+      const { c, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await wait(300);
+      await fixture.whenStable();
+      const view = resultView(fixture);
+      const oldResult = c.result()!;
+
+      // run to a new operation: no step at its index in the old result
+      c.form.operations().value.set([...c.form.operations().value(), op('o4')]);
+      const calls = asyncApi();
+      c.runTo(3);
+      respond(calls[0], { error: 'bad op' });
+      await wait(300);
+      await fixture.whenStable();
+      expect(c.result()).toBe(oldResult);
+      expect(view.step()).toBe(oldResult.steps[2]);
+      expect(view.stepNodes().length).toBeGreaterThan(0);
+      expect(c.busy()).toBe(false);
+    });
+
+    it('should push each new result to the rendition, without mutating it', async () => {
+      const { c, container, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await fixture.whenStable();
+      const rendition = container.querySelector(
+        'gve-snapshot-rendition',
+      ) as HTMLElement & { data: CharChainResult };
+
+      // edit and save an operation (auto-run off), then run
+      c.editOperation(1);
+      c.onOperationChange(op('o2', { at: 7 }));
+      const calls = asyncApi();
+      c.runTo(2);
+      respond(calls[0], { result: fakeResult(c.form.operations().value()) });
+      await fixture.whenStable();
+
+      expect(rendition.data.steps).toBe(c.result()!.steps);
+      expect(rendition.data.steps[1].operation.at).toBe(7);
+      // the base text is supplied to the rendition only
+      expect(plain(rendition.data.text)).toEqual(
+        plain(c.form.baseText().value()),
+      );
+      expect(c.result()!.text).toBeUndefined();
+    });
+
+    it('should not let an invalid run index cancel a pending run', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      const calls = asyncApi();
+      c.runTo(2);
+      expect(() => c.runTo(-1)).not.toThrow();
+      c.runTo(3);
+      expect(calls[0].observed).toBe(true);
+      expect(c.busy()).toBe(true);
+      expect(api.runOperations).toHaveBeenCalledTimes(2);
+    });
+
+    it('should drop a preview of an operation no longer edited', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.options.autoRun().value.set(true);
+
+      // cancelled before the deferred preview runs
+      c.editOperation(1);
+      c.onOperationPreview(op('o2', { at: 5 }));
+      c.onOperationCancel();
+      await wait();
+      expect(api.runOperations).toHaveBeenCalledTimes(1);
+
+      // moved to the next operation before the deferred preview runs:
+      // o2's draft must not replace o3
+      c.editOperation(1);
+      c.onOperationPreview(op('o2', { at: 5 }));
+      c.editOperation(2);
+      await wait();
+      expect(api.runOperations).toHaveBeenCalledTimes(1);
+    });
+
+    it('should rerun the saved operations when cancelling after a preview', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.options.autoRun().value.set(true);
+      c.editOperation(1);
+      c.onOperationPreview(op('o2', { at: 5 }));
+      await wait();
+      expect(lastOps()).toEqual([
+        ['o1', 1],
+        ['o2', 5],
+      ]);
+
+      c.onOperationCancel();
+      expect(api.runOperations).toHaveBeenCalledTimes(3);
+      // all the saved operations, selecting the cancelled one
+      expect(lastOps()).toEqual([
+        ['o1', 1],
+        ['o2', 1],
+        ['o3', 1],
+      ]);
+      expect(c.initialStepIndex()).toBe(1);
+      expect(c.resultOperationId()).toBe('o2');
+    });
+
+    it('should rerun the saved operations when leaving a previewed operation', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.options.autoRun().value.set(true);
+      c.editOperation(1);
+      c.onOperationPreview(op('o2', { at: 5 }));
+      await wait();
+      c.editOperation(2);
+      expect(lastOps()).toEqual([
+        ['o1', 1],
+        ['o2', 1],
+        ['o3', 1],
+      ]);
+      expect(c.editedOp()!.id).toBe('o3');
+    });
+
+    it('should not rerun when leaving an operation without previews', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.options.autoRun().value.set(true);
+      c.editOperation(1);
+      c.onOperationCancel();
+      c.editOperation(0);
+      c.editNewOperation();
+      expect(api.runOperations).toHaveBeenCalledTimes(1);
+    });
+
+    it('should rerun the saved operation after a preview even if auto-run was turned off', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.options.autoRun().value.set(true);
+      c.editOperation(1);
+      c.onOperationPreview(op('o2', { at: 5 }));
+      await wait();
+      c.options.autoRun().value.set(false);
+      c.onOperationChange(op('o2', { at: 6 }));
+      expect(lastOps()).toEqual([
+        ['o1', 1],
+        ['o2', 6],
+        ['o3', 1],
+      ]);
+    });
+
+    it('should run all the operations on save with auto-run, selecting the saved one', async () => {
+      const { c, container, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await fixture.whenStable();
+      c.options.autoRun().value.set(true);
+      c.editOperation(0);
+      c.onOperationChange(op('o1', { at: 7 }));
+      expect(lastOps()).toEqual([
+        ['o1', 7],
+        ['o2', 1],
+        ['o3', 1],
+      ]);
+      expect(c.initialStepIndex()).toBe(0);
+      expect(c.resultOperationId()).toBe('o1');
+      // the whole chain reaches the result view and the rendition
+      expect(c.result()!.steps).toHaveLength(3);
+      await fixture.whenStable();
+      const rendition = container.querySelector(
+        'gve-snapshot-rendition',
+      ) as HTMLElement & { data: CharChainResult };
+      expect(rendition.data.steps).toHaveLength(3);
+      await wait(300);
+      await fixture.whenStable();
+      expect(resultView(fixture).step()).toBe(c.result()!.steps[0]);
+    });
+  });
+
+  describe('unknown input tags', () => {
+    it('should warn about operations with an unknown input version', async () => {
+      const { c } = await setup({
+        snapshot: {
+          text: 'abc',
+          operations: [op('o1'), op('o2', { inputTag: 'nope' })],
+        },
+      });
+      expect(c.result()).toBeDefined();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        expect.stringContaining('2. o2 (nope)'),
+        'OK',
+      );
+    });
+
+    it('should not warn about valid chains', async () => {
+      await setup({ snapshot: SNAPSHOT() });
+      expect(snackBar.open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('base text', () => {
+    const panel = (container: Element) =>
+      container.querySelector('mat-expansion-panel')!;
+
+    it('should expand the base text panel for a snapshot without text', async () => {
+      const { c, container, fixture } = await setup({
+        snapshot: { text: '', operations: [] },
+      });
+      await fixture.whenStable();
+      expect(c.baseTextExpanded()).toBe(true);
+      expect(panel(container)).toHaveClass('mat-expanded');
+    });
+
+    it('should expand the base text panel without snapshot', async () => {
+      const { c } = await setup();
+      expect(c.baseTextExpanded()).toBe(true);
+    });
+
+    it('should collapse the base text panel for a snapshot with text', async () => {
+      const { c, container, fixture } = await setup({ snapshot: SNAPSHOT() });
+      await fixture.whenStable();
+      expect(c.baseTextExpanded()).toBe(false);
+      expect(panel(container)).not.toHaveClass('mat-expanded');
+    });
+
+    it('should copy the base text', async () => {
+      const user = userEvent.setup();
+      const write = vi
+        .spyOn(navigator.clipboard, 'writeText')
+        .mockResolvedValue();
+      const { c, fixture } = await setup({ snapshot: SNAPSHOT() });
+      c.baseTextExpanded.set(true);
+      await fixture.whenStable();
+      await wait(300);
+      await user.click(
+        screen.getByRole('button', { name: 'Copy base text to clipboard' }),
+      );
+      expect(write).toHaveBeenCalledWith('ab\nc');
+      await wait();
+      expect(snackBar.open).toHaveBeenCalledWith(
+        'Base text copied to clipboard',
+        'OK',
+        { duration: 3000 },
+      );
+    });
+
+    it('should not copy an empty base text', async () => {
+      await setup({ snapshot: { text: '', operations: [] } });
+      expect(
+        screen.getByRole('button', { name: 'Copy base text to clipboard' }),
+      ).toBeDisabled();
+    });
+
+    it('should not add operations without base text', async () => {
+      await setup({ snapshot: { text: '', operations: [] } });
+      await userEvent.click(screen.getByRole('tab', { name: /operations/ }));
+      await wait(600);
+      expect(
+        screen.getByRole('button', { name: 'operation' }),
+      ).toBeDisabled();
+    });
+  });
+
+  describe('keyboard shortcuts', () => {
+    const lastOps = () =>
+      (api.runOperations.mock.calls.at(-1)![1] as CharChainOperation[]).map(
+        (o) => o.id,
+      );
+    const press =(code: string, init: KeyboardEventInit = {}) =>
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          code,
+          altKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+          ...init,
+        }),
+      );
+
+    it('should add a new operation with Alt+Shift+N', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      press('KeyN');
+      expect(c.editedOp()).toBeDefined();
+      expect(c.editedOpIndex()).toBe(-1);
+    });
+
+    it('should not replace an edited operation with Alt+Shift+N', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.editOperation(1);
+      press('KeyN');
+      expect(c.editedOp()!.id).toBe('o2');
+    });
+
+    it('should not add a new operation without base text', async () => {
+      const { c } = await setup({ snapshot: { text: '', operations: [] } });
+      press('KeyN');
+      expect(c.editedOp()).toBeUndefined();
+    });
+
+    it('should run all the operations with Alt+Shift+R', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      c.runTo(0);
+      press('KeyR');
+      expect(api.runOperations).toHaveBeenCalledTimes(3);
+      expect(lastOps()).toHaveLength(3);
+      expect(c.initialStepIndex()).toBe(2);
+    });
+
+    it('should ignore other modifiers and open dialogs', async () => {
+      const { c } = await setup({ snapshot: SNAPSHOT() });
+      press('KeyN', { ctrlKey: true });
+      press('KeyN', { shiftKey: false });
+      press('KeyN', { metaKey: true });
+      expect(c.editedOp()).toBeUndefined();
+      (matDialog as unknown as { openDialogs: unknown[] }).openDialogs = [{}];
+      press('KeyN');
+      expect(c.editedOp()).toBeUndefined();
+    });
+
+    it('should show the shortcuts in the buttons', async () => {
+      const { showOperations } = await setup({ snapshot: SNAPSHOT() });
+      await showOperations();
+      expect(
+        screen.getByRole('button', { name: 'operation' }),
+      ).toHaveAttribute('aria-keyshortcuts', 'Alt+Shift+N');
+      expect(
+        screen.getByRole('button', { name: 'run' }),
+      ).toHaveAttribute('aria-keyshortcuts', 'Alt+Shift+R');
     });
   });
 });

@@ -48,7 +48,7 @@
         <input
           matInput
           [formField]="form.valuePrefix"
-          placeholder="e.g. @2:"
+          matTooltip="Optional prefix for the value, ending with a colon (e.g. @2:)"
           (keydown.enter)="onEnter($event)"
         />
         @if (

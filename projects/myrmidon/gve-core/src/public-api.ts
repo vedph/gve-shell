@@ -23,3 +23,7 @@ export * from './lib/services/gve-api.service';
 export * from './lib/services/gve-base-text.service';
 export * from './lib/services/gve-graphviz.service';
 export * from './lib/services/settings.service';
+
+export * from './lib/utils/feature-clipboard';
+export * from './lib/utils/keyboard-shortcuts';
+export * from './lib/utils/step-tags';

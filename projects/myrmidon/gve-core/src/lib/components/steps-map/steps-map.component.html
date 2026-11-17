@@ -1,14 +1,30 @@
 <div>
   @if (steps().length) {
-    @for (step of steps(); track step.outputTag) {
+    <!-- tracked by position: output tags are not unique across steps -->
+    @for (step of steps(); track $index; let i = $index) {
       <div
         matRipple
         class="step form-row"
         [class.selected]="step === selectedStep()"
+        [class.invalid]="unknownInput().has(i)"
         (click)="onStepClick(step)"
       >
         <!-- tag -->
         <div class="tag">
+          @if (unknownInput().has(i)) {
+            <mat-icon
+              class="warning"
+              role="img"
+              aria-hidden="false"
+              [attr.aria-label]="'Unknown input version ' + step.inputTag"
+              [matTooltip]="
+                'The input version ' +
+                step.inputTag +
+                ' does not exist at this step: maybe it is produced by a later, moved or deleted operation. Its output is empty.'
+              "
+              >warning</mat-icon
+            >
+          }
           <span class="muted-tag">{{ step.inputTag }} &#x25b6; </span>
           {{ step.outputTag }}
           <button
@@ -24,7 +40,7 @@
         </div>
         <!-- text lines -->
         <div class="text" [style.fontSize]="textFontSize()">
-          @for (line of lines()[step.outputTag]; track $index) {
+          @for (line of lines()[i]; track $index) {
             <p class="line">{{ line }}</p>
           }
         </div>

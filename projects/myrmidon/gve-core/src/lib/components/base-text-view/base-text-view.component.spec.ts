@@ -64,6 +64,16 @@ describe('BaseTextViewComponent', () => {
     expect(lines[1].querySelectorAll('gve-base-text-char')).toHaveLength(2);
   });
 
+  it('should limit the text height only when requested', async () => {
+    const { container, fixture } = await setup();
+    const text = () => container.querySelector('#text') as HTMLElement;
+    expect(text().style.maxHeight).toBe('');
+    fixture.componentRef.setInput('maxHeight', '10em');
+    await fixture.whenStable();
+    expect(text().style.maxHeight).toBe('10em');
+    expect(text().style.overflowY).toBe('auto');
+  });
+
   it('should render nothing for empty text', async () => {
     const { container } = await setup([]);
     expect(container.querySelectorAll('.line')).toHaveLength(0);
@@ -233,6 +243,31 @@ describe('BaseTextViewComponent', () => {
       expect(container.querySelector('.match-count.no-matches')).toHaveTextContent(
         '0',
       );
+    });
+
+    it('should clear search highlights and select a clicked char', async () => {
+      const { fixture, chars, charPick, rangePick } = await setup('abAB');
+      const c = fixture.componentInstance;
+      c.onSearchInput('ab');
+      await new Promise((r) => setTimeout(r, 350));
+      await fixture.whenStable();
+      expect(c.matchCount()).toBe(4);
+
+      await userEvent.click(chars()[2]);
+      await fixture.whenStable();
+      expect(c.searchQuery()).toBe('');
+      expect(c.matchCount()).toBe(0);
+      expect(c.hasSelection()).toBe(true);
+      expect(rangePick).toHaveBeenLastCalledWith({ at: 3, run: 1 });
+      expect(charPick).toHaveBeenCalled();
+      // the clicked char shows the selection color, the others no more
+      // the search highlight color
+      expect(colorOf(chars()[2])).toBe('rgb(62, 146, 204)');
+      for (const i of [0, 1, 3]) {
+        expect(colorOf(chars()[i])).not.toBe('rgb(255, 213, 79)');
+        expect(colorOf(chars()[i])).not.toBe('rgb(62, 146, 204)');
+      }
+      expect((screen.getByPlaceholderText('search') as HTMLInputElement).value).toBe('');
     });
 
     it('should clear the search', async () => {

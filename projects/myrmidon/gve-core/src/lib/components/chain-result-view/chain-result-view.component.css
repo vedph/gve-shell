@@ -31,12 +31,11 @@
 div#container {
   display: grid;
   grid-template-rows: auto 1fr;
-  grid-template-columns: 3fr 1fr;
+  grid-template-columns: minmax(0, 3fr) minmax(200px, 1fr);
   grid-template-areas:
     "bar map"
     "step map";
   gap: 8px;
-  height: 100%;
 }
 div#bar {
   grid-area: bar;
@@ -44,18 +43,32 @@ div#bar {
 div#map {
   grid-area: map;
   min-height: 0;
+  /* keep the map within the window: it scrolls when there are many steps */
+  max-height: var(--gve-steps-map-max-height, 70vh);
   overflow-y: auto;
+  align-self: start;
 }
 div#step {
   grid-area: step;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: 1fr auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 div#text {
-  min-height: 0;
-  overflow-y: auto;
+  min-width: 0;
+}
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+.warning mat-icon {
+  flex: 0 0 auto;
 }
 div#feats {
   width: 100%;
@@ -69,15 +82,16 @@ div#feats {
   border-top-right-radius: 4px;
 }
 
-/* lt-md */
+/* lt-md: stack the map below the step, rather than hiding it */
 @media only screen and (max-width: 959px) {
   div#container {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "bar"
-      "step";
+      "step"
+      "map";
   }
-  #map {
-    display: none;
+  div#map {
+    max-height: var(--gve-steps-map-max-height-narrow, 40vh);
   }
 }

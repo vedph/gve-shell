@@ -46,12 +46,26 @@
   <!-- step -->
   @if (step()) {
   <div id="step">
+    <!-- unknown input version warning -->
+    @if (stepInputUnknown()) {
+    <div class="warning" role="status">
+      <mat-icon aria-hidden="true">warning</mat-icon>
+      <span
+        >The input version <strong>{{ step()!.inputTag }}</strong> of this
+        step does not exist at this point of the chain: it might be produced
+        by a later operation, or by one which was moved or deleted. So, this
+        step's output is empty. Check the input tag of operation
+        <strong>{{ step()!.operation.id }}</strong>.</span
+      >
+    </div>
+    }
     <!-- text -->
     <div id="text">
       <gve-base-text-view
         [text]="stepNodes()"
         [colorCallback]="getCharColor"
         [hasLineNumber]="true"
+        [maxHeight]="textMaxHeight()"
         (charPick)="onTextCharPick($event)"
         (rangePick)="onTextRangePick($event)"
       />

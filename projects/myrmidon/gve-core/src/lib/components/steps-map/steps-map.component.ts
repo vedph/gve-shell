@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -16,6 +17,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
 
 import { ChainOperationContextStep } from '../../services/gve-api.service';
+import { getUnknownInputStepIndexes } from '../../utils/step-tags';
 
 /**
  * 🔑 `gve-steps-map`
@@ -56,8 +58,22 @@ export class StepsMapComponent implements AfterViewInit {
   // track whether we've processed the steps/selection
   private _selectionProcessed = signal(false);
 
-  // the lines of each version text, keyed under the output tag
-  public readonly lines = signal<{ [key: string]: string[] }>({});
+  /**
+   * The text lines of each step, in the order of steps. These are not keyed
+   * by output tag, as several steps may share the same output tag (when
+   * an operation outputs again to its input version).
+   */
+  public readonly lines = computed<string[][]>(() =>
+    (this.steps() || []).map((s) => s.result?.split('\n') || []),
+  );
+
+  /**
+   * The indexes of the steps whose input version does not exist at their
+   * point of the chain.
+   */
+  public readonly unknownInput = computed(() =>
+    getUnknownInputStepIndexes(this.steps()),
+  );
 
   /**
    * The steps to display.
@@ -75,16 +91,9 @@ export class StepsMapComponent implements AfterViewInit {
   public readonly textFontSize = input('0.8em');
 
   constructor() {
-    // handle steps updates
+    // reset selection processing when steps change
     effect(() => {
-      const currentSteps = this.steps();
-      if (currentSteps && currentSteps.length > 0) {
-        this.updateLines(currentSteps);
-      } else {
-        this.lines.set({});
-      }
-
-      // reset selection processing when steps change
+      this.steps();
       this._selectionProcessed.set(false);
     });
 
@@ -115,17 +124,20 @@ export class StepsMapComponent implements AfterViewInit {
   private validateAndSetSelection(step: ChainOperationContextStep): void {
     const currentSteps = this.steps();
 
-    // check if the selected step exists in the steps array
-    const stepExists = currentSteps.some((s) => s.outputTag === step.outputTag);
-
-    if (stepExists) {
-      // valid selection, keep it
-      this.selectedStep.set(step);
-    } else {
-      // invalid selection, default to last step
-      const lastStep = currentSteps[currentSteps.length - 1];
-      this.selectedStep.set(lastStep);
-    }
+    // the selected step might come from previous steps (e.g. a former
+    // execution result): map it to its counterpart among the current steps,
+    // which are distinct objects, matching the operation too, as output
+    // tags are not unique across steps; else default to the last step
+    const match = currentSteps.includes(step)
+      ? step
+      : (currentSteps.find(
+          (s) =>
+            s.outputTag === step.outputTag &&
+            s.operation?.id === step.operation?.id,
+        ) ??
+        currentSteps.find((s) => s.outputTag === step.outputTag) ??
+        currentSteps[currentSteps.length - 1]);
+    this.selectedStep.set(match);
   }
 
   public ngAfterViewInit(): void {
@@ -135,27 +147,13 @@ export class StepsMapComponent implements AfterViewInit {
     });
   }
 
-  private updateLines(steps: ChainOperationContextStep[] | undefined) {
-    if (!steps) {
-      this.lines.set({});
-      return;
-    }
-
-    const lines: { [key: string]: string[] } = {};
-    for (let i = 0; i < steps.length; i++) {
-      const step = this.steps()![i];
-      lines[step.outputTag] = step.result?.split('\n') || [];
-    }
-    this.lines.set(lines);
-  }
-
   public onStepClick(step: ChainOperationContextStep) {
     this.selectedStep.set(step);
   }
 
   public copyText(step: ChainOperationContextStep, event: MouseEvent): void {
     event.stopPropagation();
-    const text = (this.lines()[step.outputTag] ?? []).join('\n');
+    const text = step.result || '';
     navigator.clipboard.writeText(text).then(() => {
       this._snackBar.open(`Copied ${step.outputTag}`, undefined, {
         duration: 2000,

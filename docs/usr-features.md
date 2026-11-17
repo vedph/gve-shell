@@ -21,6 +21,12 @@ The feature editor contains 3 controls:
   - `multiple`: when added to a set, the feature is just added to the set, whether another one exists with the same name or not. For instance, a `log` feature is used in our examples when we want to trace the operations effects on the generated texts. In this case, each operations logs a new entry and we want to preserve all the entries as they accumulate. So, this is a multiple feature, and whenever a new log entry is added all the existing entries are preserved.
   - `single first`: when added to a set in a batch, and a feature with the same name already exists, the first one being added replaces all the existing ones, while the following ones to be added just get added as multiple. This has meaning only when adding several features at once. Otherwise, it just behaves as single.
 
+In the features list, features are sorted by name, as they are an unordered set. To **copy** features, check them (or check all of them from the header) and click `copy`. Then, in any features list, click `paste` to add them, according to the set policy of each pasted feature:
+
+- `multiple`: just added, even if features with the same name exist.
+- `single`: replaces all the features with the same name.
+- `single first`: the first pasted feature with a name replaces all the features with that name; the following ones with the same name are added.
+
 By default, you can just type whatever you want as a feature name and value. Anyway, if you rather prefer a closed taxonomy, the client code can customize the editor by passing preset names and values:
 
 - when passing preset names, the name control will turn into a selection control. You will just have to pick an item from the list.

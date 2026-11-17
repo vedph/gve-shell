@@ -10,6 +10,7 @@ import {
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { form, FormField, min, required } from '@angular/forms/signals';
@@ -32,6 +33,7 @@ import {
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
 import { MatTooltip } from '@angular/material/tooltip';
 
@@ -53,6 +55,10 @@ import {
   LabeledId,
 } from '../../models';
 import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
+import {
+  GVE_SHORTCUTS,
+  isGveShortcut,
+} from '../../utils/keyboard-shortcuts';
 import { OperationSourceEditorComponent } from '../operation-source-editor/operation-source-editor.component';
 // import { SvgValidators } from '../../validators/svg-validators';
 import {
@@ -311,6 +317,9 @@ export interface FeatureDefinitions {
     TextPeepholeComponent,
     FlatLookupPipe,
   ],
+  host: {
+    '(document:keydown)': 'onDocumentKeydown($event)',
+  },
   templateUrl: './chain-operation-editor.component.html',
   styleUrl: './chain-operation-editor.component.css',
 })
@@ -401,7 +410,19 @@ export class ChainOperationEditorComponent {
    */
   public readonly operationOrdinalRequest = output<number>();
 
+  // the selected tab, kept in sync with the tab group both ways
   public readonly tabIndex = signal<number>(0);
+
+  /**
+   * The keyboard shortcuts, for their labels in the UI.
+   */
+  public readonly shortcuts = GVE_SHORTCUTS;
+
+  // the features editor (only rendered in the general tab)
+  private readonly _featureSetEditor = viewChild(FeatureSetEditorComponent);
+  // true when a new feature was requested, until the features editor is
+  // available to add it
+  private readonly _newFeatureRequested = signal(false);
   // disabled: the elements section is not in the template.
   // // elements parsed from SVG and having an id attribute;
   // // we can attach features to each of these elements
@@ -498,8 +519,24 @@ export class ChainOperationEditorComponent {
   }));
 
   private readonly _dialogService = inject(DialogService);
+  private readonly _dialog = inject(MatDialog);
 
   constructor() {
+    // add a requested new feature once the features editor is available:
+    // it is rendered only when its tab is selected
+    effect(() => {
+      const editor = this._featureSetEditor();
+      if (editor && this._newFeatureRequested()) {
+        untracked(() => {
+          this._newFeatureRequested.set(false);
+          // never replace a feature being edited, losing its changes
+          if (!editor.editedFeature()) {
+            editor.addFeature();
+          }
+        });
+      }
+    });
+
     // a new bound operation means there are no unsaved edits
     effect(() => {
       this.operation();
@@ -552,12 +589,48 @@ export class ChainOperationEditorComponent {
       }
     });
 
-    // whenever the draft changes, update preview
+    // whenever the draft is edited, update preview. The draft also changes
+    // (and toObservable emits its initial value) when a new operation is
+    // bound: that is no edit, so the preview is requested only when dirty.
+    // Otherwise, merely opening an operation (or browsing operations) would
+    // make the consumer run the chain truncated at it.
     toObservable(this._draft)
       .pipe(debounceUntilDestroyed(500))
       .subscribe(() => {
-        this.requestPreview();
+        if (this.form().dirty()) {
+          this.requestPreview();
+        }
       });
+  }
+
+  /**
+   * Add a new feature, switching to the general tab where features are.
+   */
+  public addFeature(): void {
+    this.tabIndex.set(0);
+    this._newFeatureRequested.set(true);
+  }
+
+  /**
+   * Handle the keyboard shortcuts of this editor: add a new feature or a
+   * new source. They are ignored while a dialog is open, and while editing
+   * respectively a feature or a source, as adding another one would replace
+   * it.
+   */
+  public onDocumentKeydown(event: KeyboardEvent): void {
+    if (this._dialog.openDialogs?.length) {
+      return;
+    }
+    if (isGveShortcut(event, GVE_SHORTCUTS.newFeature)) {
+      event.preventDefault();
+      this.addFeature();
+    } else if (isGveShortcut(event, GVE_SHORTCUTS.newSource)) {
+      event.preventDefault();
+      if (!this.editedSource()) {
+        this.tabIndex.set(1);
+        this.addSource();
+      }
+    }
   }
 
   public onFeaturesChange(features: OperationFeature[]): void {

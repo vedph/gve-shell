@@ -53,7 +53,9 @@ To set the text, just type or paste it, and click the set button. Once you have 
 
 >As the text is split into its characters, please ensure you remove any unwanted artifacts from it, like sequences of more than a single space, etc. Also, do not add empty lines or use spaces to represent visual aspects, as these belong to another level of our representation and we should not misuse characters for the sake of encoding some specific appearance.
 
-In the characters list, you can also click to **select** one character, and then control+click to select the last character of a range; in this case, the coordinates of the selected range will be shown. This is useful when you want to quickly get the coordinates of the text targeted by operations.
+In the characters list, you can also click to **select** one character, and then control+click to select the last character of a range; in this case, the coordinates of the selected range will be shown. This is useful when you want to quickly get the coordinates of the text targeted by operations. Clicking a character while search matches are highlighted ends the search and selects the character.
+
+Use the copy button next to the base text button to copy the base text into the clipboard. When the snapshot has no base text yet, the base text panel starts expanded.
 
 The text tab also allows to change some **general metadata** for the text:
 
@@ -94,6 +96,22 @@ Below the operations list a **style** text box allows you to enter the CSS code 
 In some cases, when starting with a new snapshot you might want to add operations in **batch**. This can be much quicker than editing each operation at hand, even if it does not allow to fully define all the possible metadata of an operation (like its visuals). Anyway, this is a handy way to quickly fill the operations list starting from a simple text, either you type or paste it. To do this, click the `batch` button and in the dialog which pops up type or paste a text having one line per operation, following the specific syntax designed for them, which is summarized below the text. Once you have added the operations in a batch, you can [edit](usr-operation.md) each of them to add or refine its data.
 
 >Adding batch operations does not clear existing operations, but just appends the parsed ones at the end. If you want to remove all the operations before adding, use the `clear` button.
+
+You can copy all the operations in this syntax with the copy DSL button at the top of the operations toolbar, and paste them back via `batch`. Quotes and backslashes in values are escaped (as `\"` and `\\`) and parse back as they were. Line feeds in values instead cannot be represented, because each line is an operation: when any operation has them, the editor warns you after copying.
+
+The `run` button runs all the operations. When `auto-run` is on, saving an edited operation also runs all the operations, selecting the saved one in the result.
+
+If the input tag of an operation refers to a version which does not exist at its point of the chain (e.g. because the operation producing it was moved after it, or deleted), its output is empty. The editor warns you after running, and both the steps map and the result text flag the operation.
+
+### Keyboard Shortcuts
+
+- `Alt+Shift+N`: add a new operation (ignored while another operation is being edited, so that its changes are not lost).
+- `Alt+Shift+R`: run all the operations.
+- in the operation editor:
+  - `Alt+Shift+F`: add a new feature.
+  - `Alt+Shift+S`: add a new source.
+
+Shortcuts are ignored while a dialog is open.
 
 ## Image
 

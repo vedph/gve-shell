@@ -2,10 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { TestBed } from '@angular/core/testing';
+import { DebugElement } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 
 import { ChainOperationEditorComponent } from './chain-operation-editor.component';
+import { FeatureSetEditorComponent } from '../feature-set-editor/feature-set-editor.component';
 import {
   CharChainOperation,
   FeatureSetPolicy,
@@ -484,6 +487,86 @@ describe('ChainOperationEditorComponent', () => {
     });
   });
 
+  describe('keyboard shortcuts', () => {
+    const press = (code: string) =>
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          code,
+          altKey: true,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    const featureSetEditor = (fixture: { debugElement: DebugElement }) =>
+      fixture.debugElement.query(By.directive(FeatureSetEditorComponent))
+        ?.componentInstance as FeatureSetEditorComponent | undefined;
+
+    it('should add a new feature with Alt+Shift+F', async () => {
+      const { fixture } = await setup({ operation: op() });
+      press('KeyF');
+      await fixture.whenStable();
+      expect(featureSetEditor(fixture)!.editedFeature()).toEqual({
+        name: '',
+        value: '',
+        setPolicy: FeatureSetPolicy.multiple,
+      });
+    });
+
+    it('should add a new feature from the sources tab', async () => {
+      const user = userEvent.setup();
+      const { c, fixture } = await setup({ operation: op() });
+      await user.click(screen.getByRole('tab', { name: 'sources' }));
+      await fixture.whenStable();
+      expect(c.tabIndex()).toBe(1);
+      press('KeyF');
+      await fixture.whenStable();
+      await new Promise((r) => setTimeout(r, 600));
+      await fixture.whenStable();
+      expect(c.tabIndex()).toBe(0);
+      expect(featureSetEditor(fixture)!.editedFeature()).toBeDefined();
+    });
+
+    it('should not replace a feature being edited', async () => {
+      const { fixture } = await setup({
+        operation: op({
+          features: [{ name: 'a', value: '1', setPolicy: FeatureSetPolicy.multiple }],
+        }),
+      });
+      const editor = featureSetEditor(fixture)!;
+      editor.editFeature(editor.workingFeatures()[0]);
+      press('KeyF');
+      await fixture.whenStable();
+      expect(editor.editedFeature()!.name).toBe('a');
+    });
+
+    it('should add a new source with Alt+Shift+S', async () => {
+      const { c, fixture } = await setup({ operation: op() });
+      press('KeyS');
+      await fixture.whenStable();
+      expect(c.tabIndex()).toBe(1);
+      expect(c.editedSource()).toBeDefined();
+      expect(c.editedSourceIndex()).toBe(-1);
+    });
+
+    it('should not replace a source being edited', async () => {
+      const { c } = await setup({
+        operation: op({ sources: [{ id: 's1', type: 't' }] }),
+      });
+      c.editSource(0);
+      press('KeyS');
+      expect(c.editedSourceIndex()).toBe(0);
+    });
+
+    it('should show the shortcuts in the buttons', async () => {
+      await setup({ operation: op() });
+      expect(screen.getByRole('button', { name: /^feature$/ })).toHaveAttribute(
+        'aria-keyshortcuts',
+        'Alt+Shift+F',
+      );
+    });
+  });
+
   describe('preview', () => {
     it('should emit a preview on request', async () => {
       const user = userEvent.setup();
@@ -508,10 +591,36 @@ describe('ChainOperationEditorComponent', () => {
       preview.mockClear();
       c.form.run().value.set(4);
       c.form.run().value.set(5);
+      c.form.run().markAsDirty();
       expect(preview).not.toHaveBeenCalled();
       await wait(550);
       expect(preview).toHaveBeenCalledTimes(1);
       expect(preview.mock.calls[0][0].run).toBe(5);
+    });
+
+    it('should emit a preview when the user edits a field', async () => {
+      const user = userEvent.setup();
+      const { preview } = await setup({ operation: op() });
+      await wait(550);
+      preview.mockClear();
+      const run = screen.getByRole('spinbutton', { name: 'run' });
+      await user.clear(run);
+      await user.type(run, '7');
+      await wait(550);
+      expect(preview).toHaveBeenCalled();
+      expect(preview.mock.calls.at(-1)![0].run).toBe(7);
+    });
+
+    it('should not emit a preview when an operation is bound', async () => {
+      // the consumer runs the chain truncated at the previewed operation:
+      // merely opening (or browsing) operations must not trigger it
+      const { fixture, preview } = await setup({ operation: op() });
+      await wait(550);
+      expect(preview).not.toHaveBeenCalled();
+      fixture.componentRef.setInput('operation', op({ id: 'op2', at: 3 }));
+      await fixture.whenStable();
+      await wait(550);
+      expect(preview).not.toHaveBeenCalled();
     });
   });
 

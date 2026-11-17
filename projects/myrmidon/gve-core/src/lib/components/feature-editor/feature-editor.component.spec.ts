@@ -284,6 +284,16 @@ describe('FeatureEditorComponent', () => {
       });
     });
 
+    it('should label the prefix without a placeholder overlapping it', async () => {
+      await setup({
+        featNames: NAMES,
+        featValues: VALUES,
+        feature: { name: 'color', value: 'red', setPolicy: 0 },
+      });
+      const prefix = screen.getByRole('textbox', { name: 'prefix' });
+      expect(prefix).not.toHaveAttribute('placeholder');
+    });
+
     it('should validate the prefix', async () => {
       const { c } = await setup({
         featNames: NAMES,
